@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { LayoutDashboard, Target, Bell, PlusCircle, Settings, Users, Menu, Home, BarChart3 } from "lucide-react";
+import { LayoutDashboard, Target, Activity, Bell, PlusCircle, Settings, Users, Menu, Home, BarChart3, PlayCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useSidebar } from "@/lib/sidebar-context";
@@ -13,10 +13,12 @@ const navigation = [
     { name: 'Home', href: '/', icon: Home },
     // { name: 'Overview', href: '/overview', icon: LayoutDashboard },
     { name: 'Analytics Dashboard', href: '/analytics-dashboard', icon: BarChart3 },
-    { name: 'Accuracy Deep Dive', href: '/accuracy-deep-dive', icon: Target },
-    { name: 'Scenario Planner', href: '/scenario-planner', icon: LayoutDashboard }, // Changed Icon to distinguish
+    { name: 'Forecast', href: '/forecast', icon: Target },
+    { name: 'Accuracy Deep Dive', href: '/accuracy-deep-dive', icon: Activity },
+    { name: 'Scenario Planner', href: '/scenario-planner', icon: LayoutDashboard },
     // { name: 'Monitoring & Alerts', href: '/monitoring', icon: Bell },
     { name: 'New Prediction', href: '/new-prediction', icon: PlusCircle },
+    { name: 'Runs', href: '/runs', icon: PlayCircle },
     { name: 'Settings', href: '/settings', icon: Settings },
 ];
 

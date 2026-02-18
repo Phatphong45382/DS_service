@@ -29,7 +29,7 @@ const CustomLegend = ({ payload, onDrillDown, level }: any) => {
                         style={{ backgroundColor: entry.color }}
                     />
                     <span className="text-xs text-slate-600 hover:text-blue-600 hover:underline">
-                        {entry.payload.name}: <span className="font-semibold text-slate-900">{entry.payload.percent}%</span>
+                        {entry.payload.name}: <span className="font-medium text-slate-900">{entry.payload.percent}%</span>
                     </span>
                 </div>
             ))}
@@ -113,8 +113,8 @@ export function BrowserStats({ data, level, onDrillDown, isLoading }: SalesDistr
                                 ))}
                             </Pie>
                             <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle">
-                                <tspan x="50%" dy="-5" className="fill-slate-500" style={{ fontSize: '11px' }}>Total Sales</tspan>
-                                <tspan x="50%" dy="20" className="fill-slate-900 font-bold" style={{ fontSize: '18px' }}>
+                                <tspan x="50%" dy="-5" className="fill-slate-500" style={{ fontSize: '10px' }}>Total Sales</tspan>
+                                <tspan x="50%" dy="20" className="fill-slate-900 font-semibold" style={{ fontSize: '16px' }}>
                                     {new Intl.NumberFormat('en-US', { notation: "compact", maximumFractionDigits: 1 }).format(totalValue)}
                                 </tspan>
                             </text>

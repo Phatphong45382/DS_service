@@ -1,4 +1,4 @@
-// Mock data for Malee Sales Analytics
+// Mock data for Sales Forecast Analytics
 
 import { SalesData, Product, KPI } from "@/types";
 
@@ -17,16 +17,16 @@ export const salesData: SalesData[] = Array.from({ length: 30 }, (_, i) => {
 
 // Top selling products
 export const topProducts: Product[] = [
-    { id: '1', name: 'Malee น้ำส้ม 100%', sales: 1250, revenue: 312500, change: 12.5 },
-    { id: '2', name: 'Malee น้ำมะพร้าว', sales: 1100, revenue: 275000, change: 8.3 },
-    { id: '3', name: 'Malee น้ำแอปเปิ้ล', sales: 950, revenue: 237500, change: -2.1 },
-    { id: '4', name: 'Malee น้ำองุ่น', sales: 820, revenue: 205000, change: 15.2 },
-    { id: '5', name: 'Malee น้ำผลไม้รวม', sales: 750, revenue: 187500, change: 5.8 },
-    { id: '6', name: 'Malee น้ำเสาวรส', sales: 680, revenue: 170000, change: -5.4 },
-    { id: '7', name: 'Malee น้ำสับปะรด', sales: 620, revenue: 155000, change: 3.7 },
-    { id: '8', name: 'Malee น้ำมะม่วง', sales: 580, revenue: 145000, change: 9.1 },
-    { id: '9', name: 'Malee น้ำลิ้นจี่', sales: 520, revenue: 130000, change: -1.8 },
-    { id: '10', name: 'Malee น้ำฝรั่ง', sales: 480, revenue: 120000, change: 6.4 },
+    { id: '1', name: 'Orange Juice 100%', sales: 1250, revenue: 312500, change: 12.5 },
+    { id: '2', name: 'Coconut Water', sales: 1100, revenue: 275000, change: 8.3 },
+    { id: '3', name: 'Apple Juice', sales: 950, revenue: 237500, change: -2.1 },
+    { id: '4', name: 'Grape Juice', sales: 820, revenue: 205000, change: 15.2 },
+    { id: '5', name: 'Mixed Fruit Juice', sales: 750, revenue: 187500, change: 5.8 },
+    { id: '6', name: 'Passion Fruit Juice', sales: 680, revenue: 170000, change: -5.4 },
+    { id: '7', name: 'Pineapple Juice', sales: 620, revenue: 155000, change: 3.7 },
+    { id: '8', name: 'Mango Juice', sales: 580, revenue: 145000, change: 9.1 },
+    { id: '9', name: 'Lychee Juice', sales: 520, revenue: 130000, change: -1.8 },
+    { id: '10', name: 'Guava Juice', sales: 480, revenue: 120000, change: 6.4 },
 ];
 
 // Category distribution data
@@ -120,13 +120,13 @@ export const regionalSalesData = [
 
 // Inventory: Mock Data
 export const inventoryData = [
-    { id: 1, name: 'Malee Orange Juice 100%', category: 'Fruit Juices', stock: 1200, status: 'In Stock', price: 69 },
-    { id: 2, name: 'Malee Apple Juice', category: 'Fruit Juices', stock: 85, status: 'Low Stock', price: 65 },
-    { id: 3, name: 'Malee Coconut Water', category: 'Smoothies', stock: 0, status: 'Out of Stock', price: 45 },
-    { id: 4, name: 'Malee Pineapple Juice', category: 'Fruit Juices', stock: 500, status: 'In Stock', price: 60 },
-    { id: 5, name: 'Malee Grape Juice', category: 'Fruit Juices', stock: 45, status: 'Low Stock', price: 75 },
-    { id: 6, name: 'Malee Mixed Fruit', category: 'Smoothies', stock: 320, status: 'In Stock', price: 55 },
-    { id: 7, name: 'Malee Lychee Juice', category: 'Fruit Juices', stock: 210, status: 'In Stock', price: 65 },
+    { id: 1, name: 'Orange Juice 100%', category: 'Fruit Juices', stock: 1200, status: 'In Stock', price: 69 },
+    { id: 2, name: 'Apple Juice', category: 'Fruit Juices', stock: 85, status: 'Low Stock', price: 65 },
+    { id: 3, name: 'Coconut Water', category: 'Smoothies', stock: 0, status: 'Out of Stock', price: 45 },
+    { id: 4, name: 'Pineapple Juice', category: 'Fruit Juices', stock: 500, status: 'In Stock', price: 60 },
+    { id: 5, name: 'Grape Juice', category: 'Fruit Juices', stock: 45, status: 'Low Stock', price: 75 },
+    { id: 6, name: 'Mixed Fruit Smoothie', category: 'Smoothies', stock: 320, status: 'In Stock', price: 55 },
+    { id: 7, name: 'Lychee Juice', category: 'Fruit Juices', stock: 210, status: 'In Stock', price: 65 },
 ];
 
 // Customers: Mock Data

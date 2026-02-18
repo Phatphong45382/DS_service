@@ -12,10 +12,10 @@ export function SalesTrendChart() {
     if (!isMounted) return null;
 
     return (
-        <Card className="bg-white rounded-[24px] p-8 border-2 border-[#FFF0E5] shadow-[0_8px_20px_rgba(255,138,91,0.05)] h-[400px]">
+        <Card className="bg-white rounded-[var(--radius-card)] p-8 border-2 border-warm-border-light shadow-warm-accent h-[400px]">
             <div className="space-y-1 mb-6">
-                <h3 className="text-xl font-bold text-[#2D2D2D] font-poppins">Sales & Profit Trends 📈</h3>
-                <p className="text-sm text-[#7A7A7A] font-medium mt-1">Monthly performance overview</p>
+                <h3 className="text-xl font-bold text-warm-text-primary font-poppins">Sales & Profit Trends 📈</h3>
+                <p className="text-sm text-warm-text-secondary font-medium mt-1">Monthly performance overview</p>
             </div>
 
             <ResponsiveContainer width="100%" height="85%">
@@ -30,30 +30,30 @@ export function SalesTrendChart() {
                             <stop offset="95%" stopColor="#FFCC80" stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#EBE5E0" />
+                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--warm-border)" />
                     <XAxis
                         dataKey="month"
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#A8A29E', fontSize: 12 }}
+                        tick={{ fill: 'var(--warm-text-muted)', fontSize: 12 }}
                         dy={10}
                     />
                     <YAxis
                         axisLine={false}
                         tickLine={false}
-                        tick={{ fill: '#A8A29E', fontSize: 12 }}
+                        tick={{ fill: 'var(--warm-text-muted)', fontSize: 12 }}
                         tickFormatter={(value) => `฿${value}`}
                     />
                     <Tooltip
                         contentStyle={{
                             backgroundColor: '#FFFFFF',
-                            border: '2px solid #FFF0E5',
+                            border: '2px solid var(--warm-border-light)',
                             borderRadius: '16px',
                             boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
                             padding: '12px',
-                            color: '#44403C'
+                            color: 'var(--warm-text-primary)'
                         }}
-                        itemStyle={{ fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
+                        itemStyle={{ fontFamily: 'var(--font-display)', fontWeight: 600 }}
                     />
                     <Legend verticalAlign="top" height={36} iconType="circle" />
                     <Area

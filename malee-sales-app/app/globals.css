@@ -44,6 +44,21 @@
   --font-inter: Inter, sans-serif;
   --font-jetbrains-mono: JetBrains Mono, monospace;
   --font-display: var(--font-outfit), 'Plus Jakarta Sans', Inter, sans-serif;
+
+  /* Warm Palette Color Registrations */
+  --color-warm-bg-card: var(--warm-bg-card);
+  --color-warm-bg-subtle: var(--warm-bg-subtle);
+  --color-warm-bg-hover: var(--warm-bg-hover);
+  --color-warm-border: var(--warm-border);
+  --color-warm-border-light: var(--warm-border-light);
+  --color-warm-bg-table-header: var(--warm-bg-table-header);
+  --color-warm-text-primary: var(--warm-text-primary);
+  --color-warm-text-secondary: var(--warm-text-secondary);
+  --color-warm-text-muted: var(--warm-text-muted);
+  --color-warm-accent: var(--warm-accent);
+  --color-warm-accent-hover: var(--warm-accent-hover);
+  --color-warm-accent-2: var(--warm-accent-2);
+  --color-warm-accent-3: var(--warm-accent-3);
 }
 
 :root {
@@ -119,6 +134,25 @@
 
   --emerald-500: #10b981;
   --rose-500: #f43f5e;
+
+  /* Warm Palette Tokens */
+  --warm-bg-card: #FCFBF9;
+  --warm-bg-subtle: #F5EFE9;
+  --warm-bg-hover: #F0E6DD;
+  --warm-border: #EBE5E0;
+  --warm-border-light: #FFF0E5;
+  --warm-bg-table-header: #FFF5F0;
+  --warm-text-primary: #44403C;
+  --warm-text-secondary: #78716C;
+  --warm-text-muted: #A8A29E;
+  --warm-accent: #FF8A5B;
+  --warm-accent-hover: #FF7A4B;
+  --warm-accent-2: #FFB74D;
+  --warm-accent-3: #FFCC80;
+  --warm-shadow-base: rgba(97, 78, 66, 0.03);
+  --warm-shadow-hover: rgba(97, 78, 66, 0.08);
+  --warm-accent-shadow: rgba(255, 138, 91, 0.05);
+  --radius-card: 1.5rem;
 }
 
 @layer base {
@@ -247,4 +281,22 @@
       background-position: 200% 0;
     }
   }
+}
+
+/* Font alias — maps font-poppins class to the installed Outfit display font */
+@utility font-poppins {
+  font-family: var(--font-display);
+}
+
+/* Warm palette shadow utilities */
+@utility shadow-warm-sm {
+  box-shadow: 0 4px 16px var(--warm-shadow-base);
+}
+
+@utility shadow-warm-md {
+  box-shadow: 0 8px 20px var(--warm-shadow-hover);
+}
+
+@utility shadow-warm-accent {
+  box-shadow: 0 8px 20px var(--warm-accent-shadow);
 }

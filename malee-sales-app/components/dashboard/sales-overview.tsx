@@ -68,13 +68,13 @@ export function SalesOverview() {
         >
             <motion.div variants={item} className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-3xl font-bold tracking-tight text-[#44403C] font-poppins">Dashboard Overview</h2>
-                    <p className="text-[#78716C] mt-2">Track performance and sales metrics</p>
+                    <h2 className="text-3xl font-bold tracking-tight text-warm-text-primary font-poppins">Dashboard Overview</h2>
+                    <p className="text-warm-text-secondary mt-2">Track performance and sales metrics</p>
                 </div>
                 <div className="flex items-center gap-3">
                     <button
                         onClick={handleExport}
-                        className="flex items-center gap-2 px-4 py-2 bg-white border border-[#EBE5E0] rounded-xl text-sm font-semibold text-[#44403C] hover:bg-[#F5EFE9] hover:text-[#FF8A5B] transition-colors shadow-sm"
+                        className="flex items-center gap-2 px-4 py-2 bg-white border border-warm-border rounded-xl text-sm font-semibold text-warm-text-primary hover:bg-warm-bg-subtle hover:text-warm-accent transition-colors shadow-enterprise-sm"
                         suppressHydrationWarning
                     >
                         <Download className="w-4 h-4" />
