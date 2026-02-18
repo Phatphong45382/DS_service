@@ -12,10 +12,10 @@ export function CategoryChart() {
     if (!isMounted) return null;
 
     return (
-        <Card className="bg-white rounded-[24px] p-8 border-2 border-[#FFF0E5] shadow-[0_8px_20px_rgba(255,138,91,0.05)] h-[400px]">
+        <Card className="bg-white rounded-[var(--radius-card)] p-8 border-2 border-warm-border-light shadow-warm-accent h-[400px]">
             <div className="space-y-1 mb-4">
-                <h3 className="text-xl font-bold text-[#2D2D2D] font-poppins">Sales by Category 🍩</h3>
-                <p className="text-sm text-[#7A7A7A] font-medium mt-1">Distribution across product lines</p>
+                <h3 className="text-xl font-bold text-warm-text-primary font-poppins">Sales by Category 🍩</h3>
+                <p className="text-sm text-warm-text-secondary font-medium mt-1">Distribution across product lines</p>
             </div>
 
             <ResponsiveContainer width="100%" height="100%">
@@ -36,19 +36,19 @@ export function CategoryChart() {
                     <Tooltip
                         contentStyle={{
                             backgroundColor: '#FFFFFF',
-                            border: '2px solid #FFF0E5',
+                            border: '2px solid var(--warm-border-light)',
                             borderRadius: '16px',
                             boxShadow: '0 8px 20px rgba(0,0,0,0.08)',
                             padding: '12px',
-                            color: '#44403C'
+                            color: 'var(--warm-text-primary)'
                         }}
-                        itemStyle={{ color: '#FF8A5B', fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
+                        itemStyle={{ color: 'var(--warm-accent)', fontFamily: 'var(--font-display)', fontWeight: 600 }}
                     />
                     <Legend
                         verticalAlign="bottom"
                         height={36}
                         iconType="circle"
-                        formatter={(value) => <span className="text-[#44403C] font-medium ml-1">{value}</span>}
+                        formatter={(value) => <span className="text-warm-text-primary font-medium ml-1">{value}</span>}
                     />
                 </PieChart>
             </ResponsiveContainer>

@@ -253,11 +253,14 @@ export function VisitorsChart({
                         <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                         <XAxis
                             dataKey="name"
-                            tick={{ fill: '#94a3b8', fontSize: 12 }}
+                            tick={{ fill: '#94a3b8', fontSize: 10 }}
                             axisLine={{ stroke: '#e2e8f0' }}
+                            tickLine={false}
                         />
                         <YAxis
-                            tick={{ fill: '#94a3b8', fontSize: 12 }}
+                            tick={{ fill: '#94a3b8', fontSize: 10 }}
+                            axisLine={false}
+                            tickLine={false}
                             axisLine={{ stroke: '#e2e8f0' }}
                             tickFormatter={(value) => new Intl.NumberFormat('en-US', {
                                 notation: "compact",
@@ -290,12 +293,12 @@ export function VisitorsChart({
                                                             className="w-2 h-2 rounded-full"
                                                             style={{ backgroundColor: color }}
                                                         />
-                                                        <span className="text-xs text-slate-600 font-medium">{key}:</span>
-                                                        <span className="text-sm font-bold text-slate-900">
+                                                        <span className="text-xs text-slate-500">{key}:</span>
+                                                        <span className="text-xs font-medium text-slate-900 ml-auto">
                                                             {new Intl.NumberFormat('en-US').format(value)}
                                                         </span>
                                                         {isSpike && (
-                                                            <span className="bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded-full font-bold ml-1">
+                                                            <span className="bg-red-100 text-red-600 text-[10px] px-1.5 py-0.5 rounded-full font-semibold">
                                                                 Spike
                                                             </span>
                                                         )}
@@ -325,7 +328,7 @@ export function VisitorsChart({
                                         onDrillDown(String(e.value));
                                     }
                                 }}
-                                formatter={(value: any) => <span className="text-slate-600 font-medium text-xs cursor-pointer hover:text-blue-600 hover:underline">{value}</span>}
+                                formatter={(value: any) => <span className="text-xs font-medium text-slate-600 cursor-pointer hover:text-blue-600 hover:underline">{value}</span>}
                             />
                         )}
                         {seriesKeys.map((key) => (
@@ -407,7 +410,7 @@ export function VisitorsChart({
                                     position: 'insideBottomRight',
                                     value: level === 0 ? 'Avg Total' : 'Avg',
                                     fill: '#ef4444',
-                                    fontSize: 12,
+                                    fontSize: 10,
                                     dy: -10
                                 }}
                             />

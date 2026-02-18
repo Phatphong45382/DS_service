@@ -22,16 +22,16 @@ export function RevenueChart({ data }: RevenueChartProps) {
     }));
 
     return (
-        <Card className="bg-white/50 backdrop-blur-sm rounded-[24px] p-8 border border-[#EBE5E0] shadow-[0_4px_16px_rgba(97,78,66,0.03)]">
+        <Card className="bg-white/50 backdrop-blur-sm rounded-[var(--radius-card)] p-8 border border-warm-border shadow-warm-sm">
             <div className="space-y-1 mb-8">
                 <div className="flex items-center justify-between">
                     <div>
-                        <h3 className="text-xl font-bold text-[#44403C] font-poppins">Revenue Trends 📈</h3>
-                        <p className="text-sm text-[#78716C] font-medium mt-1">Showing data for the last 30 days</p>
+                        <h3 className="text-xl font-bold text-warm-text-primary font-poppins">Revenue Trends 📈</h3>
+                        <p className="text-sm text-warm-text-secondary font-medium mt-1">Showing data for the last 30 days</p>
                     </div>
-                    <div className="bg-[#F5EFE9] rounded-xl p-1 flex border border-[#F0E6DD]">
-                        <button className="bg-[#FF8A5B] text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-sm">Monthly</button>
-                        <button className="text-[#78716C] text-xs font-medium px-3 py-1.5 hover:text-[#FF8A5B]">Yearly</button>
+                    <div className="bg-warm-bg-subtle rounded-xl p-1 flex border border-warm-bg-hover">
+                        <button className="bg-warm-accent text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-enterprise-sm">Monthly</button>
+                        <button className="text-warm-text-secondary text-xs font-medium px-3 py-1.5 hover:text-warm-accent">Yearly</button>
                     </div>
                 </div>
             </div>
@@ -44,37 +44,37 @@ export function RevenueChart({ data }: RevenueChartProps) {
                             <stop offset="95%" stopColor="#FF8A5B" stopOpacity={0} />
                         </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#F0E6DD" vertical={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--warm-bg-hover)" vertical={false} />
                     <XAxis
                         dataKey="date"
-                        stroke="#A8A29E"
+                        stroke="var(--warm-text-muted)"
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
                         dy={10}
-                        fontFamily="Poppins, sans-serif"
+                        fontFamily="var(--font-display)"
                         fontWeight={500}
                     />
                     <YAxis
-                        stroke="#A8A29E"
+                        stroke="var(--warm-text-muted)"
                         fontSize={12}
                         tickLine={false}
                         axisLine={false}
                         tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                        fontFamily="Poppins, sans-serif"
+                        fontFamily="var(--font-display)"
                         fontWeight={500}
                     />
                     <Tooltip
                         contentStyle={{
-                            backgroundColor: '#FCFBF9',
-                            border: '1px solid #EBE5E0',
+                            backgroundColor: 'var(--warm-bg-card)',
+                            border: '1px solid var(--warm-border)',
                             borderRadius: '16px',
-                            boxShadow: '0 8px 24px rgba(97,78,66,0.08)',
+                            boxShadow: '0 8px 24px var(--warm-shadow-hover)',
                             padding: '12px'
                         }}
-                        labelStyle={{ color: '#44403C', fontWeight: 700, fontFamily: 'Poppins, sans-serif', marginBottom: '4px' }}
-                        itemStyle={{ color: '#FF8A5B', fontFamily: 'Poppins, sans-serif', fontWeight: 600 }}
-                        cursor={{ stroke: '#FF8A5B', strokeWidth: 2, strokeDasharray: '4 4' }}
+                        labelStyle={{ color: 'var(--warm-text-primary)', fontWeight: 700, fontFamily: 'var(--font-display)', marginBottom: '4px' }}
+                        itemStyle={{ color: 'var(--warm-accent)', fontFamily: 'var(--font-display)', fontWeight: 600 }}
+                        cursor={{ stroke: 'var(--warm-accent)', strokeWidth: 2, strokeDasharray: '4 4' }}
                         formatter={(value: number | undefined) => {
                             if (value === undefined) return ['', 'Revenue'];
                             return [

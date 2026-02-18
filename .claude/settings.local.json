@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd /c \"dir C:\\\\work\\\\pre_sale\\\\DS_service\\\\Malee /b\")",
+      "Bash(powershell -Command:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)",
+      "Bash(npm run build:*)",
+      "Bash(npx tsc:*)",
+      "Bash(python3 .agent/skills/ui-ux-pro-max/scripts/search.py:*)"
+    ]
+  }
+}

@@ -142,10 +142,10 @@ export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
             <CardHeader className="pb-4 shrink-0">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
-                        <CardTitle className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                        <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
                             Seasonal Heatmap (Within-Year Index)
                         </CardTitle>
-                        <CardDescription>
+                        <CardDescription className="text-xs text-slate-500">
                             % Deviation from each year's average (Baseline = 0%)
                         </CardDescription>
                     </div>
@@ -162,7 +162,7 @@ export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
                             {/* Header Row */}
                             <div className="h-8"></div> {/* Spacer for Year Column */}
                             {MONTHS.map(m => (
-                                <div key={m} className="flex items-center justify-center text-[10px] uppercase tracking-wider font-bold text-slate-500 mb-2">
+                                <div key={m} className="flex items-center justify-center text-[10px] uppercase tracking-wider font-semibold text-slate-500 mb-2">
                                     {m}
                                 </div>
                             ))}
@@ -170,7 +170,7 @@ export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
                             {/* Data Rows */}
                             {years.filter(year => yearlyAverages.has(year) && yearlyAverages.get(year)! > 0).map(year => (
                                 <div key={year} className="contents transition-opacity duration-300">
-                                    <div className="flex items-center justify-start font-bold text-slate-700 text-sm pr-4">
+                                    <div className="flex items-center justify-start font-semibold text-slate-700 text-sm pr-4">
                                         {year}
                                     </div>
                                     {MONTHS.map((_, mIndex) => {
@@ -184,7 +184,7 @@ export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
                                             <div
                                                 key={`${year}-${mIndex}`}
                                                 className={`
-                                                    relative h-12 lg:h-14 rounded-lg flex items-center justify-center text-[11px] font-bold 
+                                                    relative h-8 lg:h-9 rounded-md flex items-center justify-center text-[11px] font-bold
                                                     transition-all duration-200 border border-transparent
                                                     ${colorClass}
                                                     ${hasData ? 'hover:scale-110 hover:shadow-lg hover:z-10 hover:border-white/50 cursor-help' : ''}
@@ -208,9 +208,9 @@ export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
                                             >
                                                 {/* Tooltip content if not using title */}
                                                 {hasData ? (
-                                                    <span className="drop-shadow-sm pointer-events-none">{getDeviationText(val, yearAvg)}</span>
+                                                    <span className="text-[11px] font-semibold drop-shadow-sm pointer-events-none">{getDeviationText(val, yearAvg)}</span>
                                                 ) : (
-                                                    <span className="text-[10px] font-normal opacity-50 pointer-events-none">-</span>
+                                                    <span className="text-[10px] opacity-50 pointer-events-none">-</span>
                                                 )}
                                             </div>
                                         );
@@ -223,7 +223,7 @@ export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
 
                 {/* Legend - Fixed at bottom */}
                 <div className="mt-6 flex items-center justify-end gap-3 text-xs text-slate-500 shrink-0">
-                    <span className="font-medium text-slate-400 text-[10px] uppercase tracking-wide mr-2">0% = Yearly Avg</span>
+                    <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wide mr-2">0% = Yearly Avg</span>
                     <div className="flex items-center gap-2 bg-slate-50 px-3 py-1.5 rounded-full border border-slate-100">
                         <span className="text-[10px] font-medium text-red-700">Below</span>
                         <div className="flex gap-0.5">
@@ -248,14 +248,14 @@ export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
                         transform: 'translate(-50%, -100%)'
                     }}
                 >
-                    <div className="text-sm font-bold text-slate-800 mb-1">
+                    <div className="text-sm font-semibold text-slate-900 mb-1">
                         {hoveredCell.month} {hoveredCell.year}
                     </div>
                     <div className="flex flex-col gap-1 text-xs">
                         <div className="flex items-center gap-2">
                             <div className="w-2 h-2 rounded-full bg-blue-500"></div>
                             <span className="text-slate-500">Actual Sales:</span>
-                            <span className="font-bold text-slate-800 ml-auto">
+                            <span className="font-medium text-slate-900 ml-auto">
                                 {new Intl.NumberFormat('en-US').format(hoveredCell.value)}
                             </span>
                         </div>
@@ -268,7 +268,7 @@ export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
                         </div>
                         <div className="pt-1 mt-1 border-t border-slate-100 flex items-center gap-2">
                             <span className="text-slate-500">Deviation:</span>
-                            <span className={`font-bold ml-auto ${getDeviationText(hoveredCell.value, hoveredCell.yearAvg).includes('+') ? 'text-green-600' : 'text-red-600'}`}>
+                            <span className={`font-semibold ml-auto ${getDeviationText(hoveredCell.value, hoveredCell.yearAvg).includes('+') ? 'text-green-600' : 'text-red-600'}`}>
                                 {getDeviationText(hoveredCell.value, hoveredCell.yearAvg)}
                             </span>
                         </div>

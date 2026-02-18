@@ -1,0 +1,20 @@
+date,holiday_name,holiday_type,impact_flag,description
+2023-01-01,New Year Day,National Holiday,1,Official public holiday
+2023-01-21,Makha Bucha,Religious Holiday,1,Buddhist holiday - reduced trading
+2023-02-12,Chinese New Year,Cultural Festival,1,Peak shopping period - promotional boost
+2023-02-14,Valentine Day,Commercial Holiday,1,Gift-giving occasion
+2023-04-06,Chakri Memorial Day,National Holiday,1,Official public holiday
+2023-04-13,Songkran Festival,Cultural Festival,1,Thai New Year celebration - high demand
+2023-05-01,Labor Day,National Holiday,1,Official public holiday
+2023-05-22,Visakha Bucha,Religious Holiday,1,Buddhist holiday
+2023-07-20,Asahna Bucha,Religious Holiday,1,Buddhist holiday
+2023-07-28,King's Birthday,National Holiday,1,Official public holiday
+2023-08-12,Queen Mother Birthday,National Holiday,1,Official public holiday
+2023-10-13,King Bhumibol Memorial Day,National Holiday,1,Official public holiday
+2023-10-14,King Mongkut Memorial Day,National Holiday,1,Official public holiday
+2023-10-23,Chulalongkorn Memorial Day,National Holiday,1,Official public holiday
+2023-11-22,Loy Krathong,Cultural Festival,0,Festival - moderate impact
+2023-12-05,King's Birthday (Bhumibol),National Holiday,1,Official public holiday
+2023-12-10,Constitution Day,National Holiday,1,Official public holiday
+2023-12-25,Christmas,Commercial Holiday,0,Western holiday - lower impact in Thailand
+2023-12-31,New Year Eve,Commercial Holiday,1,Year-end promotional period

@@ -67,7 +67,7 @@ export function FilterBar({ className }: { className?: string }) {
         const link = document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.href = url;
-        link.setAttribute('download', `Malee_Sales_Data_${filters.date_range.start}_to_${filters.date_range.end}.csv`);
+        link.setAttribute('download', `Sales_Forecast_Data_${filters.date_range.start}_to_${filters.date_range.end}.csv`);
         link.style.visibility = 'hidden';
         document.body.appendChild(link);
         link.click();

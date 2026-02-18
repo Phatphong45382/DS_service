@@ -7,9 +7,9 @@ import { HorizontalKPICard } from "@/components/analytics/horizontal-kpi-card";
 import { VisitorsChart } from "@/components/analytics/visitors-chart";
 import { BrowserStats } from "@/components/analytics/browser-stats";
 import { MiniMetricCard } from "@/components/analytics/mini-metric-card";
-import { ThailandDistributionMap } from "@/components/analytics/thailand-map";
 import { SeasonalHeatmap } from "@/components/analytics/seasonal-heatmap";
-import { PromotionImpactChart } from '@/components/analytics/promotion-impact-chart';
+import { ActualVsPlanChart } from "@/components/analytics/actual-vs-plan-chart";
+import { PromotionImpactChart } from "@/components/analytics/promotion-impact-chart";
 import { FilterBar } from '@/components/dashboard/filter-bar';
 import { FilterDrawer } from '@/components/dashboard/filter-drawer';
 import { Package, Target, Activity, TrendingUp, ArrowDownCircle, ArrowUpCircle } from "lucide-react";
@@ -305,14 +305,14 @@ export default function AnalyticsDashboardPage() {
 
                 {/* Bottom Section - 50/50 Split */}
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[350px]">
-                    {/* Left Column: Thailand Map */}
+                    {/* Left Column: Actual vs Plan */}
                     <div className="min-h-0 h-full">
-                        <ThailandDistributionMap />
+                        <ActualVsPlanChart globalFilters={filters} />
                     </div>
 
-                    {/* Right Column: Promotion Impact Chart */}
+                    {/* Right Column: Promotion Impact */}
                     <div className="min-h-0 h-full">
-                        <PromotionImpactChart />
+                        <PromotionImpactChart globalFilters={filters} />
                     </div>
                 </div>
             </div>

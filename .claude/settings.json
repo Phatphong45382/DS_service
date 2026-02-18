@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cmd /c \"if exist c:\\\\work\\\\pre_sale\\\\DS_service\\\\Malee\\\\malee-sales-app\\\\.next\\\\dev\\\\lock \\(echo EXISTS\\) else \\(echo NOT FOUND\\)\")"
+    ]
+  }
+}

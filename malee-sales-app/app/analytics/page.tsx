@@ -39,8 +39,8 @@ export default function AnalyticsPage() {
                 </motion.div>
 
                 {/* Placeholder for future advanced analytics */}
-                <motion.div variants={item} className="p-8 bg-[#FFF5F0] rounded-[24px] border border-dashed border-[#FFCC80] text-center">
-                    <p className="text-[#FF8A5B] font-medium">More analytics widgets coming soon...</p>
+                <motion.div variants={item} className="p-8 bg-blue-50 rounded-2xl border border-dashed border-blue-200 text-center">
+                    <p className="text-blue-600 font-medium">More analytics widgets coming soon...</p>
                 </motion.div>
             </motion.div>
         </MainLayout>

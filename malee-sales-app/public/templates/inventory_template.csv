@@ -1,0 +1,10 @@
+date,sku,channel,beginning_stock,sales_qty,ending_stock,oos_flag,stock_level_days
+2023-01-01,Coconut 350ml,7-Eleven,500,150,350,0,12
+2023-01-01,Orange Juice 1L,7-Eleven,300,80,220,0,8
+2023-01-02,Coconut 350ml,7-Eleven,350,145,205,0,6
+2023-01-02,Orange Juice 1L,7-Eleven,220,90,130,0,4
+2023-01-03,Coconut 350ml,Lotus,600,120,480,0,14
+2023-01-03,Coconut 350ml,Makro,1000,200,800,0,16
+2023-01-04,Orange Juice 1L,Lotus,400,110,290,0,10
+2023-01-05,Coconut 350ml,Online,250,60,190,0,9
+2023-01-05,Mixed Berry 350ml,7-Eleven,400,75,325,0,11

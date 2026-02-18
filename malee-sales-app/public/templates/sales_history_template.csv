@@ -1,0 +1,9 @@
+date,sku,channel,sales_qty,actual_sale,planed_sales_from_start,has_promotion,discount_pct,promo_days
+2023-01-01,Coconut 350ml,7-Eleven,150,145000,160000,0,0,0
+2023-01-01,Orange Juice 1L,7-Eleven,80,95000,90000,1,10,7
+2023-01-01,Coconut 350ml,Lotus,120,115000,120000,0,0,0
+2023-01-02,Coconut 350ml,7-Eleven,145,140000,160000,0,0,0
+2023-01-02,Orange Juice 1L,BigC,90,110000,100000,0,0,0
+2023-01-03,Coconut 350ml,Makro,200,190000,180000,1,5,3
+2023-01-04,Orange Juice 1L,7-Eleven,85,98000,95000,0,0,0
+2023-01-05,Coconut 350ml,Online,60,55000,50000,1,15,5

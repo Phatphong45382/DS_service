@@ -1,4 +1,4 @@
-// Type definitions for Malee Sales Analytics
+// Type definitions for Sales Forecast Analytics
 
 export interface SalesData {
     date: string;

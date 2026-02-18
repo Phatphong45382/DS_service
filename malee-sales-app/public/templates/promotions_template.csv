@@ -1,0 +1,8 @@
+sku,channel,start_date,end_date,discount_pct,promo_type,promo_name,description
+Coconut 350ml,7-Eleven,2023-02-01,2023-02-14,15,Discount,Valentine Sale,Special discount for Valentine period
+Orange Juice 1L,All,2023-02-01,2023-02-28,10,Discount,Chinese New Year,CNY promotional offer
+Coconut 1000ml,Lotus,2023-04-01,2023-04-30,20,Bundle,Songkran Festival,Family size bundle promotion
+Mixed Berry 350ml,All,2023-06-01,2023-06-30,12,Discount,Mid-Year Sale,Mid-year clearance promotion
+Coconut 350ml,Online,2023-09-01,2023-09-30,25,Flash Sale,9.9 Mega Sale,Online exclusive flash sale
+Orange Juice 1L,All,2023-11-11,2023-11-30,18,Discount,11.11 Online Festival,E-commerce festival promotion
+Coconut 350ml,All,2023-12-01,2023-12-31,30,Discount,Year-End Sale,End of year clearance

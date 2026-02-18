@@ -22,8 +22,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Malee Sales Analytics",
-  description: "ระบบวิเคราะห์ยอดขาย Malee - Dashboard และรายงานข้อมูลการขาย",
+  title: "Sales Forecast Analytics",
+  description: "Demand forecasting and sales analytics dashboard with ML-powered predictions",
 };
 
 export default function RootLayout({
