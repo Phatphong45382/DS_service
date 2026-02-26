@@ -7,7 +7,8 @@
       "Bash(ls:*)",
       "Bash(npm run build:*)",
       "Bash(npx tsc:*)",
-      "Bash(python3 .agent/skills/ui-ux-pro-max/scripts/search.py:*)"
+      "Bash(python3 .agent/skills/ui-ux-pro-max/scripts/search.py:*)",
+      "Bash(npx next build:*)"
     ]
   }
 }
