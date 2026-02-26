@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(cmd /c \"if exist c:\\\\work\\\\pre_sale\\\\DS_service\\\\Malee\\\\malee-sales-app\\\\.next\\\\dev\\\\lock \\(echo EXISTS\\) else \\(echo NOT FOUND\\)\")"
+      "Bash(cmd /c \"if exist c:\\\\work\\\\pre_sale\\\\DS_service\\\\Malee\\\\malee-sales-app\\\\.next\\\\dev\\\\lock \\(echo EXISTS\\) else \\(echo NOT FOUND\\)\")",
+      "Bash(for f in components/ai-performance/*.tsx components/case-management/*.tsx)",
+      "Bash(do sed -i 's/export default function /export function /g' \"$f\")"
     ]
   }
 }

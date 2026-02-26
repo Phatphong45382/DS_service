@@ -13,11 +13,14 @@ import {
 import { getAnalyticsData } from "@/lib/api-client";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { InterpretPanel } from './interpret-panel';
 
 const AVAILABLE_YEARS = [2023, 2024];
 
 interface PromotionImpactChartProps {
     globalFilters?: any;
+    showInterpret?: boolean;
 }
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -57,7 +60,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     );
 };
 
-export function PromotionImpactChart({ globalFilters }: PromotionImpactChartProps) {
+export function PromotionImpactChart({ globalFilters, showInterpret }: PromotionImpactChartProps) {
     const [loading, setLoading] = useState(false);
     const [promoTs, setPromoTs] = useState<any[]>([]);
     const [regularTs, setRegularTs] = useState<any[]>([]);
@@ -140,69 +143,70 @@ export function PromotionImpactChart({ globalFilters }: PromotionImpactChartProp
     }, [promoTs, regularTs, selectedYear]);
 
     return (
-        <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 h-full flex flex-col">
-            <div className="flex items-center justify-between mb-2 shrink-0">
-                <div>
-                    <h3 className="text-base font-semibold text-slate-900">Promotion Impact</h3>
-                    <p className="text-xs text-slate-500 mt-0.5">Monthly sales vs. promotion periods</p>
-                </div>
-                <div className="flex items-center gap-3">
-                    {loading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
-                    <div className="flex items-center gap-4 text-xs">
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded bg-green-500" />
-                            <span className="font-medium text-slate-600">Promotion</span>
+        <Card className="h-full flex flex-col shadow-sm border-slate-200">
+            <CardHeader className="pb-2 shrink-0">
+                <div className="flex items-center justify-between">
+                    <div>
+                        <CardTitle className="text-base font-semibold text-slate-900">Promotion Impact</CardTitle>
+                        <CardDescription className="text-xs text-slate-500">Monthly sales vs. promotion periods</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-3">
+                        {loading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
+                        <div className="flex items-center gap-4 text-xs">
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded bg-green-500" />
+                                <span className="font-medium text-slate-600">Promotion</span>
+                            </div>
+                            <div className="flex items-center gap-1.5">
+                                <div className="w-3 h-3 rounded bg-slate-300" />
+                                <span className="font-medium text-slate-600">Regular</span>
+                            </div>
                         </div>
-                        <div className="flex items-center gap-1.5">
-                            <div className="w-3 h-3 rounded bg-slate-300" />
-                            <span className="font-medium text-slate-600">Regular</span>
+                        {/* Year Selector */}
+                        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
+                            {AVAILABLE_YEARS.map(year => (
+                                <Button
+                                    key={year}
+                                    variant={selectedYear === year ? "secondary" : "ghost"}
+                                    size="sm"
+                                    className={`h-6 text-xs px-2 ${selectedYear === year ? 'bg-white shadow-sm' : ''}`}
+                                    onClick={() => setSelectedYear(year)}
+                                >
+                                    {year}
+                                </Button>
+                            ))}
                         </div>
                     </div>
-                    {/* Year Selector */}
-                    <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-1">
-                        {AVAILABLE_YEARS.map(year => (
-                            <Button
-                                key={year}
-                                variant={selectedYear === year ? "secondary" : "ghost"}
-                                size="sm"
-                                className={`h-6 text-xs px-2 ${selectedYear === year ? 'bg-white shadow-sm' : ''}`}
-                                onClick={() => setSelectedYear(year)}
-                            >
-                                {year}
-                            </Button>
-                        ))}
-                    </div>
                 </div>
-            </div>
-
-            <div className="flex-1 min-h-0 w-full">
-                {chartData.length === 0 && !loading ? (
-                    <div className="h-full flex items-center justify-center text-slate-400 text-sm">
-                        No data available
-                    </div>
-                ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }} barCategoryGap="30%">
-                            <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
-                            <XAxis
-                                dataKey="month"
-                                tick={{ fontSize: 10, fill: '#94a3b8' }}
-                                axisLine={{ stroke: '#e2e8f0' }}
-                                tickLine={false}
-                            />
-                            <YAxis
-                                tick={{ fontSize: 10, fill: '#94a3b8' }}
-                                axisLine={false}
-                                tickLine={false}
-                                tickFormatter={(v) => new Intl.NumberFormat('en-US', { notation: 'compact' }).format(v)}
-                            />
-                            <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-                            <Bar dataKey="promotion" name="Promotion" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={22} />
-                            <Bar dataKey="regular" name="Regular" fill="#cbd5e1" radius={[4, 4, 0, 0]} maxBarSize={22} />
-                        </BarChart>
-                    </ResponsiveContainer>
+            </CardHeader>
+            <CardContent className="flex-1 pt-0 pb-0 flex flex-col">
+                <div className="h-[240px] px-2">
+                    {chartData.length === 0 && !loading ? (
+                        <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+                            No data available
+                        </div>
+                    ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }} barCategoryGap="30%">
+                                <CartesianGrid stroke="#f1f5f9" strokeDasharray="3 3" vertical={false} />
+                                <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={{ stroke: '#e2e8f0' }} tickLine={false} />
+                                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => new Intl.NumberFormat('en-US', { notation: 'compact' }).format(v)} />
+                                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+                                <Bar dataKey="promotion" name="Promotion" fill="#22c55e" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                                <Bar dataKey="regular" name="Regular" fill="#cbd5e1" radius={[4, 4, 0, 0]} maxBarSize={22} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    )}
+                </div>
+                <div className="flex-1" />
+                {showInterpret && (
+                    <InterpretPanel insights={[
+                        { emoji: '📈', text: 'Promo-heavy months = high price sensitivity' },
+                        { emoji: '⚠️', text: '>60% promo share = margin risk' },
+                        { emoji: '💡', text: 'Grow regular baseline to reduce promo reliance' },
+                    ]} />
                 )}
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 }

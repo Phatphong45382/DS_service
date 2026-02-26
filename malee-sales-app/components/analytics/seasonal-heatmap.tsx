@@ -5,14 +5,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getAnalyticsData, getAnalyticsFilters } from "@/lib/api-client";
 import { Loader2 } from "lucide-react";
+import { InterpretPanel } from './interpret-panel';
 
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
 interface SeasonalHeatmapProps {
     globalFilters?: any;
+    showInterpret?: boolean;
 }
 
-export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
+export function SeasonalHeatmap({ globalFilters, showInterpret }: SeasonalHeatmapProps) {
     const [loading, setLoading] = useState(false);
     const [heatmapData, setHeatmapData] = useState<Map<string, number>>(new Map());
     const [yearlyAverages, setYearlyAverages] = useState<Map<number, number>>(new Map());
@@ -138,7 +140,7 @@ export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
     } | null>(null);
 
     return (
-        <Card className="col-span-1 shadow-sm border-slate-200 h-full flex flex-col relative">
+        <Card className="col-span-1 shadow-sm border-slate-200 flex flex-col relative">
             <CardHeader className="pb-4 shrink-0">
                 <div className="flex flex-col md:flex-row items-center justify-between gap-4">
                     <div>
@@ -154,7 +156,7 @@ export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="h-full flex flex-col justify-between relative" onMouseLeave={() => setHoveredCell(null)}>
+            <CardContent className="flex flex-col justify-between relative" onMouseLeave={() => setHoveredCell(null)}>
                 {/* Main Grid Container - Flex Grow to fill space */}
                 <div className="flex-1 w-full min-h-0 flex flex-col justify-center">
                     <div className="w-full relative">
@@ -274,6 +276,14 @@ export function SeasonalHeatmap({ globalFilters }: SeasonalHeatmapProps) {
                         </div>
                     </div>
                 </div>
+            )}
+            {showInterpret && (
+                <InterpretPanel insights={[
+                    { emoji: '🍑', text: 'Dec and Nov are the highest-index months — Q4 is peak season, so build stock by October.' },
+                    { emoji: '📉', text: 'Jun and Jul are consistently weak — consider off-season promotions to lift demand.' },
+                    { emoji: '📅', text: '2024 shows higher values vs 2023 across most months, confirming year-over-year growth.' },
+                    { emoji: '🎯', text: 'Run Q1 promotions (Jan–Mar) to smooth the demand dip after the December peak.' },
+                ]} />
             )}
         </Card>
     );

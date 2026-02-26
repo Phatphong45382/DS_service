@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="th">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DS Service Platform — Core Workflow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #030712;
+            --step1-color: #f43f5e;
+            --step2-color: #3b82f6;
+            --step3-color: #8b5cf6;
+            --step4-color: #10b981;
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+        }
+
+        @keyframes flow {
+            to {
+                stroke-dashoffset: -20;
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 80% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 40px;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            width: 100%;
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 900;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #60a5fa 0%, #c084fc 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 16px;
+            color: var(--text-dim);
+            margin-bottom: 80px;
+            font-weight: 400;
+        }
+
+        /* ========== FLOW CONTAINER ========== */
+        .flow-container {
+            display: flex;
+            align-items: stretch;
+            justify-content: space-between;
+            gap: 0;
+            position: relative;
+        }
+
+        /* BOX STYLES */
+        .box {
+            flex: 1;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 40px 24px;
+            position: relative;
+            transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 2;
+        }
+
+        .box::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 24px;
+            padding: 1px;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.1), transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .box:hover {
+            transform: translateY(-12px) scale(1.02);
+            background: rgba(30, 41, 59, 0.8);
+            border-color: var(--step-color);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5), 0 0 20px -5px var(--step-color);
+        }
+
+        .en-header {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--step-color);
+            opacity: 0.8;
+            margin-bottom: 20px;
+        }
+
+        .icon-wrapper {
+            width: 72px;
+            height: 72px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 24px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            position: relative;
+        }
+
+        .icon-wrapper::after {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 24px;
+            background: var(--step-color);
+            opacity: 0.1;
+            filter: blur(10px);
+        }
+
+        .box h2 {
+            font-size: 20px;
+            margin-bottom: 12px;
+            font-weight: 700;
+            color: #fff;
+        }
+
+        .box p {
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        /* Color Themes */
+        .box.step-1 {
+            --step-color: var(--step1-color);
+        }
+
+        .box.step-2 {
+            --step-color: var(--step2-color);
+        }
+
+        .box.step-3 {
+            --step-color: var(--step3-color);
+        }
+
+        .box.step-4 {
+            --step-color: var(--step4-color);
+        }
+
+        /* ARROW CONNECTORS */
+        .connector {
+            flex: 0 0 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+
+        .connector svg {
+            width: 100%;
+            overflow: visible;
+        }
+
+        .connector path {
+            fill: none;
+            stroke: rgba(255, 255, 255, 0.1);
+            stroke-width: 2;
+            stroke-dasharray: 4, 6;
+            animation: flow 1s linear infinite;
+        }
+
+        /* Tech Badges */
+        .badges {
+            margin-top: auto;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .badge {
+            font-size: 10px;
+            font-weight: 600;
+            color: var(--text-dim);
+            background: rgba(255, 255, 255, 0.05);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>DS Service Platform</h1>
+        <p class="subtitle">ระบบนิเวศข้อมูลที่เชื่อมโยงทุกขั้นตอนการทำงานให้เป็นหนึ่งเดียว</p>
+
+        <div class="flow-container">
+
+            <!-- Step 1 -->
+            <div class="box step-1">
+                <span class="en-header">Data Preparation</span>
+                <div class="icon-wrapper">📁</div>
+                <h2>เตรียมข้อมูล</h2>
+                <p>นำข้อมูลเข้าสู่ระบบ<br>ระบบจัดการและเตรียมข้อมูล<br>ให้มีความถูกต้องพร้อมใช้งาน</p>
+                <div class="badges">
+                    <span class="badge">CSV / Excel</span>
+                    <span class="badge">Data Connect</span>
+                </div>
+            </div>
+
+            <div class="connector">
+                <svg viewBox="0 0 60 20">
+                    <path d="M0 10 L60 10" />
+                </svg>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="box step-2">
+                <span class="en-header">Web Interface</span>
+                <div class="icon-wrapper">🖥️</div>
+                <h2>จัดการผ่านเว็บ</h2>
+                <p>ส่วนควบคุมและคัดกรอง<br>ส่งต่อคำสั่งประมวลผล<br>บนแพลตฟอร์มที่ใช้งานง่าย</p>
+                <div class="badges">
+                    <span class="badge">Next.js UI</span>
+                    <span class="badge">Control Center</span>
+                </div>
+            </div>
+
+            <div class="connector">
+                <svg viewBox="0 0 60 20">
+                    <path d="M0 10 L60 10" />
+                </svg>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="box step-3">
+                <span class="en-header">AI Predictive</span>
+                <div class="icon-wrapper">⚙️</div>
+                <h2>วิเคราะห์และพยากรณ์</h2>
+                <p>หัวใจหลักของการคำนวณ<br>วิเคราะห์แพทเทิร์นที่สำคัญ<br>ผ่านขุมพลัง Dataiku</p>
+                <div class="badges">
+                    <span class="badge">ML Modeling</span>
+                    <span class="badge">Dataiku DSS</span>
+                </div>
+            </div>
+
+            <div class="connector">
+                <svg viewBox="0 0 60 20">
+                    <path d="M0 10 L60 10" />
+                </svg>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="box step-4">
+                <span class="en-header">Analytics & Reporting</span>
+                <div class="icon-wrapper">📊</div>
+                <h2>ดูผลและรายงาน</h2>
+                <p>แดชบอร์ดสรุปผลลัพธ์เชิงสถิติ<br>เปลี่ยนตัวเลขเป็นกลยุทธ์<br>ที่นำไปใช้วางแผนงานได้ทันที</p>
+                <div class="badges">
+                    <span class="badge">Analytics View</span>
+                    <span class="badge">Simulations</span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+
+</html>

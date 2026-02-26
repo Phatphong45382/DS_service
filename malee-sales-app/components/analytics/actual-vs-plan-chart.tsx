@@ -6,11 +6,13 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Responsive
 import { getDeepDiveAnalytics } from "@/lib/api-client";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { InterpretPanel } from './interpret-panel';
 
 const AVAILABLE_YEARS = [2023, 2024];
 
 interface ActualVsPlanChartProps {
     globalFilters?: any;
+    showInterpret?: boolean;
 }
 
 const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
@@ -46,7 +48,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
     );
 };
 
-export function ActualVsPlanChart({ globalFilters }: ActualVsPlanChartProps) {
+export function ActualVsPlanChart({ globalFilters, showInterpret }: ActualVsPlanChartProps) {
     const [loading, setLoading] = useState(false);
     const [salesTrend, setSalesTrend] = useState<any[]>([]);
     const [selectedYear, setSelectedYear] = useState<number>(() => {
@@ -165,32 +167,32 @@ export function ActualVsPlanChart({ globalFilters }: ActualVsPlanChartProps) {
                     </div>
                 </div>
             </CardHeader>
-            <CardContent className="flex-1 min-h-0 pt-0">
-                {chartData.length === 0 && !loading ? (
-                    <div className="h-full flex items-center justify-center text-slate-400 text-sm">
-                        No data available
-                    </div>
-                ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }} barCategoryGap="30%">
-                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
-                            <XAxis
-                                dataKey="month"
-                                tick={{ fontSize: 10, fill: '#94a3b8' }}
-                                axisLine={{ stroke: '#e2e8f0' }}
-                                tickLine={false}
-                            />
-                            <YAxis
-                                tick={{ fontSize: 10, fill: '#94a3b8' }}
-                                axisLine={false}
-                                tickLine={false}
-                                tickFormatter={(v) => new Intl.NumberFormat('en-US', { notation: 'compact' }).format(v)}
-                            />
-                            <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
-                            <Bar dataKey="actual" name="Actual" fill="#3b82f6" radius={[3, 3, 0, 0]} maxBarSize={22} />
-                            <Bar dataKey="planned" name="Planned" fill="#cbd5e1" radius={[3, 3, 0, 0]} maxBarSize={22} />
-                        </BarChart>
-                    </ResponsiveContainer>
+            <CardContent className="flex-1 pt-0 pb-0 flex flex-col">
+                <div className="h-[240px]">
+                    {chartData.length === 0 && !loading ? (
+                        <div className="h-full flex items-center justify-center text-slate-400 text-sm">
+                            No data available
+                        </div>
+                    ) : (
+                        <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chartData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }} barCategoryGap="30%">
+                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                                <XAxis dataKey="month" tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={{ stroke: '#e2e8f0' }} tickLine={false} />
+                                <YAxis tick={{ fontSize: 10, fill: '#94a3b8' }} axisLine={false} tickLine={false} tickFormatter={(v) => new Intl.NumberFormat('en-US', { notation: 'compact' }).format(v)} />
+                                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#f8fafc' }} />
+                                <Bar dataKey="actual" name="Actual" fill="#3b82f6" radius={[3, 3, 0, 0]} maxBarSize={22} />
+                                <Bar dataKey="planned" name="Planned" fill="#cbd5e1" radius={[3, 3, 0, 0]} maxBarSize={22} />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    )}
+                </div>
+                <div className="flex-1" />
+                {showInterpret && (
+                    <InterpretPanel insights={[
+                        { emoji: '📊', text: 'Actual > Plan = execution success' },
+                        { emoji: '📉', text: 'Actual < Plan = demand shortfall or over-planning' },
+                        { emoji: '⚙️', text: 'Consistent over-achievement — raise future targets' },
+                    ]} />
                 )}
             </CardContent>
         </Card>

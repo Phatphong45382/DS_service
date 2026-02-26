@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Malee Platform — Customer Journey Flow</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #0f172a;
+            color: #fff;
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+
+        /* ========== Header ========== */
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+        }
+        .header h1 {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #a78bfa, #60a5fa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 8px;
+        }
+        .header p {
+            font-size: 16px;
+            color: #94a3b8;
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.6;
+        }
+
+        /* ========== Journey Container ========== */
+        .journeys {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 48px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .journey {
+            position: relative;
+        }
+
+        /* ========== Journey Header ========== */
+        .journey-header {
+            text-align: center;
+            margin-bottom: 32px;
+            padding: 20px 24px;
+            border-radius: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        .journey-header::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            padding: 2px;
+            background: var(--accent-gradient);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+        }
+        .journey-header .icon {
+            font-size: 40px;
+            margin-bottom: 8px;
+        }
+        .journey-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        .journey-header .role {
+            font-size: 13px;
+            color: #94a3b8;
+        }
+
+        /* Purple theme */
+        .journey.type-a { --accent: #8b5cf6; --accent-light: #c4b5fd; --accent-gradient: linear-gradient(135deg, #8b5cf6, #a78bfa); --glow: rgba(139, 92, 246, 0.15); }
+        /* Blue theme */
+        .journey.type-b { --accent: #3b82f6; --accent-light: #93c5fd; --accent-gradient: linear-gradient(135deg, #3b82f6, #60a5fa); --glow: rgba(59, 130, 246, 0.15); }
+
+        .journey-header h2 { color: var(--accent-light); }
+
+        /* ========== Steps ========== */
+        .steps {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0;
+        }
+
+        .step-card {
+            width: 100%;
+            max-width: 380px;
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(148, 163, 184, 0.1);
+            border-left: 4px solid var(--accent);
+            border-radius: 12px;
+            padding: 18px 20px;
+            position: relative;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 20px var(--glow);
+        }
+        .step-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 30px var(--glow), 0 8px 25px rgba(0,0,0,0.3);
+            border-left-color: var(--accent-light);
+        }
+
+        .step-card.action {
+            border-left-color: #22c55e;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.15);
+            background: rgba(34, 197, 94, 0.08);
+        }
+        .step-card.action:hover {
+            box-shadow: 0 0 30px rgba(34, 197, 94, 0.25);
+        }
+
+        .step-top {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 6px;
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+        .step-card.action .step-number {
+            background: #22c55e;
+        }
+
+        .step-icon {
+            font-size: 20px;
+            flex-shrink: 0;
+        }
+
+        .step-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: #f1f5f9;
+        }
+
+        .step-subtitle {
+            font-size: 12px;
+            color: #94a3b8;
+            margin-left: 40px;
+            line-height: 1.5;
+        }
+
+        /* ========== Arrow ========== */
+        .arrow {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 36px;
+            justify-content: center;
+        }
+        .arrow svg {
+            width: 20px;
+            height: 36px;
+            opacity: 0.4;
+        }
+        .arrow svg line, .arrow svg polygon {
+            stroke: var(--accent-light);
+            fill: var(--accent-light);
+        }
+
+        /* ========== Footer ========== */
+        .footer {
+            text-align: center;
+            margin-top: 56px;
+            padding: 24px;
+        }
+        .footer .tip {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            padding: 16px 32px;
+            font-size: 14px;
+            color: #94a3b8;
+            line-height: 1.6;
+        }
+        .footer .tip strong {
+            color: #60a5fa;
+        }
+
+        /* ========== Comparison Table ========== */
+        .comparison {
+            max-width: 1100px;
+            margin: 56px auto 0;
+        }
+        .comparison h3 {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 24px;
+        }
+        .comparison table {
+            width: 100%;
+            border-collapse: collapse;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .comparison thead th {
+            background: rgba(30, 41, 59, 0.9);
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 13px;
+            font-weight: 600;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.1);
+        }
+        .comparison tbody td {
+            padding: 14px 20px;
+            font-size: 14px;
+            color: #cbd5e1;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.06);
+            background: rgba(15, 23, 42, 0.6);
+        }
+        .comparison tbody tr:hover td {
+            background: rgba(30, 41, 59, 0.6);
+        }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 999px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge.purple { background: rgba(139, 92, 246, 0.15); color: #a78bfa; }
+        .badge.blue { background: rgba(59, 130, 246, 0.15); color: #60a5fa; }
+        .badge.green { background: rgba(34, 197, 94, 0.15); color: #4ade80; }
+        .check { color: #4ade80; }
+        .cross { color: #64748b; }
+
+        /* ========== Sales Script ========== */
+        .sales-script {
+            max-width: 1100px;
+            margin: 56px auto 0;
+        }
+        .sales-script h3 {
+            text-align: center;
+            font-size: 22px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 24px;
+        }
+        .script-cards {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .script-card {
+            background: rgba(30, 41, 59, 0.5);
+            border: 1px solid rgba(148, 163, 184, 0.08);
+            border-radius: 16px;
+            padding: 24px;
+        }
+        .script-card h4 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .script-card.purple h4 { color: #a78bfa; }
+        .script-card.blue h4 { color: #60a5fa; }
+        .script-card p {
+            font-size: 13px;
+            color: #94a3b8;
+            line-height: 1.8;
+        }
+        .script-card .quote {
+            font-style: italic;
+            color: #cbd5e1;
+            background: rgba(148, 163, 184, 0.06);
+            border-left: 3px solid var(--q-color, #8b5cf6);
+            padding: 12px 16px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 12px;
+            font-size: 13px;
+            line-height: 1.7;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========== HEADER ========== -->
+    <div class="header">
+        <h1>🍍 Malee Platform — Customer Journey</h1>
+        <p>ลูกค้า 2 ประเภท → 2 เส้นทาง → 1 แพลตฟอร์ม<br>ทุก use case ตอบโจทย์ได้ ไม่ว่าจะต้องการแค่ดู Dashboard หรือต้องการ AI Forecast</p>
+    </div>
+
+    <!-- ========== JOURNEY FLOWS ========== -->
+    <div class="journeys">
+
+        <!-- ===== Type A: Dashboard Only ===== -->
+        <div class="journey type-a">
+            <div class="journey-header">
+                <div class="icon">📊</div>
+                <h2>Type A: Dashboard & Analytics</h2>
+                <div class="role">👤 ผู้บริหาร / Sales Manager / Marketing</div>
+            </div>
+
+            <div class="steps">
+                <!-- Step 1 -->
+                <div class="step-card">
+                    <div class="step-top">
+                        <div class="step-number">1</div>
+                        <div class="step-icon">🌐</div>
+                        <div class="step-title">เข้าสู่ระบบ Malee Platform</div>
+                    </div>
+                    <div class="step-subtitle">เปิดเบราว์เซอร์ → Login ด้วย Account ของบริษัท</div>
+                </div>
+
+                <div class="arrow"><svg viewBox="0 0 20 36"><line x1="10" y1="0" x2="10" y2="28" stroke-width="2"/><polygon points="5,26 10,36 15,26"/></svg></div>
+
+                <!-- Step 2 -->
+                <div class="step-card">
+                    <div class="step-top">
+                        <div class="step-number">2</div>
+                        <div class="step-icon">📈</div>
+                        <div class="step-title">ดู Overview Dashboard</div>
+                    </div>
+                    <div class="step-subtitle">ติดตามยอดขายรวม, KPI Cards, Trend รายเดือน<br>Filter ตาม Product Group / Region / ช่วงเวลา</div>
+                </div>
+
+                <div class="arrow"><svg viewBox="0 0 20 36"><line x1="10" y1="0" x2="10" y2="28" stroke-width="2"/><polygon points="5,26 10,36 15,26"/></svg></div>
+
+                <!-- Step 3 -->
+                <div class="step-card">
+                    <div class="step-top">
+                        <div class="step-number">3</div>
+                        <div class="step-icon">🔍</div>
+                        <div class="step-title">EDA / Accuracy Deep Dive</div>
+                    </div>
+                    <div class="step-subtitle">วิเคราะห์ WAPE, Bias ตาม SKU / ภูมิภาค<br>ดู Heatmap, Rankings, แนวโน้มความแม่นยำ</div>
+                </div>
+
+                <div class="arrow"><svg viewBox="0 0 20 36"><line x1="10" y1="0" x2="10" y2="28" stroke-width="2"/><polygon points="5,26 10,36 15,26"/></svg></div>
+
+                <!-- Step 4: Action -->
+                <div class="step-card action">
+                    <div class="step-top">
+                        <div class="step-number">✓</div>
+                        <div class="step-icon">✅</div>
+                        <div class="step-title">ตัดสินใจ & Action</div>
+                    </div>
+                    <div class="step-subtitle">ปรับ Stock / วางแผน Marketing / รายงานผู้บริหาร<br>Export เป็น Report ได้ทันที</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== Type B: Full Forecast ===== -->
+        <div class="journey type-b">
+            <div class="journey-header">
+                <div class="icon">🤖</div>
+                <h2>Type B: Full AI Forecast</h2>
+                <div class="role">👤 Data Team / Demand Planner / Supply Chain</div>
+            </div>
+
+            <div class="steps">
+                <!-- Step 1 -->
+                <div class="step-card">
+                    <div class="step-top">
+                        <div class="step-number">1</div>
+                        <div class="step-icon">🌐</div>
+                        <div class="step-title">เข้าสู่ระบบ Malee Platform</div>
+                    </div>
+                    <div class="step-subtitle">เปิดเบราว์เซอร์ → Login ด้วย Account ของบริษัท</div>
+                </div>
+
+                <div class="arrow"><svg viewBox="0 0 20 36"><line x1="10" y1="0" x2="10" y2="28" stroke-width="2"/><polygon points="5,26 10,36 15,26"/></svg></div>
+
+                <!-- Step 2 -->
+                <div class="step-card">
+                    <div class="step-top">
+                        <div class="step-number">2</div>
+                        <div class="step-icon">📈</div>
+                        <div class="step-title">ดู Overview Dashboard</div>
+                    </div>
+                    <div class="step-subtitle">ดู Baseline ยอดขายปัจจุบัน<br>เข้าใจ Trend ก่อนรัน Forecast</div>
+                </div>
+
+                <div class="arrow"><svg viewBox="0 0 20 36"><line x1="10" y1="0" x2="10" y2="28" stroke-width="2"/><polygon points="5,26 10,36 15,26"/></svg></div>
+
+                <!-- Step 3 -->
+                <div class="step-card">
+                    <div class="step-top">
+                        <div class="step-number">3</div>
+                        <div class="step-icon">📁</div>
+                        <div class="step-title">Upload ข้อมูลยอดขายใหม่</div>
+                    </div>
+                    <div class="step-subtitle">อัปโหลดไฟล์ CSV ที่มีข้อมูลยอดขายล่าสุด<br>ระบบ Validate ให้อัตโนมัติ</div>
+                </div>
+
+                <div class="arrow"><svg viewBox="0 0 20 36"><line x1="10" y1="0" x2="10" y2="28" stroke-width="2"/><polygon points="5,26 10,36 15,26"/></svg></div>
+
+                <!-- Step 4 -->
+                <div class="step-card">
+                    <div class="step-top">
+                        <div class="step-number">4</div>
+                        <div class="step-icon">🤖</div>
+                        <div class="step-title">รัน AI Forecast</div>
+                    </div>
+                    <div class="step-subtitle">กดปุ่ม Run → AI ประมวลผลด้วย LightGBM + Prophet<br>รอ ~40 วินาที → ได้ผลลัพธ์ทันที</div>
+                </div>
+
+                <div class="arrow"><svg viewBox="0 0 20 36"><line x1="10" y1="0" x2="10" y2="28" stroke-width="2"/><polygon points="5,26 10,36 15,26"/></svg></div>
+
+                <!-- Step 5 -->
+                <div class="step-card">
+                    <div class="step-top">
+                        <div class="step-number">5</div>
+                        <div class="step-icon">🎯</div>
+                        <div class="step-title">วิเคราะห์ผล & Scenario Planner</div>
+                    </div>
+                    <div class="step-subtitle">ดู Forecast Chart + จำลอง Promotion<br>ปรับ Discount / Duration → เห็นผลทันที</div>
+                </div>
+
+                <div class="arrow"><svg viewBox="0 0 20 36"><line x1="10" y1="0" x2="10" y2="28" stroke-width="2"/><polygon points="5,26 10,36 15,26"/></svg></div>
+
+                <!-- Step 6: Action -->
+                <div class="step-card action">
+                    <div class="step-top">
+                        <div class="step-number">✓</div>
+                        <div class="step-icon">✅</div>
+                        <div class="step-title">ตัดสินใจ & Action</div>
+                    </div>
+                    <div class="step-subtitle">วางแผนการผลิต / Promotion Campaign<br>ลด Overstock & Stockout ด้วยข้อมูล</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== FOOTER TIP ========== -->
+    <div class="footer">
+        <div class="tip">
+            💡 <strong>Sales Tip:</strong> ลูกค้าที่เริ่มจาก Type A สามารถ upgrade เป็น Type B ได้ภายหลัง — ขายเป็น 2 Tier ช่วยปิด deal ได้ง่ายขึ้น!
+        </div>
+    </div>
+
+    <!-- ========== COMPARISON TABLE ========== -->
+    <div class="comparison">
+        <h3>📋 เปรียบเทียบ Feature ตาม Package</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Feature</th>
+                    <th>Type A — Dashboard</th>
+                    <th>Type B — Full Forecast</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>📊 Overview Dashboard (ยอดขาย, KPI)</td>
+                    <td><span class="check">✅ รวมอยู่</span></td>
+                    <td><span class="check">✅ รวมอยู่</span></td>
+                </tr>
+                <tr>
+                    <td>🔍 EDA / Accuracy Deep Dive</td>
+                    <td><span class="check">✅ รวมอยู่</span></td>
+                    <td><span class="check">✅ รวมอยู่</span></td>
+                </tr>
+                <tr>
+                    <td>🗺️ Regional Breakdown (แผนที่ประเทศ)</td>
+                    <td><span class="check">✅ รวมอยู่</span></td>
+                    <td><span class="check">✅ รวมอยู่</span></td>
+                </tr>
+                <tr>
+                    <td>📁 Upload ข้อมูลใหม่</td>
+                    <td><span class="cross">— ไม่รวม</span></td>
+                    <td><span class="check">✅ รวมอยู่</span></td>
+                </tr>
+                <tr>
+                    <td>🤖 AI Demand Forecast (LightGBM + Prophet)</td>
+                    <td><span class="cross">— ไม่รวม</span></td>
+                    <td><span class="check">✅ รวมอยู่</span></td>
+                </tr>
+                <tr>
+                    <td>🎯 Scenario Planner (จำลอง Promotion)</td>
+                    <td><span class="cross">— ไม่รวม</span></td>
+                    <td><span class="check">✅ รวมอยู่</span></td>
+                </tr>
+                <tr>
+                    <td>📋 Run History & Audit Trail</td>
+                    <td><span class="cross">— ไม่รวม</span></td>
+                    <td><span class="check">✅ รวมอยู่</span></td>
+                </tr>
+                <tr>
+                    <td>🔗 Dataiku DSS Integration</td>
+                    <td><span class="cross">— ไม่รวม</span></td>
+                    <td><span class="check">✅ รวมอยู่</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- ========== SALES SCRIPT ========== -->
+    <div class="sales-script">
+        <h3>🎤 ตัวอย่าง Sales Script สำหรับเล่าลูกค้า</h3>
+        <div class="script-cards">
+            <div class="script-card purple">
+                <h4>📊 เล่า Type A — Dashboard & Analytics</h4>
+                <p>ใช้กับลูกค้าที่มี Data Team อยู่แล้ว หรือต้องการแค่ Visualization</p>
+                <div class="quote" style="--q-color: #8b5cf6;">
+                    "ระบบของเราช่วยให้ผู้บริหารเห็น ยอดขาย, KPI, แนวโน้ม ได้ครบจบในหน้าเดียว<br><br>
+                    Filter ได้ตาม Product / Region / ช่วงเวลา → ไม่ต้องเปิด Excel อีกต่อไป<br><br>
+                    มี EDA Dashboard ที่วิเคราะห์ให้เลยว่า สินค้าไหนแม่น สินค้าไหนเบี่ยงเบน → ตัดสินใจได้เร็วขึ้น"
+                </div>
+            </div>
+            <div class="script-card blue">
+                <h4>🤖 เล่า Type B — Full AI Forecast</h4>
+                <p>ใช้กับลูกค้าที่ต้องการ Demand Planning / Supply Chain Optimization</p>
+                <div class="quote" style="--q-color: #3b82f6;">
+                    "นอกจาก Dashboard แล้ว ระบบยังมี AI Forecast ที่ทำนายยอดขายล่วงหน้าได้<br><br>
+                    แค่อัปโหลดไฟล์ → กดปุ่ม → ได้ผลใน 40 วินาที ไม่ต้องเขียน Code เลย<br><br>
+                    ยังมี Scenario Planner จำลองว่า ถ้าลด 10% จะขายเพิ่มเท่าไหร่ → วางแผน Promotion ได้แม่นยำ"
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
