@@ -681,7 +681,7 @@ def get_deep_dive_analytics(
             ranking_items.append(PerformanceRankingItem(
                 date=m_str,
                 customer=c,
-                sku=str(row.get("Sku", "-")),
+                sku=f"{masker.mask('flavor', row.get('Flavor', '-'))} {masker.mask('size', str(row.get('Size', '-')))}",
                 product_group=pg,
                 flavor=masker.mask("flavor", row.get("Flavor", "-")),
                 size=masker.mask("size", str(row.get("Size", "-"))),
