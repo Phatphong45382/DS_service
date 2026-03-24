@@ -15,7 +15,7 @@ export async function GET() {
         ];
 
         const downloadUrls = templates.map(t => ({
-            filename: t.filename || t.name,
+            filename: t.name,
             url: `/templates/${t.name}`,
             required: t.required,
         }));
