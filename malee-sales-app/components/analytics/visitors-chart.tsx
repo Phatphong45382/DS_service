@@ -259,9 +259,8 @@ export function VisitorsChart({
                         />
                         <YAxis
                             tick={{ fill: '#94a3b8', fontSize: 10 }}
-                            axisLine={false}
-                            tickLine={false}
                             axisLine={{ stroke: '#e2e8f0' }}
+                            tickLine={false}
                             tickFormatter={(value) => new Intl.NumberFormat('en-US', {
                                 notation: "compact",
                                 maximumFractionDigits: 1
