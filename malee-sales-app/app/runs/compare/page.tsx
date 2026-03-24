@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, Suspense } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { MainLayout } from "@/components/layout/main-layout"
@@ -48,6 +48,14 @@ import {
 import { ArrowLeft, GitCompare, TrendingUp, TrendingDown, Minus } from "lucide-react"
 
 export default function ComparePage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen">Loading...</div>}>
+      <CompareContent />
+    </Suspense>
+  )
+}
+
+function CompareContent() {
   const searchParams = useSearchParams()
   const runIdA = searchParams.get("a") || "RUN-2025-001"
   const runIdB = searchParams.get("b") || "RUN-2025-005"
