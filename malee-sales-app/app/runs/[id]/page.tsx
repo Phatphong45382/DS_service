@@ -330,7 +330,7 @@ export default function RunReportPage({
                         borderRadius: '8px',
                         fontSize: 13,
                       }}
-                      formatter={(v: number) => formatNumber(v)}
+                      formatter={(v) => v != null ? formatNumber(Number(v)) : "---"}
                     />
                     <Area
                       type="monotone"
