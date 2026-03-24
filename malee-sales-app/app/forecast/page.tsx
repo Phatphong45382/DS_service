@@ -274,8 +274,8 @@ export default function ForecastPage() {
                     borderRadius: "8px",
                     fontSize: 12,
                   }}
-                  formatter={(v: number | null) =>
-                    v !== null ? formatNumber(v) : "---"
+                  formatter={(v) =>
+                    v != null ? formatNumber(Number(v)) : "---"
                   }
                 />
                 {showBands && (
