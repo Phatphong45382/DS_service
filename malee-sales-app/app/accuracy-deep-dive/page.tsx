@@ -155,12 +155,7 @@ export default function AccuracyDeepDivePage() {
                     <ErrorHeatmap
                         title={`WAPE by Flavor vs Month (${filters?.date_range?.end?.split('-')[0] || new Date().getFullYear()})`}
                         type="product"
-                        data={(heatmapData?.product || []).filter((item: any) => {
-                            const rowName = (item.row || '').toLowerCase();
-                            return rowName.includes('coconut') ||
-                                rowName.includes('orange') ||
-                                rowName.includes('apple');
-                        })}
+                        data={heatmapData?.product || []}
                         loading={loading}
                     />
                 </motion.div>
