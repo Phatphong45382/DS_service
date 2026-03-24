@@ -119,7 +119,7 @@ export function BrowserStats({ data, level, onDrillDown, isLoading }: SalesDistr
                                 </tspan>
                             </text>
                             <Tooltip
-                                formatter={(value: number | undefined) => new Intl.NumberFormat('en-US').format(value || 0)}
+                                formatter={(value: any) => new Intl.NumberFormat('en-US').format(Number(value ?? 0))}
                                 contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
                             />
                         </PieChart>

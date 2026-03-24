@@ -47,7 +47,7 @@ export function ScenarioDeltaChart({ data }: ScenarioDeltaChartProps) {
         <Tooltip
           cursor={{ fill: 'transparent' }}
           contentStyle={{ borderRadius: "8px", border: "1px solid #e5e5e5" }}
-          formatter={(value: number, name: string) => [value.toLocaleString(), name]}
+          formatter={(value: any, name: any) => [Number(value ?? 0).toLocaleString(), name]}
         />
         <ReferenceLine y={0} stroke="#000" />
         <Bar dataKey="delta" name="Net Change (Units)" radius={[4, 4, 0, 0]}>

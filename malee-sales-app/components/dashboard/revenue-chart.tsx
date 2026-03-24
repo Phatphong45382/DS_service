@@ -75,7 +75,7 @@ export function RevenueChart({ data }: RevenueChartProps) {
                         labelStyle={{ color: 'var(--warm-text-primary)', fontWeight: 700, fontFamily: 'var(--font-display)', marginBottom: '4px' }}
                         itemStyle={{ color: 'var(--warm-accent)', fontFamily: 'var(--font-display)', fontWeight: 600 }}
                         cursor={{ stroke: 'var(--warm-accent)', strokeWidth: 2, strokeDasharray: '4 4' }}
-                        formatter={(value: number | undefined) => {
+                        formatter={(value: any) => {
                             if (value === undefined) return ['', 'Revenue'];
                             return [
                                 new Intl.NumberFormat('th-TH', {

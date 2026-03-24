@@ -222,7 +222,7 @@ export default function ComparePage() {
                 borderRadius: "8px",
                 fontSize: "12px",
               }}
-              formatter={(value: number) => [formatNumber(value), ""]}
+              formatter={(value: any) => [formatNumber(Number(value ?? 0)), ""]}
             />
             <Legend wrapperStyle={{ fontSize: "11px" }} />
             <Line
@@ -267,7 +267,7 @@ export default function ComparePage() {
                   borderRadius: "8px",
                   fontSize: "12px",
                 }}
-                formatter={(value: number) => [`${value >= 0 ? "+" : ""}${formatNumber(value)}`, "Delta"]}
+                formatter={(value: any) => [`${Number(value ?? 0) >= 0 ? "+" : ""}${formatNumber(Number(value ?? 0))}`, "Delta"]}
               />
               <Bar dataKey="delta" radius={[4, 4, 0, 0]}>
                 {deltaData.map((entry, idx) => (

@@ -62,9 +62,10 @@ export function ScenarioComparisonChart({ data }: ScenarioComparisonChartProps) 
             borderRadius: "8px",
             fontSize: 12,
           }}
-          formatter={(value: number, name: string) => {
-            if (name === "Delta") return [`${value > 0 ? "+" : ""}${value.toLocaleString()}`, name]
-            return [value.toLocaleString(), name]
+          formatter={(value: any, name: any) => {
+            const v = Number(value ?? 0)
+            if (name === "Delta") return [`${v > 0 ? "+" : ""}${v.toLocaleString()}`, name]
+            return [v.toLocaleString(), name]
           }}
         />
         <Legend wrapperStyle={{ paddingTop: 10 }} />
