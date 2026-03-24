@@ -19,7 +19,7 @@ export function generateYearMonth(offset: number = 0): string {
 }
 
 // Mock flavors and sizes
-export const FLAVORS = ['Orange', 'Apple', 'Grape', 'Coconut', 'Pineapple', 'Mango'];
+export const FLAVORS = ['Original', 'BBQ', 'Seaweed', 'Cheese', 'Hot Spicy', 'Sour Cream'];
 export const SIZES = [200, 400, 1000]; // ml
 export const CHANNELS = ['Retail', 'Wholesale', 'Online', 'Export'];
 

@@ -1,7 +1,7 @@
 'use client';
 
 import { MainLayout } from "@/components/layout/main-layout";
-import { PageHeader } from "@/components/ui/page-header";
+
 import { SalesTrendChart } from "@/components/dashboard/sales-trend-chart";
 import { RegionalSalesChart } from "@/components/dashboard/regional-sales-chart";
 import { motion } from "framer-motion";
@@ -21,17 +21,16 @@ export default function AnalyticsPage() {
     };
 
     return (
-        <MainLayout>
+        <MainLayout
+            title="Analytics Dashboard"
+            description="Deep dive into sales trends and regional performance."
+        >
             <motion.div
                 className="space-y-8"
                 variants={container}
                 initial="hidden"
                 animate="show"
             >
-                <PageHeader
-                    title="Analytics Dashboard"
-                    description="Deep dive into sales trends and regional performance."
-                />
 
                 <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <SalesTrendChart />

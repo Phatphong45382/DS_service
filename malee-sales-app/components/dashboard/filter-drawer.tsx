@@ -59,7 +59,7 @@ export function FilterDrawer() {
                         <div className="p-2 bg-blue-600 rounded-lg">
                             <Filter className="w-5 h-5 text-white" />
                         </div>
-                        <SheetTitle className="text-xl font-bold text-slate-900 font-display tracking-tight">Advanced Filters</SheetTitle>
+                        <SheetTitle className="text-2xl font-bold text-slate-900 font-display tracking-tight">Advanced Filters</SheetTitle>
                     </div>
                     <SheetDescription className="text-sm text-slate-500 font-medium">
                         Refine your dashboard view with specific criteria

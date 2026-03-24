@@ -83,7 +83,7 @@ export default function ScenarioChart() {
         <div className="bg-white rounded-2xl shadow-[0_4px_20px_-4px_rgba(0,0,0,0.05)] overflow-hidden h-full flex flex-col">
             <div className="px-8 py-6 border-b border-slate-50 flex items-center justify-between">
                 <div>
-                    <h2 className="text-xl font-bold text-slate-900 tracking-tight font-display">Scenario Forecast & Production</h2>
+                    <h2 className="text-2xl font-bold text-slate-900 tracking-tight font-display">Scenario Forecast & Production</h2>
                     <p className="text-sm text-slate-400 font-medium mt-1">
                         Comparing Baseline vs. {scenarioParams.promo_enabled ? 'Promo Scenario' : 'Standard Forecast'}
                     </p>

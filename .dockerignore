@@ -1,0 +1,10 @@
+malee-sales-app/
+node_modules/
+__pycache__/
+*.pyc
+.git/
+.claude/
+.agent/
+pic/
+docs/
+*.md

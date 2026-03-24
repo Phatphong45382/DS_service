@@ -9,23 +9,21 @@ interface MainLayoutProps {
     title?: string;
     description?: string;
     action?: React.ReactNode;
+    mainClassName?: string;
 }
 
-export function MainLayout({ children, title, description, action }: MainLayoutProps) {
+export function MainLayout({ children, title, description, action, mainClassName }: MainLayoutProps) {
     const { isCollapsed, isInitialized } = useSidebar();
 
-    // Optional: Prevent transition on initial load to avoid flicker
-    // But since we have fixed position, maybe it's fine.
-
     return (
-        <div className="flex min-h-screen bg-background">
+        <div className="flex h-screen bg-background overflow-hidden">
             <Sidebar />
 
             {/* Main content area - add left margin to account for fixed sidebar */}
-            <div className={`flex-1 flex flex-col transition-[margin-left] duration-300 ${isCollapsed ? 'md:ml-20' : 'md:ml-64'}`}>
+            <div className={`flex-1 flex flex-col h-full overflow-hidden transition-[margin-left] duration-300 ${isCollapsed ? 'md:ml-16' : 'md:ml-56'}`}>
                 <TopBar title={title} description={description} action={action} />
 
-                <main className="flex-1 p-4 md:px-6 md:pb-6 md:pt-5">
+                <main className={mainClassName || "flex-1 p-4 md:px-6 md:pb-6 md:pt-5 overflow-auto"}>
                     {children}
                 </main>
             </div>

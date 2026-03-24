@@ -274,6 +274,275 @@ export function downloadForecastResultFile(filename?: string): void {
     document.body.removeChild(link);
 }
 
+// ──────────────────────────────────────────
+// AI Endpoints
+// ──────────────────────────────────────────
+
+/**
+ * Generate AI insights from KPI data via Gemini
+ */
+export async function getAIInsights(payload: {
+    kpi: any;
+    top_products?: any[];
+    by_customer?: any[];
+    monthly_ts?: any[];
+}): Promise<{ insight: string }> {
+    return fetchAPI<{ insight: string }>('/ai/insights', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+}
+
+/**
+ * Send chat message to AI assistant
+ */
+export async function sendChatMessage(payload: {
+    messages: { role: string; content: string }[];
+    context?: any;
+    knowledge_doc_ids?: string[];
+}): Promise<{ reply: string }> {
+    return fetchAPI<{ reply: string }>('/ai/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+}
+
+/**
+ * Generate AI report and optionally send via email
+ */
+export async function generateReport(payload: {
+    kpi: any;
+    top_products?: any[];
+    by_customer?: any[];
+    monthly_ts?: any[];
+    email?: string;
+}): Promise<{ report: string; email_sent: boolean; email_to: string | null }> {
+    return fetchAPI<{ report: string; email_sent: boolean; email_to: string | null }>('/ai/report', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+}
+
+/**
+ * OCR a Purchase Order image using Gemini Vision
+ */
+export async function ocrPurchaseOrder(
+    file: File,
+    customPrompt?: string,
+    model?: string
+): Promise<{
+    extracted: any;
+    filename: string;
+    file_size: number;
+    mime_type: string;
+    model_used: string;
+}> {
+    const formData = new FormData();
+    formData.append('file', file);
+    if (customPrompt) {
+        formData.append('custom_prompt', customPrompt);
+    }
+    if (model) {
+        formData.append('model', model);
+    }
+
+    const url = `${API_URL}/ai/ocr`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: formData,
+    });
+
+    if (!response.ok) {
+        let errorMsg = `Server error: ${response.status}`;
+        try {
+            const errorData = await response.json();
+            errorMsg = errorData.error?.message || errorMsg;
+        } catch (_) {}
+        throw new DataikuAPIError(errorMsg, response.status);
+    }
+
+    const result: ApiResponse<any> = await response.json();
+    if (!result.success) {
+        throw new DataikuAPIError(
+            result.error?.message || 'OCR failed',
+            undefined,
+            undefined,
+            result.error?.code
+        );
+    }
+
+    return result.data;
+}
+
+/**
+ * Get current AI model and available models
+ */
+export async function getAIModel(): Promise<{ current: string; available: string[] }> {
+    return fetchAPI<{ current: string; available: string[] }>('/ai/model');
+}
+
+/**
+ * Switch AI model at runtime
+ */
+export async function setAIModel(model: string): Promise<{ current: string }> {
+    return fetchAPI<{ current: string }>('/ai/model', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model }),
+    });
+}
+
+/**
+ * Get current chat system prompt
+ */
+export async function getChatPrompt(): Promise<{ prompt: string }> {
+    return fetchAPI<{ prompt: string }>('/ai/prompt');
+}
+
+/**
+ * Update chat system prompt at runtime
+ */
+export async function setChatPrompt(prompt: string): Promise<{ prompt: string }> {
+    return fetchAPI<{ prompt: string }>('/ai/prompt', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+    });
+}
+
+/**
+ * Get current agent system prompt
+ */
+export async function getAgentPrompt(): Promise<{ prompt: string }> {
+    return fetchAPI<{ prompt: string }>('/ai/agent/prompt');
+}
+
+/**
+ * Update agent system prompt at runtime
+ */
+export async function setAgentPrompt(prompt: string): Promise<{ prompt: string }> {
+    return fetchAPI<{ prompt: string }>('/ai/agent/prompt', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt }),
+    });
+}
+
+/**
+ * Run AI Agent — send a command, Agent plans and executes autonomously
+ */
+export async function runAgent(message: string): Promise<{
+    answer: string;
+    steps: Array<{
+        step: number;
+        type: string;
+        thought?: string;
+        tool?: string;
+        params?: any;
+        result?: any;
+        status?: string;
+        answer?: string;
+        error?: string;
+    }>;
+    total_steps: number;
+}> {
+    return fetchAPI<any>('/ai/agent', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message }),
+    });
+}
+
+/**
+ * RAG: Upload a document for Q&A
+ */
+export async function ragUploadDocument(file: File): Promise<{
+    doc_id: string;
+    filename: string;
+    file_size: number;
+    text_length: number;
+    preview: string;
+}> {
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const url = `${API_URL}/ai/rag/upload`;
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Accept': 'application/json' },
+        body: formData,
+    });
+
+    if (!response.ok) {
+        let errorMsg = `Server error: ${response.status}`;
+        try {
+            const errorData = await response.json();
+            errorMsg = errorData.error?.message || errorMsg;
+        } catch (_) {}
+        throw new DataikuAPIError(errorMsg, response.status);
+    }
+
+    const result: ApiResponse<any> = await response.json();
+    if (!result.success) {
+        throw new DataikuAPIError(
+            result.error?.message || 'Upload failed',
+            undefined,
+            undefined,
+            result.error?.code
+        );
+    }
+    return result.data;
+}
+
+/**
+ * RAG: Ask a question about an uploaded document
+ */
+export async function ragQuery(payload: {
+    doc_id: string;
+    question: string;
+    history?: { role: string; content: string }[];
+}): Promise<{ reply: string }> {
+    return fetchAPI<{ reply: string }>('/ai/rag/query', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+}
+
+// ──────────────────────────────────────────
+// Prediction Endpoints (Dataiku ML Model)
+// ──────────────────────────────────────────
+
+/**
+ * Compare baseline (no promo) vs scenario (with promo) using Dataiku ML model
+ */
+export async function predictCompare(features: {
+    product_group: string;
+    flavor: string;
+    size: string;
+    year: number;
+    month: number;
+    promo_days_in_month: number;
+    promo_discount_pct: number;
+    promo_type: string;
+}): Promise<{
+    baseline: number;
+    scenario: number;
+    delta: number;
+    delta_pct: number;
+    explanations: Record<string, number>;
+}> {
+    return fetchAPI<any>('/predict/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(features),
+    });
+}
+
 // Keep old functions for compatibility if needed, but update their implementations
 export async function listDataikuFiles(): Promise<DataikuListFilesResponse> {
     // For now, return empty or implement a general list endpoint

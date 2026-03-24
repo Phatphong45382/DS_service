@@ -16,7 +16,7 @@ import {
   aggregateForecastByMonth,
   SKUS,
 } from '@/lib/mock-data'
-import { PageHeader } from '@/components/page-header'
+
 import { KPICard } from '@/components/kpi-card'
 import { ChartCard } from '@/components/chart-card'
 import { StatusBadge } from '@/components/status-badge'
@@ -114,43 +114,33 @@ export default function RunReportPage({
   const [tab, setTab] = useState('summary')
 
   return (
-    <MainLayout>
-      <div className="space-y-6 max-w-7xl mx-auto">
-        {/* Header Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" asChild className="h-9 w-9 p-0">
-              <Link href="/runs">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold tracking-tight text-slate-900">{run.run_id}</h1>
-                <Badge className={confidenceLevel.color} variant="secondary">
-                  {run.status === 'success' ? 'Completed' : run.status}
-                </Badge>
-              </div>
-              <p className="text-slate-500 text-sm mt-1">
-                {run.model_name} {run.model_version} • {formatDuration(run.duration_sec)} • {formatDate(run.created_at)}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" asChild>
-              <Link href="/runs/compare">
-                <GitCompare className="mr-2 h-4 w-4" />
-                Compare
-              </Link>
-            </Button>
-            <Button asChild>
-              <Link href="/scenario-planner">
-                <Zap className="mr-2 h-4 w-4" />
-                Create Scenario
-              </Link>
-            </Button>
-          </div>
+    <MainLayout
+      title={run.run_id}
+      description={`${run.model_name} ${run.model_version} • ${formatDuration(run.duration_sec)} • ${formatDate(run.created_at)}`}
+      action={
+        <div className="flex items-center gap-2">
+          <Button variant="outline" asChild>
+            <Link href="/runs">
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back
+            </Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link href="/runs/compare">
+              <GitCompare className="mr-2 h-4 w-4" />
+              Compare
+            </Link>
+          </Button>
+          <Button asChild>
+            <Link href="/scenario-planner">
+              <Zap className="mr-2 h-4 w-4" />
+              Create Scenario
+            </Link>
+          </Button>
         </div>
+      }
+    >
+      <div className="space-y-6 max-w-7xl mx-auto">
 
         {/* Quick Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -441,9 +431,9 @@ export default function RunReportPage({
               <CardContent className="p-4">
                 <div className="space-y-3">
                   {[
-                    'Updated December 2024 actuals showed stronger-than-expected seasonal recovery for Apple Juice 200ml (+8.2% vs prior estimate).',
+                    'Updated December 2024 actuals showed stronger-than-expected seasonal recovery for Rice Cracker 30g (+8.2% vs prior estimate).',
                     'Model version upgraded from v2.4.1 to v2.5.0 with improved seasonality detection, reducing overall WAPE by 0.7pp.',
-                    'Promo uplift coefficients recalibrated: Orange Juice 200ml shows 12% higher promo sensitivity than previous model.',
+                    'Promo uplift coefficients recalibrated: Corn Stick 40g shows 12% higher promo sensitivity than previous model.',
                   ].map((text, i) => (
                     <div
                       key={i}

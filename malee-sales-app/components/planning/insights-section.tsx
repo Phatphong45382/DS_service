@@ -1,16 +1,52 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { usePlanning } from '@/lib/planning-context';
-import { TrendingUp, TrendingDown, AlertTriangle, Activity, Lightbulb, ArrowRight, Sparkles } from 'lucide-react';
+import { getAIInsights } from '@/lib/api-client';
+import { TrendingUp, TrendingDown, AlertTriangle, Activity, Lightbulb, ArrowRight, Sparkles, RefreshCw, Loader2 } from 'lucide-react';
 
 export function InsightsSection() {
-    const { globalSummary, dashboardData } = usePlanning();
+    const { globalSummary, dashboardData, fullSummary } = usePlanning();
     const [isClient, setIsClient] = useState(false);
+
+    // AI Insight state
+    const [aiInsight, setAiInsight] = useState<string | null>(null);
+    const [aiLoading, setAiLoading] = useState(false);
+    const [aiError, setAiError] = useState<string | null>(null);
 
     useEffect(() => {
         setIsClient(true);
     }, []);
+
+    // Fetch AI insight when fullSummary changes
+    const fetchAIInsight = useCallback(async () => {
+        if (!fullSummary?.kpi) return;
+
+        setAiLoading(true);
+        setAiError(null);
+
+        try {
+            const result = await getAIInsights({
+                kpi: fullSummary.kpi,
+                top_products: fullSummary.top_products || [],
+                by_customer: fullSummary.by_customer || [],
+                monthly_ts: fullSummary.monthly_ts || [],
+            });
+            setAiInsight(result.insight);
+        } catch (err: any) {
+            console.error('AI Insight error:', err);
+            setAiError(err.message || 'ไม่สามารถสร้าง insight ได้');
+        } finally {
+            setAiLoading(false);
+        }
+    }, [fullSummary]);
+
+    // Auto-fetch on data load
+    useEffect(() => {
+        if (fullSummary?.kpi) {
+            fetchAIInsight();
+        }
+    }, [fullSummary?.kpi]);
 
     if (!globalSummary) {
         return (
@@ -26,16 +62,13 @@ export function InsightsSection() {
     }
 
     // Calculate insights from Real Data if available
-    // Prevent hydration mismatch by only using real data on client after mount
     const hasRealData = isClient && dashboardData.length > 0;
 
-    // 1. Trend Analysis: Compare last month sales vs 3-month average
     let diff = 0;
     let diffPct = "0.0";
     let isPositive = true;
 
     if (hasRealData) {
-        // Group by month
         const monthlySales = new Map<string, number>();
         dashboardData.forEach(item => {
             const current = monthlySales.get(item.year_month) || 0;
@@ -46,7 +79,6 @@ export function InsightsSection() {
         const lastMonth = sortedMonths[sortedMonths.length - 1];
         const lastMonthSales = monthlySales.get(lastMonth) || 0;
 
-        // items before last month
         const priorMonths = sortedMonths.slice(Math.max(0, sortedMonths.length - 4), sortedMonths.length - 1);
 
         if (priorMonths.length > 0) {
@@ -58,18 +90,14 @@ export function InsightsSection() {
             isPositive = diff >= 0;
         }
     } else {
-        // Fallback to mock logic
         const avg3m = 145000;
         diff = globalSummary.last_month_actual - avg3m;
         diffPct = ((diff / avg3m) * 100).toFixed(1);
         isPositive = diff > 0;
     }
 
-    // Volatility
     const volatility = 12.5;
     const volatilityLevel = volatility < 10 ? 'ต่ำ' : volatility < 20 ? 'ปานกลาง' : 'สูง';
-
-    // Risk level
     const riskLevel = globalSummary.risk_badge;
 
     const insights = [
@@ -105,6 +133,40 @@ export function InsightsSection() {
         },
     ];
 
+    // Format AI insight text with bullet styling
+    const renderAIInsight = () => {
+        if (aiLoading) {
+            return (
+                <div className="flex items-center gap-3 text-sm text-blue-600">
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Gemini กำลังวิเคราะห์ข้อมูล...</span>
+                </div>
+            );
+        }
+
+        if (aiError) {
+            return (
+                <p className="text-sm text-rose-600">
+                    {aiError}
+                </p>
+            );
+        }
+
+        if (aiInsight) {
+            return (
+                <div className="text-sm text-slate-600 leading-relaxed max-w-4xl whitespace-pre-line">
+                    {aiInsight}
+                </div>
+            );
+        }
+
+        return (
+            <p className="text-sm text-slate-400 italic">
+                กด Refresh เพื่อให้ AI วิเคราะห์ข้อมูล
+            </p>
+        );
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -113,7 +175,7 @@ export function InsightsSection() {
                         <Lightbulb className="w-5 h-5 text-yellow-400" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 tracking-tight font-display">AI Logic & Insights</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight font-display">AI Logic & Insights</h2>
                         <p className="text-sm text-slate-500 font-medium mt-1">Automated analysis of current trends</p>
                     </div>
                 </div>
@@ -153,19 +215,30 @@ export function InsightsSection() {
                 ))}
             </div>
 
-            {/* AI Summary Box */}
+            {/* AI Summary Box — Powered by Gemini */}
             <div className="glass-enterprise p-6 rounded-2xl border border-blue-100 bg-blue-50/30">
                 <div className="flex gap-4">
                     <div className="p-2 bg-blue-100 rounded-lg h-fit">
                         <Sparkles className="w-5 h-5 text-blue-600" />
                     </div>
-                    <div>
-                        <h3 className="text-sm font-bold text-slate-900 mb-2">AI Natural Language Summary</h3>
-                        <p className="text-sm text-slate-600 leading-relaxed max-w-4xl">
-                            Based on the current trajectory, total sales volume is projected to exceed Q1 targets by <span className="font-bold text-emerald-600">12%</span>.
-                            However, inventory levels for <span className="font-semibold text-slate-800">Orange 200ml</span> are critically low and may lead to stockouts by mid-month.
-                            Recommended immediate production adjustment.
-                        </p>
+                    <div className="flex-1">
+                        <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                                <h3 className="text-sm font-bold text-slate-900">AI Insight Summary</h3>
+                                <span className="text-[10px] font-medium bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+                                    Gemini Flash
+                                </span>
+                            </div>
+                            <button
+                                onClick={fetchAIInsight}
+                                disabled={aiLoading}
+                                className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-800 disabled:opacity-50 transition-colors"
+                            >
+                                <RefreshCw className={`w-3.5 h-3.5 ${aiLoading ? 'animate-spin' : ''}`} />
+                                Refresh
+                            </button>
+                        </div>
+                        {renderAIInsight()}
                     </div>
                 </div>
             </div>

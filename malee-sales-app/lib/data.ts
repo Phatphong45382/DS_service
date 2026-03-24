@@ -17,24 +17,24 @@ export const salesData: SalesData[] = Array.from({ length: 30 }, (_, i) => {
 
 // Top selling products
 export const topProducts: Product[] = [
-    { id: '1', name: 'Orange Juice 100%', sales: 1250, revenue: 312500, change: 12.5 },
-    { id: '2', name: 'Coconut Water', sales: 1100, revenue: 275000, change: 8.3 },
-    { id: '3', name: 'Apple Juice', sales: 950, revenue: 237500, change: -2.1 },
-    { id: '4', name: 'Grape Juice', sales: 820, revenue: 205000, change: 15.2 },
-    { id: '5', name: 'Mixed Fruit Juice', sales: 750, revenue: 187500, change: 5.8 },
-    { id: '6', name: 'Passion Fruit Juice', sales: 680, revenue: 170000, change: -5.4 },
-    { id: '7', name: 'Pineapple Juice', sales: 620, revenue: 155000, change: 3.7 },
-    { id: '8', name: 'Mango Juice', sales: 580, revenue: 145000, change: 9.1 },
-    { id: '9', name: 'Lychee Juice', sales: 520, revenue: 130000, change: -1.8 },
-    { id: '10', name: 'Guava Juice', sales: 480, revenue: 120000, change: 6.4 },
+    { id: '1', name: 'Original Chips', sales: 1250, revenue: 312500, change: 12.5 },
+    { id: '2', name: 'BBQ Chips', sales: 1100, revenue: 275000, change: 8.3 },
+    { id: '3', name: 'Seaweed Crackers', sales: 950, revenue: 237500, change: -2.1 },
+    { id: '4', name: 'Cheese Corn Stick', sales: 820, revenue: 205000, change: 15.2 },
+    { id: '5', name: 'Sour Cream Chips', sales: 750, revenue: 187500, change: 5.8 },
+    { id: '6', name: 'Hot Spicy Crackers', sales: 680, revenue: 170000, change: -5.4 },
+    { id: '7', name: 'Wasabi Rice Cracker', sales: 620, revenue: 155000, change: 3.7 },
+    { id: '8', name: 'Tom Yum Chips', sales: 580, revenue: 145000, change: 9.1 },
+    { id: '9', name: 'Salted Egg Chips', sales: 520, revenue: 130000, change: -1.8 },
+    { id: '10', name: 'Truffle Crackers', sales: 480, revenue: 120000, change: 6.4 },
 ];
 
 // Category distribution data
 export const categoryData = [
-    { name: 'Fruit Juices', value: 45, color: '#FF8A5B' }, // Warm Orange
-    { name: 'Smoothies', value: 25, color: '#FFB74D' },    // Soft Orange
-    { name: 'Tea & Coffee', value: 20, color: '#FFCC80' }, // Peach
-    { name: 'Snacks', value: 10, color: '#81C784' },       // Soft Green
+    { name: 'Chips', value: 45, color: '#FF8A5B' },
+    { name: 'Crackers', value: 25, color: '#FFB74D' },
+    { name: 'Corn Sticks', value: 20, color: '#FFCC80' },
+    { name: 'Rice Crackers', value: 10, color: '#81C784' },
 ];
 
 // KPI metrics
@@ -120,20 +120,20 @@ export const regionalSalesData = [
 
 // Inventory: Mock Data
 export const inventoryData = [
-    { id: 1, name: 'Orange Juice 100%', category: 'Fruit Juices', stock: 1200, status: 'In Stock', price: 69 },
-    { id: 2, name: 'Apple Juice', category: 'Fruit Juices', stock: 85, status: 'Low Stock', price: 65 },
-    { id: 3, name: 'Coconut Water', category: 'Smoothies', stock: 0, status: 'Out of Stock', price: 45 },
-    { id: 4, name: 'Pineapple Juice', category: 'Fruit Juices', stock: 500, status: 'In Stock', price: 60 },
-    { id: 5, name: 'Grape Juice', category: 'Fruit Juices', stock: 45, status: 'Low Stock', price: 75 },
-    { id: 6, name: 'Mixed Fruit Smoothie', category: 'Smoothies', stock: 320, status: 'In Stock', price: 55 },
-    { id: 7, name: 'Lychee Juice', category: 'Fruit Juices', stock: 210, status: 'In Stock', price: 65 },
+    { id: 1, name: 'Original Chips 75g', category: 'Chips', stock: 1200, status: 'In Stock', price: 35 },
+    { id: 2, name: 'Seaweed Crackers 30g', category: 'Crackers', stock: 85, status: 'Low Stock', price: 25 },
+    { id: 3, name: 'BBQ Chips 75g', category: 'Chips', stock: 0, status: 'Out of Stock', price: 35 },
+    { id: 4, name: 'Hot Spicy Corn Stick 40g', category: 'Corn Sticks', stock: 500, status: 'In Stock', price: 20 },
+    { id: 5, name: 'Cheese Corn Stick 150g', category: 'Corn Sticks', stock: 45, status: 'Low Stock', price: 55 },
+    { id: 6, name: 'Sour Cream Chips 75g', category: 'Chips', stock: 320, status: 'In Stock', price: 35 },
+    { id: 7, name: 'Salted Egg Rice Cracker 120g', category: 'Rice Crackers', stock: 210, status: 'In Stock', price: 45 },
 ];
 
 // Customers: Mock Data
 export const customerData = [
-    { id: 1, name: 'Somchai Jai-dee', email: 'somchai@email.com', totalSpent: 12500, lastOrder: '2023-10-25', type: 'VIP' },
-    { id: 2, name: 'Somsri Rak-thai', email: 'somsri@email.com', totalSpent: 4500, lastOrder: '2023-10-24', type: 'Returning' },
-    { id: 3, name: 'John Doe', email: 'john@email.com', totalSpent: 890, lastOrder: '2023-10-20', type: 'New' },
-    { id: 4, name: 'Jane Smith', email: 'jane@email.com', totalSpent: 22000, lastOrder: '2023-10-25', type: 'VIP' },
-    { id: 5, name: 'Pranee Meemark', email: 'pranee@email.com', totalSpent: 3400, lastOrder: '2023-10-18', type: 'Returning' },
+    { id: 1, name: 'Alex Morgan', email: 'alex@demo.com', totalSpent: 12500, lastOrder: '2023-10-25', type: 'VIP' },
+    { id: 2, name: 'Sam Taylor', email: 'sam@demo.com', totalSpent: 4500, lastOrder: '2023-10-24', type: 'Returning' },
+    { id: 3, name: 'Chris Lee', email: 'chris@demo.com', totalSpent: 890, lastOrder: '2023-10-20', type: 'New' },
+    { id: 4, name: 'Dana Park', email: 'dana@demo.com', totalSpent: 22000, lastOrder: '2023-10-25', type: 'VIP' },
+    { id: 5, name: 'Pat Chen', email: 'pat@demo.com', totalSpent: 3400, lastOrder: '2023-10-18', type: 'Returning' },
 ];

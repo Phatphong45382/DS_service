@@ -126,7 +126,7 @@ export default function AccuracyDeepDivePage() {
     );
 
     return (
-        <MainLayout title="Forecast Accuracy Deep Dive" action={HeaderAction}>
+        <MainLayout title="Accuracy Deep Dive" description="WAPE, Bias and error distribution analysis" action={HeaderAction}>
 
             <motion.div
                 className="min-h-screen flex flex-col gap-6 pb-6"

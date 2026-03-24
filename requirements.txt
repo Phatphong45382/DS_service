@@ -5,3 +5,5 @@ dataiku-api-client
 pydantic
 aiofiles
 pandas
+google-genai
+requests

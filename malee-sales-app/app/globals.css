@@ -41,9 +41,9 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  --font-inter: Inter, sans-serif;
+  --font-manrope: Manrope, sans-serif;
   --font-jetbrains-mono: JetBrains Mono, monospace;
-  --font-display: var(--font-outfit), 'Plus Jakarta Sans', Inter, sans-serif;
+  --font-display: var(--font-manrope), sans-serif;
 
   /* Warm Palette Color Registrations */
   --color-warm-bg-card: var(--warm-bg-card);
@@ -162,13 +162,15 @@
 
   html {
     background: #F8F9FA !important;
+    height: 100%;
   }
 
   body {
     background: #F8F9FA !important;
-    min-height: 100vh;
+    height: 100%;
+    overflow: hidden;
     color: #0f172a;
-    font-family: var(--font-inter);
+    font-family: var(--font-manrope);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -283,7 +285,7 @@
   }
 }
 
-/* Font alias — maps font-poppins class to the installed Outfit display font */
+/* Font alias — maps font-poppins class to the display font */
 @utility font-poppins {
   font-family: var(--font-display);
 }

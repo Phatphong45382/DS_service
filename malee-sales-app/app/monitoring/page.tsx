@@ -1,17 +1,16 @@
 import { MainLayout } from "@/components/layout/main-layout";
-import { PageHeader } from "@/components/ui/page-header";
+
 import { HealthOverview } from "@/components/monitoring/health-overview";
 import { ActualVsForecastChart } from "@/components/monitoring/actual-vs-forecast";
 import { AlertsFeed } from "@/components/monitoring/alerts-feed";
 
 export default function MonitoringPage() {
     return (
-        <MainLayout>
+        <MainLayout
+            title="Monitoring & Alerts"
+            description="Track forecast accuracy and investigate anomalies"
+        >
             <div className="space-y-10">
-                <PageHeader
-                    title="Monitoring & Alerts"
-                    description="Track forecast accuracy and investigate anomalies"
-                />
 
                 {/* Health Overview */}
                 <HealthOverview />

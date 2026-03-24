@@ -72,7 +72,7 @@ export function ProductionTable() {
                         <TableIcon className="w-5 h-5 text-slate-600" />
                     </div>
                     <div>
-                        <h2 className="text-lg font-bold text-slate-900 tracking-tight font-display">Production Plan Details</h2>
+                        <h2 className="text-xl font-bold text-slate-900 tracking-tight font-display">Production Plan Details</h2>
                         <p className="text-sm text-slate-400 font-medium">Target for {formatMonth(generateYearMonth(1))}</p>
                     </div>
                 </div>

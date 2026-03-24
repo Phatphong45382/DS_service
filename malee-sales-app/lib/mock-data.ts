@@ -3,11 +3,11 @@
 // ============================================================
 
 export const SKUS = [
-  "Coconut Water 350ml",
-  "Orange Juice 200ml",
-  "Orange Juice 1000ml",
-  "Apple Juice 200ml",
-  "Apple Juice 1000ml",
+  "Crispy Chips 75g",
+  "Corn Stick 40g",
+  "Corn Stick 150g",
+  "Rice Cracker 30g",
+  "Rice Cracker 120g",
 ] as const
 
 export type SKU = (typeof SKUS)[number]
@@ -77,11 +77,11 @@ function randBetween(min: number, max: number) {
 
 function generateSeed(sku: SKU): number {
   const seeds: Record<SKU, number> = {
-    "Coconut Water 350ml": 5000,
-    "Orange Juice 200ml": 8000,
-    "Orange Juice 1000ml": 3500,
-    "Apple Juice 200ml": 6500,
-    "Apple Juice 1000ml": 2800,
+    "Crispy Chips 75g": 5000,
+    "Corn Stick 40g": 8000,
+    "Corn Stick 150g": 3500,
+    "Rice Cracker 30g": 6500,
+    "Rice Cracker 120g": 2800,
   }
   return seeds[sku]
 }
@@ -277,8 +277,8 @@ export const validationChecks: ValidationCheck[] = [
   { rule: "Value: actual_units >= 0", status: "pass", message: "All values non-negative" },
   { rule: "Value: promo_days range", status: "pass", message: "All values in 0..31" },
   { rule: "Value: discount_pct range", status: "pass", message: "All values in 0..100" },
-  { rule: "Consistency: promo_flag=0 checks", status: "warning", message: "2 rows have promo_flag=0 but promo_days>0 (2023-08, OJ 200ml; 2024-02, Apple 200ml)" },
-  { rule: "Outlier: Z-score check", status: "warning", message: "1 potential outlier: Coconut Water 350ml, 2024-07 (z=2.3, value 6,842 vs median 5,200)" },
+  { rule: "Consistency: promo_flag=0 checks", status: "warning", message: "2 rows have promo_flag=0 but promo_days>0 (2023-08, Corn Stick 40g; 2024-02, Rice Cracker 30g)" },
+  { rule: "Outlier: Z-score check", status: "warning", message: "1 potential outlier: Crispy Chips 75g, 2024-07 (z=2.3, value 6,842 vs median 5,200)" },
 ]
 
 // Helper: aggregate by month across SKUs

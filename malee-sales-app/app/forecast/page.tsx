@@ -14,7 +14,7 @@ import {
   aggregateForecastByMonth,
   SKUS,
 } from "@/lib/mock-data"
-import { PageHeader } from "@/components/page-header"
+
 import { ChartCard } from "@/components/chart-card"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -163,12 +163,11 @@ export default function ForecastPage() {
   }, [filteredForecast, selectedSku])
 
   return (
-    <MainLayout title="Forecast">
-      <div className="flex flex-col gap-6">
-        <PageHeader
-          title="Forecast"
-          description="Latest demand forecast with uncertainty bands and risk assessment"
-        >
+    <MainLayout
+      title="Forecast"
+      description="Latest demand forecast with uncertainty bands and risk assessment"
+      action={
+        <div className="flex items-center gap-2">
           <Button variant="outline" className="bg-white border-slate-300 hover:bg-slate-50" asChild>
             <Link href={`/runs/${selectedRunId}`}>
               <FileText className="mr-2 h-4 w-4" />
@@ -181,8 +180,10 @@ export default function ForecastPage() {
               Scenarios
             </Link>
           </Button>
-        </PageHeader>
-
+        </div>
+      }
+    >
+      <div className="flex flex-col gap-6">
         {/* Filters: SKU selector + Run selector + toggles */}
         <div className="flex flex-wrap items-center gap-3 bg-white rounded-xl border border-slate-200 px-4 py-2.5 shadow-enterprise-sm">
           <div className="flex items-center gap-2">

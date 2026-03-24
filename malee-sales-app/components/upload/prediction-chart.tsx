@@ -125,7 +125,7 @@ export default function PredictionChart({ data, filename }: PredictionChartProps
                         <TrendingUp className="w-6 h-6 text-indigo-600" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-slate-900 tracking-tight font-display">Prediction Result</h2>
+                        <h2 className="text-2xl font-bold text-slate-900 tracking-tight font-display">Prediction Result</h2>
                         <p className="text-sm text-slate-500 font-medium mt-1">
                             Actuals vs Forecast based on {filename || 'uploaded data'}
                         </p>

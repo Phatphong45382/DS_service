@@ -20,16 +20,16 @@ interface ParetoData {
 }
 
 const data: ParetoData[] = [
-    { name: '7-Eleven x coconut 350ml', error: 220000, cumulativePercentage: 26 },
-    { name: 'Lotus x coconut 350ml', error: 160000, cumulativePercentage: 46 },
-    { name: 'BigC x coconut 350ml', error: 120000, cumulativePercentage: 60 },
-    { name: 'Makro x coconut 350ml', error: 90000, cumulativePercentage: 71 },
-    { name: 'CJ x coconut 350ml', error: 70000, cumulativePercentage: 79 },
-    { name: 'Tops x coconut 350ml', error: 50000, cumulativePercentage: 85 },
-    { name: 'Online x coconut 350ml', error: 40000, cumulativePercentage: 90 },
-    { name: 'Other MT x coconut 350ml', error: 30000, cumulativePercentage: 94 },
-    { name: 'Traditional x coconut 350ml', error: 25000, cumulativePercentage: 98 },
-    { name: 'Export x coconut 350ml', error: 20000, cumulativePercentage: 100 },
+    { name: 'FreshMart x Chips 75g', error: 220000, cumulativePercentage: 26 },
+    { name: 'MegaStore x Chips 75g', error: 160000, cumulativePercentage: 46 },
+    { name: 'ValuePlus x Chips 75g', error: 120000, cumulativePercentage: 60 },
+    { name: 'CityGrocery x Chips 75g', error: 90000, cumulativePercentage: 71 },
+    { name: 'RetailCo x Chips 75g', error: 70000, cumulativePercentage: 79 },
+    { name: 'QuickShop x Chips 75g', error: 50000, cumulativePercentage: 85 },
+    { name: 'Online x Chips 75g', error: 40000, cumulativePercentage: 90 },
+    { name: 'Other MT x Chips 75g', error: 30000, cumulativePercentage: 94 },
+    { name: 'Traditional x Chips 75g', error: 25000, cumulativePercentage: 98 },
+    { name: 'Export x Chips 75g', error: 20000, cumulativePercentage: 100 },
 ];
 
 const CustomTooltip = ({ active, payload, label }: any) => {

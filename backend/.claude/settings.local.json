@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python -m uvicorn backend.main:app --host 0.0.0.0 --port 8080 --reload)",
+      "Bash(pip install:*)",
+      "Bash(python --version && python -m uvicorn --version)",
+      "Bash(cd /c/work/pre_sale/DS_service/Malee && /c/Users/phatp/AppData/Local/Programs/Python/Python312/python.exe start_backend.py)",
+      "Bash(python start_backend.py)",
+      "Bash(cd /c/work/pre_sale/DS_service/Malee && python -u start_backend.py 2>&1 | head -50)",
+      "Bash(python -c \"import uvicorn; print\\('uvicorn ok'\\)\" 2>&1)",
+      "Bash(python -c \"import fastapi\" 2>&1)",
+      "Bash(python -m pip install -r requirements.txt)",
+      "Bash(/c/Users/phatp/AppData/Local/Programs/Python/Python312/python.exe -m pip install -r /c/work/pre_sale/DS_service/Malee/requirements.txt)",
+      "Bash(/c/Users/phatp/AppData/Local/Programs/Python/Python312/python.exe start_backend.py)",
+      "Bash(netstat -ano | grep ':8080' || netstat -ano | findstr ':8080')",
+      "Bash(curl -s http://localhost:8081/api/v1/health | head -20)",
+      "Bash(cd /c/work/pre_sale/DS_service/Malee/malee-sales-app && npm run dev -- --port 3001)",
+      "Bash(netstat -ano | findstr ':3001' | head -5)",
+      "Bash(tasklist | findstr \"28572\")",
+      "Bash(taskkill /PID 28572 /F)",
+      "Bash(cmd.exe /c 'taskkill /PID 28572 /F')",
+      "Bash(cmd //c taskkill //PID 28572 //F 2>&1 || true)",
+      "Bash(ls -la /c/work/pre_sale/DS_service/Malee/malee-sales-app/.env* 2>/dev/null || echo \"No .env files found\")",
+      "Bash(netstat -ano | findstr ':3001' | findstr 'LISTENING')",
+      "Bash(cmd //c taskkill //PID 40784 //F)"
+    ]
+  }
+}

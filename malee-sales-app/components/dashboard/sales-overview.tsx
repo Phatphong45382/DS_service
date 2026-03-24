@@ -38,7 +38,7 @@ export function SalesOverview() {
         const link = document.createElement("a");
         const url = URL.createObjectURL(blob);
         link.setAttribute("href", url);
-        link.setAttribute("download", "malee_sales_data.csv");
+        link.setAttribute("download", "sales_data.csv");
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);

@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { usePlanning } from "@/lib/planning-context";
 import { MainLayout } from "@/components/layout/main-layout";
 
-import { PageHeader } from "@/components/ui/page-header";
+
 
 import { OverviewKPICards } from "@/components/planning/overview-kpi-cards";
 // import { TrendChart } from "@/components/planning/trend-chart";
@@ -23,15 +23,11 @@ export default function OverviewPage() {
         setActivePage('overview');
     }, [setActivePage]);
     return (
-        <MainLayout>
+        <MainLayout
+            title="Executive Summary"
+            description="ภาพรวมยอดขายและแผนการผลิตที่เชื่อมต่อกับ Dataiku จริง"
+        >
             <div className="space-y-6">
-                <div className="flex flex-col gap-0">
-                    <PageHeader
-                        title="Executive Summary"
-                        description="ภาพรวมยอดขายและแผนการผลิตที่เชื่อมต่อกับ Dataiku จริง"
-                        className="mb-2"
-                    />
-                </div>
 
                 {/* 0. Filter Section */}
                 <div className="space-y-2">

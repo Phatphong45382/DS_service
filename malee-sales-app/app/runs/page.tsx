@@ -8,7 +8,7 @@ import {
   formatDuration,
   formatDate,
 } from "@/lib/mock-data"
-import { PageHeader } from "@/components/page-header"
+
 import { StatusBadge } from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -70,20 +70,19 @@ export default function RunsPage() {
   }
 
   return (
-    <MainLayout title="Runs">
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Runs Center"
-        description="History of all forecast runs with governance and comparison tools"
-      >
+    <MainLayout
+      title="Runs Center"
+      description="History of all forecast runs with governance and comparison tools"
+      action={
         <Button asChild>
           <Link href="/new-prediction">
             <Play className="mr-2 h-4 w-4" />
             New Run
           </Link>
         </Button>
-      </PageHeader>
-
+      }
+    >
+    <div className="flex flex-col gap-6">
       {/* Filters */}
       <div className="flex flex-wrap items-center gap-3">
         <div className="relative flex-1 min-w-[200px] max-w-[320px]">

@@ -194,7 +194,7 @@ export default function AnalyticsDashboardPage() {
     );
 
     return (
-        <MainLayout title="Analytics Dashboard" action={HeaderAction}>
+        <MainLayout title="Analytics Dashboard" description="Performance overview and analysis" action={HeaderAction}>
             <Tabs defaultValue="overview" className="flex flex-col gap-4 pb-6" onValueChange={(v) => { setActiveTab(v); if (v !== 'analysis') setShowInterpret(false); }}>
                 <div className="flex items-center gap-3">
                     <TabsList variant="line" className="w-fit">

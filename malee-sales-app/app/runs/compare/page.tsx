@@ -14,7 +14,7 @@ import {
   SKUS,
   type SKU,
 } from "@/lib/mock-data"
-import { PageHeader } from "@/components/page-header"
+
 import { ChartCard } from "@/components/chart-card"
 import { StatusBadge } from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
@@ -63,8 +63,7 @@ export default function ComparePage() {
 
   if (!runA || !runB) {
     return (
-      <div className="flex flex-col gap-6">
-        <PageHeader title="Compare Runs" description="One or both runs not found" />
+      <MainLayout title="Compare Runs" description="One or both runs not found">
         <Card className="p-8 text-center">
           <p className="text-sm text-muted-foreground mb-4">
             Could not find runs: {runIdA} and {runIdB}
@@ -76,7 +75,7 @@ export default function ComparePage() {
             </Link>
           </Button>
         </Card>
-      </div>
+      </MainLayout>
     )
   }
 
@@ -129,19 +128,19 @@ export default function ComparePage() {
   const totalDiffPct = ((totalDiff / totalA) * 100).toFixed(1)
 
   return (
-    <MainLayout>
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Compare Runs"
-        description={`Side-by-side comparison of ${runIdA} vs ${runIdB}`}
-      >
+    <MainLayout
+      title="Compare Runs"
+      description={`Side-by-side comparison of ${runIdA} vs ${runIdB}`}
+      action={
         <Button variant="outline" asChild>
           <Link href="/runs">
             <ArrowLeft className="mr-2 h-4 w-4" />
             Back to Runs
           </Link>
         </Button>
-      </PageHeader>
+      }
+    >
+    <div className="flex flex-col gap-6">
 
       {/* Summary strip */}
       <div className="grid gap-4 md:grid-cols-3">
