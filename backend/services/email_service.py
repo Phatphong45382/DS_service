@@ -134,14 +134,14 @@ class EmailService:
             if stripped[0] in "•-*":
                 if not in_list:
                     html_parts.append(
-                        '<ul style="margin:4px 0;padding-left:0;list-style:none">'
+                        '<ul style="margin:8px 0;padding-left:20px;list-style:none">'
                     )
                     in_list = True
                 content = stripped.lstrip("•-* ").strip()
                 content = self._apply_inline(content)
                 html_parts.append(
-                    f'<li style="padding:6px 12px;margin:4px 0;background:#f8fafc;border-radius:6px;'
-                    f'font-size:14px;border-left:3px solid #6366f1">{content}</li>'
+                    f'<li style="padding:4px 0;margin:2px 0;font-size:14px;color:#334155;'
+                    f'line-height:1.7">▸ {content}</li>'
                 )
                 continue
 
@@ -176,8 +176,10 @@ class EmailService:
     def _apply_inline(self, text: str) -> str:
         """Convert **bold** and markdown-style inline formatting."""
         import re
-        # **bold**
+        # **bold** (handle spaces and colon before closing **)
         text = re.sub(r"\*\*(.+?)\*\*", r'<strong style="color:#1e293b">\1</strong>', text)
+        # Clean up any leftover stray ** or *
+        text = text.replace("**", "")
         # Highlight numbers with units (e.g. 25,700,000 หน่วย or +80.8%)
         text = re.sub(
             r"([\+\-]?\d[\d,]*\.?\d*\s*(?:%|หน่วย|บาท|ล้าน|พัน))",
