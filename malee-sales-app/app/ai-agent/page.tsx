@@ -487,6 +487,7 @@ export default function AIAgentPage() {
                         <Settings2 className="w-3.5 h-3.5" />
                         Prompt
                     </button>
+                    {process.env.NODE_ENV === 'development' && (
                     <button
                         onClick={() => setShowDebug(!showDebug)}
                         className={`flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors duration-200 cursor-pointer ${
@@ -496,6 +497,7 @@ export default function AIAgentPage() {
                         <Server className="w-3.5 h-3.5" />
                         Debug
                     </button>
+                    )}
                 </div>
             }
         >

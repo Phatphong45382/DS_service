@@ -428,7 +428,8 @@ export default function AIOcrPage() {
                     </div>
                 </div>
 
-                {/* Debug Panel */}
+                {/* Debug Panel (dev only) */}
+                {process.env.NODE_ENV === 'development' && (
                 <div className="bg-slate-900 text-slate-300 rounded-2xl overflow-hidden shadow-sm border border-slate-700">
                     <div className="flex items-center gap-2 px-5 py-2.5 border-b border-slate-700 bg-slate-800">
                         <Server className="w-4 h-4 text-slate-400" />
@@ -465,6 +466,7 @@ export default function AIOcrPage() {
                         )}
                     </div>
                 </div>
+                )}
             </div>
         </MainLayout>
     );

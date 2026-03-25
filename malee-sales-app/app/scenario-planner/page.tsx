@@ -784,7 +784,8 @@ export default function ScenarioPlannerPage() {
           </div>
         </div>
 
-        {/* ──── Debug Panel ──── */}
+        {/* ──── Debug Panel (dev only) ──── */}
+        {process.env.NODE_ENV === 'development' && (
         <div className="border border-slate-200 rounded-lg overflow-hidden bg-slate-950 text-slate-300">
           <div
             role="button"
@@ -920,6 +921,7 @@ export default function ScenarioPlannerPage() {
             </div>
           )}
         </div>
+        )}
       </div>
     </MainLayout>
   )
