@@ -19,7 +19,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { PageHeader } from "@/components/page-header"
 import { getDashboardFilters, predictCompare } from "@/lib/api-client"
 // Recharts no longer used — waterfall is custom SVG
 
@@ -391,13 +390,11 @@ export default function ScenarioPlannerPage() {
   const canPredict = productGroup && flavor && size
 
   return (
-    <MainLayout title="What-if Scenarios">
+    <MainLayout
+      title="What-if Scenario"
+      description="Select product features, adjust promo parameters, and predict sales using ML model."
+    >
       <div className="flex flex-col gap-6">
-        <PageHeader
-          title="What-if Scenario"
-          description="Select product features, adjust promo parameters, and predict sales using ML model."
-        />
-
         <div className="grid gap-6 lg:grid-cols-3">
           {/* ──── Left: Controls (compact single card) ──── */}
           <div className="flex flex-col gap-3">
