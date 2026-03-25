@@ -263,15 +263,15 @@ class AgentTools:
 
         try:
             from ..services.email_service import email_service
-            sent = email_service.send_report(
+            result = email_service.send_report(
                 to_email=to,
                 subject=subject,
                 report_text=body,
             )
-            if sent:
+            if result["ok"]:
                 return {"status": "sent", "to": to, "subject": subject}
             else:
-                return {"status": "failed", "message": "ส่งเมลไม่สำเร็จ"}
+                return {"status": "failed", "message": f"ส่งเมลไม่สำเร็จ: {result['error']}"}
         except Exception as e:
             return {"status": "error", "message": str(e)}
 

@@ -16,9 +16,14 @@ class EmailService:
         to_email: str,
         subject: str,
         report_text: str,
-    ) -> bool:
-        """Send AI-generated report via Gmail SMTP."""
+    ) -> dict:
+        """Send AI-generated report via Gmail SMTP.
+        Returns {"ok": True} on success, {"ok": False, "error": "..."} on failure.
+        """
         try:
+            if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
+                return {"ok": False, "error": "SMTP_USER or SMTP_PASSWORD not configured"}
+
             msg = MIMEMultipart("alternative")
             msg["From"] = f"Sales AI Report <{settings.SMTP_USER}>"
             msg["To"] = to_email
@@ -31,16 +36,22 @@ class EmailService:
             html_body = self._build_html(subject, report_text)
             msg.attach(MIMEText(html_body, "html", "utf-8"))
 
-            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT) as server:
+            with smtplib.SMTP(settings.SMTP_HOST, settings.SMTP_PORT, timeout=15) as server:
                 server.starttls()
                 server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                 server.send_message(msg)
 
             logger.info(f"Report email sent to {to_email}")
-            return True
+            return {"ok": True}
+        except smtplib.SMTPAuthenticationError as e:
+            logger.error(f"SMTP auth error: {e}", exc_info=True)
+            return {"ok": False, "error": f"Gmail authentication failed: {e.smtp_error.decode() if isinstance(e.smtp_error, bytes) else e.smtp_error}"}
+        except smtplib.SMTPException as e:
+            logger.error(f"SMTP error: {e}", exc_info=True)
+            return {"ok": False, "error": f"SMTP error: {e}"}
         except Exception as e:
             logger.error(f"Email send error: {e}", exc_info=True)
-            return False
+            return {"ok": False, "error": str(e)}
 
     def _build_html(self, subject: str, report_text: str) -> str:
         now = datetime.now().strftime("%d/%m/%Y %H:%M")

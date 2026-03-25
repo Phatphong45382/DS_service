@@ -282,12 +282,13 @@ async def generate_report(payload: Dict[str, Any] = Body(...)):
         today = datetime.now().strftime("%d/%m/%Y")
         subject = f"Sales Report - {today}"
 
-        sent = email_service.send_report(
+        email_result = email_service.send_report(
             to_email=to_email,
             subject=subject,
             report_text=report,
         )
-        result["email_sent"] = sent
+        result["email_sent"] = email_result["ok"]
+        result["email_error"] = email_result.get("error")
         result["email_to"] = to_email
 
     return APIResponse(success=True, data=result)
