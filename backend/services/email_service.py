@@ -1,5 +1,6 @@
 import smtplib
 import logging
+import requests
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
@@ -17,9 +18,48 @@ class EmailService:
         subject: str,
         report_text: str,
     ) -> dict:
-        """Send AI-generated report via Gmail SMTP.
+        """Send AI-generated report.
+        Uses Resend API if RESEND_API_KEY is set, otherwise falls back to Gmail SMTP.
         Returns {"ok": True} on success, {"ok": False, "error": "..."} on failure.
         """
+        if settings.RESEND_API_KEY:
+            return self._send_via_resend(to_email, subject, report_text)
+        return self._send_via_smtp(to_email, subject, report_text)
+
+    # ─── Resend API (for deployed environments) ───
+
+    def _send_via_resend(self, to_email: str, subject: str, report_text: str) -> dict:
+        try:
+            html_body = self._build_html(subject, report_text)
+            resp = requests.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {settings.RESEND_API_KEY}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "from": f"Sales AI Report <{settings.RESEND_FROM}>",
+                    "to": [to_email],
+                    "subject": subject,
+                    "html": html_body,
+                    "text": report_text,
+                },
+                timeout=15,
+            )
+            if resp.status_code == 200:
+                logger.info(f"Report email sent via Resend to {to_email}")
+                return {"ok": True}
+            else:
+                error_msg = resp.json().get("message", resp.text)
+                logger.error(f"Resend API error: {resp.status_code} {error_msg}")
+                return {"ok": False, "error": f"Resend API error: {error_msg}"}
+        except Exception as e:
+            logger.error(f"Resend send error: {e}", exc_info=True)
+            return {"ok": False, "error": str(e)}
+
+    # ─── Gmail SMTP (for local development) ───
+
+    def _send_via_smtp(self, to_email: str, subject: str, report_text: str) -> dict:
         try:
             if not settings.SMTP_USER or not settings.SMTP_PASSWORD:
                 return {"ok": False, "error": "SMTP_USER or SMTP_PASSWORD not configured"}
@@ -29,10 +69,8 @@ class EmailService:
             msg["To"] = to_email
             msg["Subject"] = subject
 
-            # Plain text version
             msg.attach(MIMEText(report_text, "plain", "utf-8"))
 
-            # HTML version
             html_body = self._build_html(subject, report_text)
             msg.attach(MIMEText(html_body, "html", "utf-8"))
 
@@ -41,7 +79,7 @@ class EmailService:
                 server.login(settings.SMTP_USER, settings.SMTP_PASSWORD)
                 server.send_message(msg)
 
-            logger.info(f"Report email sent to {to_email}")
+            logger.info(f"Report email sent via SMTP to {to_email}")
             return {"ok": True}
         except smtplib.SMTPAuthenticationError as e:
             logger.error(f"SMTP auth error: {e}", exc_info=True)

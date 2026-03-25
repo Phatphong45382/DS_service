@@ -35,11 +35,15 @@ class Settings:
         "gemini-3-flash-preview",
     ]
 
-    # Email (Gmail SMTP) Settings
+    # Email (Gmail SMTP) Settings — used locally
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     SMTP_USER: str = os.getenv("SMTP_USER", "")
     SMTP_PASSWORD: str = os.getenv("SMTP_PASSWORD", "")
+
+    # Resend API — used on deployed environments (takes priority over SMTP)
+    RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
+    RESEND_FROM: str = os.getenv("RESEND_FROM", "noreply@resend.dev")
 
     # Dataiku Prediction API
     DATAIKU_PREDICT_URL: str = os.getenv("DATAIKU_PREDICT_URL", "")
