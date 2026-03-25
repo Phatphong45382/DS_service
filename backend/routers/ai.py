@@ -182,6 +182,8 @@ async def chat(payload: Dict[str, Any] = Body(...)):
             context.get("top_products", []),
             context.get("by_customer", []),
             context.get("monthly_ts", []),
+            analytics=context.get("analytics"),
+            deep_dive=context.get("deep_dive"),
         )
         system += f"\n\nข้อมูลยอดขายปัจจุบัน:\n{data_summary}"
 
@@ -549,6 +551,8 @@ def _build_data_summary(
     top_products: List[Dict],
     by_customer: List[Dict],
     monthly_ts: List[Dict],
+    analytics: Optional[Dict] = None,
+    deep_dive: Optional[Dict] = None,
 ) -> str:
     lines = []
 
@@ -563,7 +567,7 @@ def _build_data_summary(
         total_actual = kpi.get("total_actual", 0)
         total_planned = kpi.get("total_planned", 0)
 
-        lines.append("=== KPI Summary ===")
+        lines.append("=== KPI Summary (Overview) ===")
         lines.append(f"Total Quantity: {total_qty:,.0f}")
         lines.append(f"MoM Growth: {mom:+.1f}%")
         if total_planned > 0:
@@ -592,5 +596,47 @@ def _build_data_summary(
         lines.append("\n=== Top 5 Customers ===")
         for c in by_customer[:5]:
             lines.append(f"  {c.get('label', '')}: {c.get('qty', 0):,.0f}")
+
+    # Analytics Dashboard
+    if analytics:
+        a_kpi = analytics.get("kpi") if isinstance(analytics, dict) else None
+        if a_kpi:
+            lines.append("\n=== Analytics Dashboard KPI ===")
+            lines.append(f"Total Actual: {a_kpi.get('total_actual', 0):,.0f}")
+            lines.append(f"Total Planned: {a_kpi.get('total_planned', 0):,.0f}")
+            lines.append(f"WAPE: {a_kpi.get('wape', 0):.1f}%")
+            lines.append(f"Bias: {a_kpi.get('bias', 0):+.1f}%")
+            lines.append(f"Over-plan Rate: {a_kpi.get('over_plan_rate', 0):.1f}%")
+            lines.append(f"Active Items: {a_kpi.get('total_active_items', 0)}")
+            lines.append(f"Target Achievement: {a_kpi.get('target_achievement_rate', 0):.1f}%")
+
+    # Deep Dive Dashboard
+    if deep_dive and isinstance(deep_dive, dict):
+        # Top under-plan items
+        under = deep_dive.get("ranking_under_plan", [])
+        if under:
+            lines.append("\n=== Deep Dive: Top 5 Under-Plan Items ===")
+            for item in under[:5]:
+                lines.append(
+                    f"  {item.get('flavor', '')} {item.get('size', '')} @ {item.get('customer', '')}: "
+                    f"Actual {item.get('actual', 0):,.0f} vs Plan {item.get('planned', 0):,.0f} "
+                    f"(Error {item.get('error', 0):+.1f}%)"
+                )
+        # Top over-plan items
+        over = deep_dive.get("ranking_over_plan", [])
+        if over:
+            lines.append("\n=== Deep Dive: Top 5 Over-Plan Items ===")
+            for item in over[:5]:
+                lines.append(
+                    f"  {item.get('flavor', '')} {item.get('size', '')} @ {item.get('customer', '')}: "
+                    f"Actual {item.get('actual', 0):,.0f} vs Plan {item.get('planned', 0):,.0f} "
+                    f"(Error {item.get('error', 0):+.1f}%)"
+                )
+        # Error distribution
+        err_dist = deep_dive.get("error_dist", [])
+        if err_dist:
+            lines.append("\n=== Deep Dive: Error Distribution ===")
+            for b in err_dist:
+                lines.append(f"  {b.get('bin', '')}: {b.get('count', 0)} items")
 
     return "\n".join(lines)

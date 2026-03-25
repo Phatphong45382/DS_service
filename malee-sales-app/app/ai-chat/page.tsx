@@ -4,7 +4,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { MainLayout } from '@/components/layout/main-layout';
 import { useSidebar } from '@/lib/sidebar-context';
 import { ModelSelector } from '@/components/ai/model-selector';
-import { sendChatMessage, getDashboardData, getChatPrompt, setChatPrompt, ragUploadDocument } from '@/lib/api-client';
+import { sendChatMessage, getDashboardData, getAnalyticsData, getDeepDiveAnalytics, getChatPrompt, setChatPrompt, ragUploadDocument } from '@/lib/api-client';
 import {
     Send, Loader2, Bot, User, Trash2,
     CheckCircle2, XCircle, Server, Clock, Sparkles,
@@ -93,12 +93,20 @@ export default function AIChatPage() {
         return () => container.removeEventListener('scroll', onScroll);
     }, [messages.length]);
 
-    // Load dashboard data as context
+    // Load ALL dashboard data as context
     const loadContext = useCallback(async () => {
         setContextLoading(true);
         try {
-            const data = await getDashboardData({});
-            setContext(data);
+            const [dashboard, analytics, deepDive] = await Promise.allSettled([
+                getDashboardData({}),
+                getAnalyticsData({}),
+                getDeepDiveAnalytics({}),
+            ]);
+            setContext({
+                dashboard: dashboard.status === 'fulfilled' ? dashboard.value : null,
+                analytics: analytics.status === 'fulfilled' ? analytics.value : null,
+                deep_dive: deepDive.status === 'fulfilled' ? deepDive.value : null,
+            });
         } catch (err) {
             console.error('Failed to load context:', err);
         } finally {
@@ -227,10 +235,15 @@ export default function AIChatPage() {
             const result = await sendChatMessage({
                 messages: apiMessages,
                 context: context ? {
-                    kpi: context.kpi || {},
-                    top_products: context.top_products || [],
-                    by_customer: context.by_customer || [],
-                    monthly_ts: context.monthly_ts || [],
+                    // Overview Dashboard
+                    kpi: context.dashboard?.kpi || {},
+                    top_products: context.dashboard?.top_products || [],
+                    by_customer: context.dashboard?.by_customer || [],
+                    monthly_ts: context.dashboard?.monthly_ts || [],
+                    // Analytics Dashboard
+                    analytics: context.analytics || {},
+                    // Deep Dive Dashboard
+                    deep_dive: context.deep_dive || {},
                 } : undefined,
                 knowledge_doc_ids: enabledDocs.length > 0 ? enabledDocs.map(d => d.doc_id) : undefined,
             });
