@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ArrowRight, ChevronDown, Database, Keyboard, MinusCircle, CheckCircle2, AlertCircle, ChevronRight, RotateCcw } from 'lucide-react';
+import { ArrowRight, ChevronDown, Database, Keyboard, MinusCircle, CheckCircle2, AlertCircle, ChevronRight, RotateCcw, Wand2 } from 'lucide-react';
 import { ParsedData } from '@/lib/file-utils';
 
 // ── Required model columns ──
@@ -16,11 +16,14 @@ interface ModelColumn {
 }
 
 const MODEL_COLUMNS: ModelColumn[] = [
-    { key: 'date', label: 'Date', description: 'วันที่ขาย (YYYY-MM-DD)', required: true, example: '2023-01-01' },
-    { key: 'sku', label: 'SKU', description: 'รหัส/ชื่อสินค้า', required: true, example: 'Chips 75g' },
-    { key: 'channel', label: 'Channel', description: 'ช่องทางขาย', required: true, example: 'FreshMart' },
-    { key: 'sales_qty', label: 'Sales Qty', description: 'จำนวนที่ขาย', required: true, example: '150' },
-    { key: 'actual_sale', label: 'Actual Sale', description: 'ยอดขายจริง (บาท)', required: false, defaultValue: '0', example: '145000' },
+    { key: 'customer', label: 'Customer', description: 'ชื่อลูกค้า/ช่องทาง', required: true, example: 'FreshMart' },
+    { key: 'destination', label: 'Destination', description: 'ปลายทาง/สาขา', required: true, example: 'DC Central 1' },
+    { key: 'year', label: 'Year', description: 'ปี (พ.ศ. หรือ ค.ศ.)', required: true, example: '2025' },
+    { key: 'month', label: 'Month', description: 'เดือน (1-12)', required: true, example: '1' },
+    { key: 'product', label: 'Product', description: 'กลุ่มสินค้า', required: true, example: 'Chips' },
+    { key: 'flavor', label: 'Flavor', description: 'รสชาติ', required: true, example: 'Original' },
+    { key: 'size', label: 'Size', description: 'ขนาด', required: true, example: '150g' },
+    { key: 'quantity', label: 'Quantity', description: 'จำนวนที่ขาย', required: true, example: '150' },
     { key: 'planed_sales_from_start', label: 'Planned Sales', description: 'ยอดขายเป้าหมาย', required: false, defaultValue: '0', example: '160000' },
     { key: 'has_promotion', label: 'Has Promotion', description: 'มี Promo หรือไม่ (0/1)', required: false, defaultValue: '0', example: '0' },
     { key: 'discount_pct', label: 'Discount %', description: '% ส่วนลด', required: false, defaultValue: '0', example: '10' },
@@ -102,6 +105,30 @@ export function ColumnMapping({ data, fileName, onConfirm, onBack }: ColumnMappi
             initial[col.key] = { source: 'none' };
         }
         setMappings(initial);
+    };
+
+    // Auto map columns by matching names (case-insensitive, ignoring spaces/underscores/hyphens)
+    const autoMap = () => {
+        const normalize = (s: string) => s.toLowerCase().replace(/[\s_\-]/g, '');
+        const used = new Set<string>();
+        const result: Record<string, MappingEntry> = {};
+
+        for (const col of MODEL_COLUMNS) {
+            const colNorm = normalize(col.key);
+            const labelNorm = normalize(col.label);
+            const match = data.headers.find(h => {
+                if (used.has(h)) return false;
+                const hNorm = normalize(h);
+                return hNorm === colNorm || hNorm === labelNorm;
+            });
+            if (match) {
+                result[col.key] = { source: 'column', columnName: match };
+                used.add(match);
+            } else {
+                result[col.key] = { source: 'none' };
+            }
+        }
+        setMappings(result);
     };
 
     // Build mapped data and proceed
@@ -198,8 +225,15 @@ export function ColumnMapping({ data, fileName, onConfirm, onBack }: ColumnMappi
                     </>
                 )}
                 <button
+                    onClick={autoMap}
+                    className="ml-auto flex items-center gap-1 text-[11px] px-2.5 py-1 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-medium cursor-pointer"
+                >
+                    <Wand2 className="w-3 h-3" />
+                    Auto Mapping
+                </button>
+                <button
                     onClick={resetMappings}
-                    className="ml-auto flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"
+                    className="flex items-center gap-1 text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
                     <RotateCcw className="w-3 h-3" />
                     Reset
