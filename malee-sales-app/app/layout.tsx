@@ -16,7 +16,7 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Sales Forecast Analytics",
+  title: "Demand Forecast",
   description: "Demand forecasting and sales analytics dashboard with ML-powered predictions",
 };
 
