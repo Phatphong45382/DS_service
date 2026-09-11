@@ -5,12 +5,23 @@ import Link from 'next/link';
 // import { TrendChart } from '@/components/planning/trend-chart';
 import { downloadForecastResultFile } from '@/lib/api-client';
 import PredictionChart from './prediction-chart';
+import { downloadDemoForecastResult } from '@/lib/demo-data';
 
 interface RunResultsProps {
     data?: any;
 }
 
 export function RunResults({ data }: RunResultsProps) {
+    const isDemo = Boolean(data?.demo);
+
+    const handleDownload = () => {
+        if (isDemo) {
+            downloadDemoForecastResult(data.rows);
+        } else {
+            downloadForecastResultFile(data?.filename);
+        }
+    };
+
     return (
         <div className="space-y-6">
             {/* Success Banner */}
@@ -20,7 +31,7 @@ export function RunResults({ data }: RunResultsProps) {
                         <CheckCircle2 className="w-8 h-8 text-emerald-600" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-emerald-900">Forecast Generated Successfully</h2>
+                        <h2 className="text-xl font-bold text-emerald-900">{isDemo ? 'Demo Forecast Generated' : 'Forecast Generated Successfully'}</h2>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-emerald-700 text-sm font-medium">
                             <span className="flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
@@ -29,18 +40,18 @@ export function RunResults({ data }: RunResultsProps) {
                             <span className="hidden md:inline text-emerald-300">•</span>
                             <span>Duration: 45s</span>
                             <span className="hidden md:inline text-emerald-300">•</span>
-                            <span>Model: Time Series</span>
+                                <span>Model: {isDemo ? 'Demo model' : 'Time Series'}</span>
                         </div>
                     </div>
                 </div>
 
                 <div className="flex items-center gap-3 w-full md:w-auto">
                     <button
-                        onClick={() => downloadForecastResultFile(data?.filename)}
+                        onClick={handleDownload}
                         className="flex-1 md:flex-none justify-center px-4 py-2 bg-white border border-emerald-200 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors flex items-center gap-2 shadow-sm text-sm"
                     >
                         <Download className="w-4 h-4" />
-                        Download CSV
+                        {isDemo ? 'Download Demo CSV' : 'Download CSV'}
                     </button>
                     <Link
                         href="/scenario-planner"

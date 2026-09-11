@@ -9,6 +9,7 @@ import { ColumnMapping } from '@/components/upload/column-mapping';
 import { ForecastConfig } from '@/components/upload/forecast-config';
 import { RunResults } from '@/components/upload/run-results';
 import { ParsedData } from '@/lib/file-utils';
+import { createDemoForecastResult, DEMO_FILE_NAME, getDemoInputData } from '@/lib/demo-data';
 import { useState } from 'react';
 import { FileSpreadsheet, ScanLine, Check, Upload, Eye, Settings2, BarChart3, ChevronRight, Download, ArrowRight, Lightbulb, RotateCcw, CheckCircle2, AlertTriangle, XCircle, AlertCircle, Database } from 'lucide-react';
 
@@ -22,12 +23,23 @@ export default function NewPredictionPage() {
     const [fileName, setFileName] = useState<string>('');
     const [uploadResult, setUploadResult] = useState<any>(null);
     const [isRunning, setIsRunning] = useState(false);
+    const [isDemoMode, setIsDemoMode] = useState(false);
 
     const handleDataParsed = (data: ParsedData, name: string, result?: any) => {
         setUploadedData(data);
         setFileName(name);
         setUploadResult(result);
+        setIsDemoMode(false);
         // Stay on upload step — show inline preview
+    };
+
+    const handleUseDemoData = () => {
+        setUploadedData(getDemoInputData());
+        setMappedData(null);
+        setFileName(DEMO_FILE_NAME);
+        setUploadResult({ demo: true, filename: DEMO_FILE_NAME });
+        setIsDemoMode(true);
+        setCurrentStep('upload');
     };
 
     const [mappedData, setMappedData] = useState<ParsedData | null>(null);
@@ -46,6 +58,13 @@ export default function NewPredictionPage() {
     const handleRunForecast = async () => {
         setIsRunning(true);
         try {
+            if (isDemoMode) {
+                await new Promise(resolve => setTimeout(resolve, 600));
+                setResultData(createDemoForecastResult());
+                setCurrentStep('results');
+                return;
+            }
+
             const { runForecast, getForecastResults } = await import('@/lib/api-client');
 
             console.log("Starting forecast...");
@@ -179,6 +198,7 @@ export default function NewPredictionPage() {
                                                             <p className="text-[11px] text-slate-500">
                                                                 {uploadedData.summary.rowCount.toLocaleString()} rows, {uploadedData.summary.colCount} columns
                                                                 {fileName && <span className="ml-1 text-slate-400">— {fileName}</span>}
+                                                                {isDemoMode && <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-amber-700 font-semibold">Demo data</span>}
                                                             </p>
                                                             {errors.map((e, i) => (
                                                                 <div key={i} className="flex items-center gap-1 mt-1 text-[11px] text-rose-600">
@@ -227,7 +247,7 @@ export default function NewPredictionPage() {
                                             {/* Actions */}
                                             <div className="px-4 py-3 border-t border-slate-200 flex items-center gap-2 bg-white">
                                                 <button
-                                                    onClick={() => { setUploadedData(null); setFileName(''); setUploadResult(null); }}
+                                                    onClick={() => { setUploadedData(null); setFileName(''); setUploadResult(null); setIsDemoMode(false); }}
                                                     className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                                                 >
                                                     <RotateCcw className="w-3 h-3" />
@@ -249,11 +269,29 @@ export default function NewPredictionPage() {
                                         </div>
                                     ) : (
                                         /* Upload Panel */
-                                        uploadMode === 'excel' ? (
-                                            <UploadPanel onDataParsed={handleDataParsed} />
-                                        ) : (
-                                            <OCRUploadPanel onDataParsed={handleDataParsed} />
-                                        )
+                                        <div className="space-y-3">
+                                            {uploadMode === 'excel' ? (
+                                                <UploadPanel onDataParsed={handleDataParsed} />
+                                            ) : (
+                                                <OCRUploadPanel onDataParsed={handleDataParsed} />
+                                            )}
+                                            <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100">
+                                                    <BarChart3 className="h-4 w-4 text-amber-700" />
+                                                </div>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="text-xs font-semibold text-amber-900">No source file handy?</p>
+                                                    <p className="text-[11px] text-amber-700">Try the complete forecast flow with sample sales data.</p>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={handleUseDemoData}
+                                                    className="shrink-0 rounded-lg bg-amber-400 px-3 py-2 text-xs font-bold text-amber-950 shadow-sm transition-colors hover:bg-amber-300"
+                                                >
+                                                    Use demo data
+                                                </button>
+                                            </div>
+                                        </div>
                                     )}
                                 </div>
 
@@ -347,6 +385,7 @@ export default function NewPredictionPage() {
                             onRun={handleRunForecast}
                             isLoading={isRunning}
                             uploadResult={uploadResult}
+                            demoMode={isDemoMode}
                         />
                     )}
 

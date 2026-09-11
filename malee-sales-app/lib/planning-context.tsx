@@ -1,6 +1,7 @@
 'use client';
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import { usePathname } from 'next/navigation';
 import { GlobalFilters, ScenarioParams, GlobalSummary, KPI } from '@/types/planning';
 import { generateYearMonth, globalSummary as initialGlobalSummary } from './planning-data';
 import { getDashboardData, getDashboardFilters, getAnalyticsData, getAnalyticsFilters } from './api-client';
@@ -124,9 +125,16 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
     const [fullSummary, setFullSummary] = useState<DashboardSummaryResponse | null>(null);
     const [filterOptions, setFilterOptions] = useState<FilterOptionsResponse | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const pathname = usePathname();
+    const shouldFetchDashboard = ['/overview', '/analytics-dashboard', '/accuracy-deep-dive'].includes(pathname);
 
     // Fetch filter options (Cascade)
     useEffect(() => {
+        if (!shouldFetchDashboard) {
+            setIsLoading(false);
+            return;
+        }
+
         async function fetchOptions() {
             try {
                 // Prepare params for cascading
@@ -147,10 +155,14 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
             }
         }
         fetchOptions();
-    }, [activePage, filters.product_group, filters.flavor, filters.customer]); // Refetch when page or cascading keys change
+    }, [activePage, filters.product_group, filters.flavor, filters.customer, shouldFetchDashboard]); // Refetch when page or cascading keys change
 
     // Fetch dashboard data on applied filters change
     useEffect(() => {
+        if (!shouldFetchDashboard) {
+            return;
+        }
+
         async function fetchData() {
             try {
                 setIsLoading(true);
@@ -208,7 +220,7 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
         }
 
         fetchData();
-    }, [filters, activePage]);
+    }, [filters, activePage, shouldFetchDashboard]);
 
     const updateFilters = (partial: Partial<GlobalFilters>) => {
         const newFilters = { ...filters, ...partial };

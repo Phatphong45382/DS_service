@@ -10,9 +10,10 @@ interface ForecastConfigProps {
     onRun: () => void;
     isLoading: boolean;
     uploadResult?: any;
+    demoMode?: boolean;
 }
 
-export function ForecastConfig({ onRun, isLoading, uploadResult }: ForecastConfigProps) {
+export function ForecastConfig({ onRun, isLoading, uploadResult, demoMode = false }: ForecastConfigProps) {
     const [config, setConfig] = useState({
         horizon: 6,
         model: 'ensemble',
@@ -57,7 +58,9 @@ export function ForecastConfig({ onRun, isLoading, uploadResult }: ForecastConfi
                 </div>
                 <div>
                     <h2 className="text-xl font-bold text-slate-900">Configure Forecast Model</h2>
-                    <p className="text-sm text-slate-500">Set parameters for the AI prediction engine</p>
+                    <p className="text-sm text-slate-500">
+                        {demoMode ? 'Demo mode — no backend connection required' : 'Set parameters for the AI prediction engine'}
+                    </p>
                 </div>
             </div>
 
@@ -171,7 +174,7 @@ export function ForecastConfig({ onRun, isLoading, uploadResult }: ForecastConfi
                         className="w-full py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg"
                     >
                         <Play className="w-5 h-5 fill-current" />
-                        Run Forecast Model
+                        {demoMode ? 'Run Demo Forecast' : 'Run Forecast Model'}
                     </button>
                 ) : (
                     <div className="space-y-4 bg-slate-50 p-6 rounded-xl border border-slate-200">
