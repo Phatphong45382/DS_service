@@ -258,7 +258,7 @@ export default function AIAgentPage() {
         const startTime = Date.now();
         const debug: DebugInfo = {
             endpoint: `${apiBaseUrl}/api/v1/ai/agent`,
-            model: 'gemini-2.5-flash-lite',
+            model: 'AI Engine (Fast)',
             messageCount: messages.length + 1,
             responseTime: 0,
             totalSteps: 0,

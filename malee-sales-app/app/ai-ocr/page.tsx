@@ -77,7 +77,7 @@ export default function AIOcrPage() {
         const startTime = Date.now();
         const debug: DebugInfo = {
             endpoint: `${apiBaseUrl}/api/v1/ai/ocr`,
-            model: 'gemini-2.5-flash-lite (Vision)',
+            model: 'AI Engine (Vision)',
             filename: file.name,
             fileSize: `${(file.size / 1024).toFixed(1)} KB`,
             mimeType: file.type,
@@ -138,7 +138,7 @@ export default function AIOcrPage() {
                 <div className="flex items-center gap-3">
                     <div className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-full font-medium bg-violet-50 text-violet-700 border border-violet-200">
                         <ScanLine className="w-3.5 h-3.5" />
-                        Gemini Vision OCR
+                        AI Vision OCR
                     </div>
                     {(file || result) && (
                         <button
@@ -265,7 +265,7 @@ export default function AIOcrPage() {
                             <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
                                 <div className="flex flex-col items-center gap-4">
                                     <Loader2 className="w-10 h-10 text-violet-500 animate-spin" />
-                                    <p className="text-sm font-medium text-slate-600">Gemini Vision กำลังอ่านเอกสาร...</p>
+                                    <p className="text-sm font-medium text-slate-600">AI Vision กำลังอ่านเอกสาร...</p>
                                 </div>
                             </div>
                         ) : hasError ? (
@@ -460,7 +460,7 @@ export default function AIOcrPage() {
                                 <span><span className="text-slate-500">Size:</span> <span className="text-slate-300">{debugInfo.fileSize}</span></span>
                                 <span><span className="text-slate-500">Type:</span> <span className="text-slate-300">{debugInfo.mimeType}</span></span>
                                 <span><span className="text-slate-500">Time:</span> <span className={`font-semibold ${debugInfo.responseTime < 5000 ? 'text-emerald-400' : debugInfo.responseTime < 10000 ? 'text-yellow-400' : 'text-rose-400'}`}>{debugInfo.status === 'loading' ? '...' : `${(debugInfo.responseTime / 1000).toFixed(2)}s`}</span></span>
-                                {debugInfo.status === 'success' && <span className="text-emerald-400">Gemini Vision Response (not hardcoded)</span>}
+                                {debugInfo.status === 'success' && <span className="text-emerald-400">AI Vision Response (not hardcoded)</span>}
                                 {debugInfo.errorDetail && <span className="text-rose-400">Error: {debugInfo.errorDetail}</span>}
                             </div>
                         )}

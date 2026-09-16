@@ -41,7 +41,7 @@ export default function AIInsightsPage() {
         const debug: DebugInfo = {
             backendUrl: apiBaseUrl,
             aiEndpoint: `${apiBaseUrl}/api/v1/ai/insights`,
-            model: 'gemini-2.5-flash-lite',
+            model: 'AI Engine (Fast)',
             dataSource,
             kpiKeys: [],
             topProductsCount: 0,
@@ -103,7 +103,7 @@ export default function AIInsightsPage() {
                 <div className="flex items-start justify-between">
                     <PageHeader
                         title="AI Insights"
-                        description="วิเคราะห์ข้อมูลยอดขายอัตโนมัติด้วย Gemini AI"
+                        description="วิเคราะห์ข้อมูลยอดขายอัตโนมัติด้วย AI"
                     />
                     <ModelSelector />
                 </div>
@@ -166,10 +166,10 @@ export default function AIInsightsPage() {
                             </div>
                             <div className="flex-1">
                                 <h3 className="text-base font-bold text-slate-900">AI Analysis Result</h3>
-                                <p className="text-xs text-slate-500">Powered by Gemini 2.5 Flash Lite</p>
+                                <p className="text-xs text-slate-500">Powered by AI Engine</p>
                             </div>
                             <span className="text-[11px] font-semibold bg-blue-100 text-blue-700 px-2 py-1 rounded-full">
-                                Gemini Flash
+                                AI Engine
                             </span>
                         </div>
 
@@ -181,7 +181,7 @@ export default function AIInsightsPage() {
                                         <div className="w-12 h-12 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin" />
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-sm font-medium text-slate-700">Gemini กำลังวิเคราะห์ข้อมูล...</p>
+                                        <p className="text-sm font-medium text-slate-700">AI กำลังวิเคราะห์ข้อมูล...</p>
                                         <p className="text-xs text-slate-400 mt-1">กำลังดึงข้อมูลจาก {dataSource === 'dashboard' ? 'Dashboard' : 'Analytics'} และส่งให้ AI</p>
                                     </div>
                                 </div>
@@ -292,7 +292,7 @@ export default function AIInsightsPage() {
                                     {debugInfo.status === 'success' && (
                                         <div className="mt-3 p-3 bg-emerald-950/50 border border-emerald-800/50 rounded-lg flex items-center gap-2">
                                             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                            <span className="text-emerald-400">ข้อมูลถูกส่งไปที่ Gemini API จริง ไม่ได้ hardcode — คำตอบมาจาก LLM</span>
+                                            <span className="text-emerald-400">ข้อมูลถูกส่งไปที่ AI API จริง ไม่ได้ hardcode — คำตอบมาจาก LLM</span>
                                         </div>
                                     )}
                                 </>

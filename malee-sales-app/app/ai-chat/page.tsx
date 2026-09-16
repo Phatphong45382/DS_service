@@ -218,7 +218,7 @@ export default function AIChatPage() {
         const startTime = Date.now();
         const debug: DebugInfo = {
             endpoint: `${apiBaseUrl}/api/v1/ai/chat`,
-            model: 'gemini-2.5-flash-lite',
+            model: 'AI Engine (Fast)',
             contextLoaded: !!context,
             messageCount: updatedMessages.length,
             responseTime: 0,

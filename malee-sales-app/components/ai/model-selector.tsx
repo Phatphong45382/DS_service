@@ -7,20 +7,20 @@ import type { LucideIcon } from 'lucide-react';
 
 const MODEL_META: Record<string, { label: string; desc: string; icon: LucideIcon; color: string }> = {
     'gemini-2.5-flash-lite': {
-        label: 'Flash Lite',
+        label: 'Fast',
         desc: 'Fast & free quota',
         icon: Zap,
         color: 'text-amber-600 bg-amber-50',
     },
     'gemini-2.5-flash': {
-        label: 'Flash',
+        label: 'Balanced',
         desc: 'Balanced performance',
         icon: Sparkles,
         color: 'text-blue-600 bg-blue-50',
     },
     'gemini-3-flash-preview': {
-        label: '3 Flash Preview',
-        desc: 'Latest preview model',
+        label: 'Advanced',
+        desc: 'Highest quality',
         icon: FlaskConical,
         color: 'text-violet-600 bg-violet-50',
     },
@@ -67,7 +67,7 @@ export function ModelSelector() {
         }
     };
 
-    const meta = MODEL_META[current] || { label: current, desc: '', icon: Cpu, color: 'text-slate-600 bg-slate-50' };
+    const meta = MODEL_META[current] || { label: 'AI Model', desc: '', icon: Cpu, color: 'text-slate-600 bg-slate-50' };
     const CurrentIcon = meta.icon;
 
     if (!current) return null;
@@ -90,10 +90,10 @@ export function ModelSelector() {
             {open && (
                 <div className="absolute left-0 top-full mt-1.5 w-64 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1.5 animate-in fade-in slide-in-from-top-1 duration-150">
                     <div className="px-3 py-2 border-b border-slate-100">
-                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">Gemini Model</p>
+                        <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">AI Model</p>
                     </div>
                     {available.map((model) => {
-                        const m = MODEL_META[model] || { label: model, desc: '', icon: Cpu, color: 'text-slate-600 bg-slate-50' };
+                        const m = MODEL_META[model] || { label: 'AI Model', desc: '', icon: Cpu, color: 'text-slate-600 bg-slate-50' };
                         const Icon = m.icon;
                         const isActive = model === current;
                         return (
@@ -112,7 +112,6 @@ export function ModelSelector() {
                                         <span className="text-xs font-semibold text-slate-800">{m.label}</span>
                                         {isActive && <Check className="w-3 h-3 text-emerald-500" />}
                                     </div>
-                                    <p className="text-[10px] text-slate-400 mt-0.5">{model}</p>
                                     {m.desc && <p className="text-[10px] text-slate-500">{m.desc}</p>}
                                 </div>
                             </button>

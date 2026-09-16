@@ -28,9 +28,9 @@ interface EditableHeader {
 }
 
 const OCR_MODELS = [
-    { id: 'gemini-2.5-flash-lite', name: 'Flash Lite', desc: 'Fast & free quota', icon: Zap },
-    { id: 'gemini-2.5-flash', name: 'Flash', desc: 'Balanced performance', icon: Brain },
-    { id: 'gemini-3-flash-preview', name: '3 Flash Preview', desc: 'Latest preview model', icon: Sparkles },
+    { id: 'gemini-2.5-flash-lite', name: 'Fast', desc: 'Fast & free quota', icon: Zap },
+    { id: 'gemini-2.5-flash', name: 'Balanced', desc: 'Balanced performance', icon: Brain },
+    { id: 'gemini-3-flash-preview', name: 'Advanced', desc: 'Highest quality', icon: Sparkles },
 ];
 
 export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
@@ -295,7 +295,7 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                             ) : (
                                 <>
                                     <ScanLine className="w-4 h-4" />
-                                    อ่านเอกสารด้วย AI ({OCR_MODELS.find(m => m.id === selectedModel)?.name || 'Gemini'})
+                                    อ่านเอกสารด้วย AI ({OCR_MODELS.find(m => m.id === selectedModel)?.name || 'AI'})
                                 </>
                             )}
                         </button>
@@ -323,7 +323,7 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                                     AI อ่านเอกสารสำเร็จ — {editableItems.length} รายการ
                                 </p>
                                 <p className="text-xs text-emerald-600 mt-0.5">
-                                    ใช้เวลา {(responseTime / 1000).toFixed(2)}s | {OCR_MODELS.find(m => m.id === modelUsed)?.name || modelUsed}
+                                    ใช้เวลา {(responseTime / 1000).toFixed(2)}s | {OCR_MODELS.find(m => m.id === modelUsed)?.name || 'AI Engine'}
                                 </p>
                             </div>
                         </div>
@@ -545,7 +545,7 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                             className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium text-violet-700 bg-violet-100 hover:bg-violet-200 border border-violet-200 transition-colors"
                         >
                             {(() => { const m = OCR_MODELS.find(m => m.id === selectedModel); const Icon = m?.icon || Zap; return <Icon className="w-3 h-3" />; })()}
-                            {OCR_MODELS.find(m => m.id === selectedModel)?.name || 'Flash Lite'}
+                            {OCR_MODELS.find(m => m.id === selectedModel)?.name || 'AI Model'}
                             <ChevronDown className="w-3 h-3" />
                         </button>
                         {showModelPicker && (
@@ -553,7 +553,7 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                                 <div className="fixed inset-0 z-40" onClick={() => setShowModelPicker(false)} />
                                 <div className="absolute right-0 bottom-full mb-1 z-50 w-60 bg-white rounded-xl shadow-lg border border-slate-200 py-1.5">
                                     <div className="px-3 py-1 text-[10px] font-bold text-violet-600 uppercase tracking-wider">
-                                        Gemini Model
+                                        AI Model
                                     </div>
                                     {OCR_MODELS.map((m) => {
                                         const Icon = m.icon;

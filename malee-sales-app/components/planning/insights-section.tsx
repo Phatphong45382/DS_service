@@ -139,7 +139,7 @@ export function InsightsSection() {
             return (
                 <div className="flex items-center gap-3 text-sm text-blue-600">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Gemini กำลังวิเคราะห์ข้อมูล...</span>
+                    <span>AI กำลังวิเคราะห์ข้อมูล...</span>
                 </div>
             );
         }
@@ -215,7 +215,7 @@ export function InsightsSection() {
                 ))}
             </div>
 
-            {/* AI Summary Box — Powered by Gemini */}
+            {/* AI Summary Box — Powered by AI Engine */}
             <div className="glass-enterprise p-6 rounded-2xl border border-blue-100 bg-blue-50/30">
                 <div className="flex gap-4">
                     <div className="p-2 bg-blue-100 rounded-lg h-fit">
@@ -226,7 +226,7 @@ export function InsightsSection() {
                             <div className="flex items-center gap-2">
                                 <h3 className="text-sm font-bold text-slate-900">AI Insight Summary</h3>
                                 <span className="text-[10px] font-medium bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
-                                    Gemini Flash
+                                    AI Engine
                                 </span>
                             </div>
                             <button
