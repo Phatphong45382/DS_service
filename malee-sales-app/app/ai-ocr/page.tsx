@@ -130,7 +130,7 @@ export default function AIOcrPage() {
     return (
         <MainLayout
             title="AI OCR — Purchase Order Reader"
-            description="อัปโหลดรูปภาพใบสั่งซื้อ (PO) แล้ว AI จะอ่านและดึงข้อมูลออกมาเป็นตาราง"
+            description="Upload a purchase order (PO) image and the AI reads it into a table"
             action={<ModelSelector />}
         >
             <div className="space-y-6">
@@ -170,10 +170,10 @@ export default function AIOcrPage() {
                                     </div>
                                     <div>
                                         <p className="text-sm font-semibold text-slate-700">
-                                            ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์
+                                            Drag &amp; drop or click to browse
                                         </p>
                                         <p className="text-xs text-slate-400 mt-1">
-                                            PNG, JPEG, WebP, GIF (สูงสุด 10MB)
+                                            PNG, JPEG, WebP, GIF — max 10MB
                                         </p>
                                     </div>
                                 </div>
@@ -201,7 +201,7 @@ export default function AIOcrPage() {
                                         onClick={() => fileInputRef.current?.click()}
                                         className="text-xs text-violet-600 hover:text-violet-700 font-medium"
                                     >
-                                        เปลี่ยนไฟล์
+                                        Change file
                                     </button>
                                     <input
                                         ref={fileInputRef}
@@ -233,12 +233,12 @@ export default function AIOcrPage() {
                                         {loading ? (
                                             <>
                                                 <Loader2 className="w-4 h-4 animate-spin" />
-                                                AI กำลังอ่านเอกสาร...
+                                                AI is reading the document...
                                             </>
                                         ) : (
                                             <>
                                                 <ScanLine className="w-4 h-4" />
-                                                อ่านเอกสารด้วย AI
+                                                Read with AI
                                             </>
                                         )}
                                     </button>
@@ -256,8 +256,8 @@ export default function AIOcrPage() {
                                         <ScanLine className="w-10 h-10 text-slate-300" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-500">ยังไม่มีผลลัพธ์</p>
-                                        <p className="text-xs text-slate-400 mt-1">อัปโหลดรูป PO แล้วกด "อ่านเอกสารด้วย AI"</p>
+                                        <p className="text-sm font-semibold text-slate-500">No results yet</p>
+                                        <p className="text-xs text-slate-400 mt-1">Upload a PO image, then click &quot;Read with AI&quot;</p>
                                     </div>
                                 </div>
                             </div>
@@ -265,7 +265,7 @@ export default function AIOcrPage() {
                             <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center shadow-sm">
                                 <div className="flex flex-col items-center gap-4">
                                     <Loader2 className="w-10 h-10 text-violet-500 animate-spin" />
-                                    <p className="text-sm font-medium text-slate-600">AI Vision กำลังอ่านเอกสาร...</p>
+                                    <p className="text-sm font-medium text-slate-600">AI Vision is reading the document...</p>
                                 </div>
                             </div>
                         ) : hasError ? (
@@ -285,7 +285,7 @@ export default function AIOcrPage() {
                                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 bg-emerald-50">
                                     <div className="flex items-center gap-2">
                                         <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                                        <span className="text-sm font-bold text-emerald-800">ผลลัพธ์ OCR</span>
+                                        <span className="text-sm font-bold text-emerald-800">OCR Result</span>
                                     </div>
                                     <div className="flex items-center gap-2">
                                         <button
@@ -451,7 +451,7 @@ export default function AIOcrPage() {
                     </div>
                     <div className="px-5 py-3 font-mono text-[11px]">
                         {!debugInfo ? (
-                            <p className="text-slate-500 italic">อัปโหลดรูป PO เพื่อดูสถานะ API</p>
+                            <p className="text-slate-500 italic">Upload a PO image to see API status</p>
                         ) : (
                             <div className="flex flex-wrap gap-x-6 gap-y-1">
                                 <span><span className="text-slate-500">Endpoint:</span> <span className="text-cyan-400">{debugInfo.endpoint}</span></span>

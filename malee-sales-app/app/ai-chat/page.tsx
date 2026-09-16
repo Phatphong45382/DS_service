@@ -41,12 +41,12 @@ interface DebugInfo {
 }
 
 const QUICK_QUESTIONS: { text: string; icon: LucideIcon }[] = [
-    { text: 'สรุปยอดขายเดือนล่าสุด', icon: BarChart3 },
-    { text: 'สินค้าขายดีที่สุดคืออะไร?', icon: Trophy },
-    { text: 'ลูกค้ารายใหญ่มีใคร?', icon: Users },
-    { text: 'กลยุทธ์เพิ่มยอดขาย', icon: Lightbulb },
-    { text: 'วิเคราะห์ MoM Growth', icon: TrendingUp },
-    { text: 'Forecast แม่นยำแค่ไหน?', icon: Target },
+    { text: 'Summarize the latest month of sales', icon: BarChart3 },
+    { text: 'What is the best-selling product?', icon: Trophy },
+    { text: 'Who are the largest customers?', icon: Users },
+    { text: 'Strategies to grow sales', icon: Lightbulb },
+    { text: 'Analyze MoM growth', icon: TrendingUp },
+    { text: 'How accurate is the forecast?', icon: Target },
 ];
 
 export default function AIChatPage() {
@@ -268,7 +268,7 @@ export default function AIChatPage() {
             const errorMessage: ChatMessage = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: `เกิดข้อผิดพลาด: ${err.message}`,
+                content: `Error: ${err.message}`,
                 timestamp: new Date(),
             };
             setMessages(prev => [...prev, errorMessage]);
@@ -554,7 +554,7 @@ export default function AIChatPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-bold text-slate-900">System Prompt</h3>
-                                        <p className="text-[11px] text-slate-400">กำหนดบุคลิกและแนวทางการตอบของ AI</p>
+                                        <p className="text-[11px] text-slate-400">Set the AI&apos;s persona and answering style</p>
                                     </div>
                                 </div>
                                 <button
@@ -627,7 +627,7 @@ export default function AIChatPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-bold text-slate-900">Knowledge Sources</h3>
-                                        <p className="text-[11px] text-slate-400">เพิ่มเอกสารเป็นความรู้ให้ AI</p>
+                                        <p className="text-[11px] text-slate-400">Add documents as knowledge for the AI</p>
                                     </div>
                                 </div>
                                 <button
@@ -766,7 +766,7 @@ export default function AIChatPage() {
                             </div>
                             <h2 className="text-xl font-bold text-slate-900 mb-2">Sales AI Assistant</h2>
                             <p className="text-sm text-slate-500 mb-8 text-center max-w-sm leading-relaxed">
-                                วิเคราะห์ยอดขาย สินค้า ลูกค้า หรือขอคำแนะนำเชิงกลยุทธ์<br />จากข้อมูลจริงใน Dashboard
+                                Analyze sales, products and customers — or ask for strategic advice<br />from live Dashboard data
                             </p>
 
                             {/* Quick Questions Grid */}
@@ -912,7 +912,7 @@ export default function AIChatPage() {
                                 value={input}
                                 onChange={handleInputChange}
                                 onKeyDown={handleKeyDown}
-                                placeholder="ถามเกี่ยวกับยอดขาย สินค้า หรือลูกค้า..."
+                                placeholder="Ask about sales, products or customers..."
                                 rows={1}
                                 className="flex-1 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 bg-transparent border-none outline-none resize-none"
                                 style={{ minHeight: '40px', maxHeight: '120px' }}
@@ -930,7 +930,7 @@ export default function AIChatPage() {
                             </button>
                         </div>
                         <p className="text-[11px] text-slate-400 mt-1 text-center">
-                            AI อาจให้ข้อมูลไม่ถูกต้อง กรุณาตรวจสอบก่อนตัดสินใจ
+                            AI can be inaccurate. Please verify before making decisions.
                         </p>
                     </div>
                 </div>

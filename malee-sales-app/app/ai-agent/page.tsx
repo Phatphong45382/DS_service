@@ -60,21 +60,21 @@ const TOOL_ICONS: Record<string, LucideIcon> = {
 };
 
 const TOOL_LABELS: Record<string, string> = {
-    query_sales_data: 'ดึงข้อมูลยอดขาย',
-    analyze_data: 'วิเคราะห์ข้อมูล',
-    generate_report: 'สร้างรายงาน',
-    send_email: 'ส่งอีเมล',
-    get_product_list: 'ดูรายการสินค้า',
-    get_customer_list: 'ดูรายการลูกค้า',
+    query_sales_data: 'Query sales data',
+    analyze_data: 'Analyze data',
+    generate_report: 'Generate report',
+    send_email: 'Send email',
+    get_product_list: 'Get product list',
+    get_customer_list: 'Get customer list',
 };
 
 // ─── Quick Commands ───
 
 const QUICK_COMMANDS: { text: string; icon: LucideIcon }[] = [
-    { text: 'วิเคราะห์ยอดขายภาพรวมให้หน่อย', icon: BarChart3 },
-    { text: 'สินค้าขายดีที่สุด 5 อันดับแรกคืออะไร', icon: Search },
-    { text: 'ลูกค้ารายใหญ่มีใครบ้าง', icon: Users },
-    { text: 'สร้างรายงานสรุปยอดขายแบบ brief', icon: FileText },
+    { text: 'Analyze overall sales performance', icon: BarChart3 },
+    { text: 'What are the top 5 best-selling products?', icon: Search },
+    { text: 'Who are the largest customers?', icon: Users },
+    { text: 'Generate a brief sales summary report', icon: FileText },
 ];
 
 // ─── Step Component ───
@@ -296,7 +296,7 @@ export default function AIAgentPage() {
             const errorMsg: AgentMessage = {
                 id: (Date.now() + 2).toString(),
                 role: 'agent',
-                content: `เกิดข้อผิดพลาด: ${err.message}`,
+                content: `Error: ${err.message}`,
                 timestamp: new Date(),
             };
             setMessages(prev => [
@@ -464,7 +464,7 @@ export default function AIAgentPage() {
     return (
         <MainLayout
             title="Sales AI Agent"
-            description="สั่งงานครั้งเดียว Agent วางแผนและทำให้จนเสร็จ"
+            description="One instruction — the Agent plans it and runs it to completion"
             mainClassName="flex-1 p-0 bg-white overflow-hidden"
             action={
                 <div className="flex items-center gap-2">
@@ -550,7 +550,7 @@ export default function AIAgentPage() {
                                     </div>
                                     <div>
                                         <h3 className="text-sm font-bold text-slate-900">System Prompt</h3>
-                                        <p className="text-[11px] text-slate-400">กำหนดบุคลิกและแนวทางการตอบของ Agent</p>
+                                        <p className="text-[11px] text-slate-400">Set the Agent&apos;s persona and answering style</p>
                                     </div>
                                 </div>
                                 <button
@@ -613,10 +613,10 @@ export default function AIAgentPage() {
                             </div>
                             <h2 className="text-xl font-bold text-slate-900 mb-2">Sales AI Agent</h2>
                             <p className="text-sm text-slate-500 mb-2 text-center max-w-md leading-relaxed">
-                                สั่งงานด้วยภาษาธรรมชาติ Agent จะวางแผน เรียกใช้เครื่องมือ และทำงานให้อัตโนมัติ
+                                Give an instruction in plain language — the Agent plans, calls tools and completes the work on its own
                             </p>
                             <p className="text-xs text-slate-400 mb-8 text-center max-w-sm">
-                                ต่างจาก AI Chat ตรงที่ Agent สามารถดึงข้อมูล วิเคราะห์ สร้างรายงาน และส่งเมลได้ในคำสั่งเดียว
+                                Unlike AI Chat, the Agent can pull data, analyze it, build a report and send email from a single instruction
                             </p>
 
                             <div className="flex flex-wrap justify-center gap-2 mb-6">
@@ -697,7 +697,7 @@ export default function AIAgentPage() {
                                                         <div className="w-2 h-2 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '150ms' }} />
                                                         <div className="w-2 h-2 rounded-full bg-violet-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                                                     </div>
-                                                    <span className="text-xs text-slate-400">Agent กำลังวางแผนและทำงาน...</span>
+                                                    <span className="text-xs text-slate-400">Agent is planning and working...</span>
                                                 </div>
                                             )}
 
@@ -763,7 +763,7 @@ export default function AIAgentPage() {
                                 value={input}
                                 onChange={handleInputChange}
                                 onKeyDown={handleKeyDown}
-                                placeholder="สั่งงาน Agent เช่น &quot;วิเคราะห์ยอดขายแล้วส่งสรุปให้ boss@company.com&quot;"
+                                placeholder="Instruct the Agent, e.g. &quot;Analyze sales and email the summary to boss@company.com&quot;"
                                 rows={1}
                                 className="flex-1 px-4 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 bg-transparent border-none outline-none resize-none"
                                 style={{ minHeight: '40px', maxHeight: '120px' }}
@@ -781,7 +781,7 @@ export default function AIAgentPage() {
                             </button>
                         </div>
                         <p className="text-[11px] text-slate-400 mt-1 text-center">
-                            Agent จะดึงข้อมูล วิเคราะห์ และดำเนินการให้อัตโนมัติ
+                            The Agent pulls data, analyzes it and takes action automatically
                         </p>
                     </div>
                 </div>

@@ -62,7 +62,7 @@ export function UploadPanel({ onDataParsed }: UploadPanelProps) {
                 onDataParsed(data, file.name, uploadResult);
             }
         } catch (err: any) {
-            const errorMessage = err.detail || err.message || 'เกิดข้อผิดพลาดในการอัปโหลดไฟล์';
+            const errorMessage = err.detail || err.message || 'File upload failed';
             setError(errorMessage);
             setIsProcessing(false);
             console.error('Upload error:', err);

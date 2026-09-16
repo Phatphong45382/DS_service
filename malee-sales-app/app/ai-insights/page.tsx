@@ -91,7 +91,7 @@ export default function AIInsightsPage() {
             debug.status = 'error';
             debug.errorDetail = err.message;
             setDebugInfo({ ...debug });
-            setError(err.message || 'ไม่สามารถสร้าง insight ได้');
+            setError(err.message || 'Could not generate insight');
         } finally {
             setLoading(false);
         }
@@ -103,7 +103,7 @@ export default function AIInsightsPage() {
                 <div className="flex items-start justify-between">
                     <PageHeader
                         title="AI Insights"
-                        description="วิเคราะห์ข้อมูลยอดขายอัตโนมัติด้วย AI"
+                        description="Automated sales analysis powered by AI"
                     />
                     <ModelSelector />
                 </div>
@@ -145,12 +145,12 @@ export default function AIInsightsPage() {
                         ) : (
                             <Sparkles className="w-4 h-4" />
                         )}
-                        {loading ? 'กำลังวิเคราะห์...' : 'Generate AI Insight'}
+                        {loading ? 'Analyzing...' : 'Generate AI Insight'}
                     </button>
 
                     {lastGenerated && (
                         <span className="text-xs text-slate-400">
-                            อัปเดตล่าสุด: {lastGenerated}
+                            Last updated: {lastGenerated}
                         </span>
                     )}
                 </div>
@@ -181,8 +181,8 @@ export default function AIInsightsPage() {
                                         <div className="w-12 h-12 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin" />
                                     </div>
                                     <div className="text-center">
-                                        <p className="text-sm font-medium text-slate-700">AI กำลังวิเคราะห์ข้อมูล...</p>
-                                        <p className="text-xs text-slate-400 mt-1">กำลังดึงข้อมูลจาก {dataSource === 'dashboard' ? 'Dashboard' : 'Analytics'} และส่งให้ AI</p>
+                                        <p className="text-sm font-medium text-slate-700">AI is analyzing the data...</p>
+                                        <p className="text-xs text-slate-400 mt-1">Pulling data from {dataSource === 'dashboard' ? 'Dashboard' : 'Analytics'} and sending it to the AI</p>
                                     </div>
                                 </div>
                             )}
@@ -193,7 +193,7 @@ export default function AIInsightsPage() {
                                         <RefreshCw className="w-4 h-4 text-rose-600" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-rose-800">เกิดข้อผิดพลาด</p>
+                                        <p className="text-sm font-medium text-rose-800">Something went wrong</p>
                                         <p className="text-xs text-rose-600 mt-0.5">{error}</p>
                                     </div>
                                 </div>
@@ -211,8 +211,8 @@ export default function AIInsightsPage() {
                                         <Sparkles className="w-8 h-8 text-slate-300" />
                                     </div>
                                     <div>
-                                        <p className="text-sm font-medium text-slate-500">ยังไม่มีข้อมูล</p>
-                                        <p className="text-xs text-slate-400 mt-1">กดปุ่ม "Generate AI Insight" เพื่อเริ่มวิเคราะห์</p>
+                                        <p className="text-sm font-medium text-slate-500">No data yet</p>
+                                        <p className="text-xs text-slate-400 mt-1">Click &quot;Generate AI Insight&quot; to start</p>
                                     </div>
                                 </div>
                             )}
@@ -241,7 +241,7 @@ export default function AIInsightsPage() {
                         </div>
                         <div className="px-5 py-4 font-mono text-xs space-y-2">
                             {!debugInfo ? (
-                                <p className="text-slate-500 italic">กด "Generate AI Insight" เพื่อดูสถานะ</p>
+                                <p className="text-slate-500 italic">Click &quot;Generate AI Insight&quot; to see status</p>
                             ) : (
                                 <>
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-1.5">
@@ -292,7 +292,7 @@ export default function AIInsightsPage() {
                                     {debugInfo.status === 'success' && (
                                         <div className="mt-3 p-3 bg-emerald-950/50 border border-emerald-800/50 rounded-lg flex items-center gap-2">
                                             <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                                            <span className="text-emerald-400">ข้อมูลถูกส่งไปที่ AI API จริง ไม่ได้ hardcode — คำตอบมาจาก LLM</span>
+                                            <span className="text-emerald-400">Sent to the live AI API — not hardcoded; the answer comes from the LLM</span>
                                         </div>
                                     )}
                                 </>
@@ -310,7 +310,7 @@ export default function AIInsightsPage() {
                                 <h4 className="text-sm font-bold text-slate-900">Trend Analysis</h4>
                             </div>
                             <p className="text-xs text-slate-500 leading-relaxed">
-                                วิเคราะห์แนวโน้มยอดขาย MoM growth และเปรียบเทียบกับค่าเฉลี่ย
+                                Analyzes the sales trend, MoM growth and comparison against the average
                             </p>
                         </div>
                         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
@@ -321,7 +321,7 @@ export default function AIInsightsPage() {
                                 <h4 className="text-sm font-bold text-slate-900">Product Insights</h4>
                             </div>
                             <p className="text-xs text-slate-500 leading-relaxed">
-                                สรุปสินค้าขายดี และแนะนำกลยุทธ์เพิ่มยอดขาย
+                                Summarizes best sellers and suggests strategies to grow sales
                             </p>
                         </div>
                         <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
@@ -332,7 +332,7 @@ export default function AIInsightsPage() {
                                 <h4 className="text-sm font-bold text-slate-900">Customer Analysis</h4>
                             </div>
                             <p className="text-xs text-slate-500 leading-relaxed">
-                                วิเคราะห์ลูกค้ารายใหญ่ พร้อมคำแนะนำเชิงกลยุทธ์
+                                Analyzes key customers with strategic recommendations
                             </p>
                         </div>
                     </div>

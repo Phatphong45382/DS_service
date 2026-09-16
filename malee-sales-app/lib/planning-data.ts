@@ -199,11 +199,11 @@ export function generateAlerts(
                 size: sale.size,
                 alert_type: 'demand_spike',
                 severity: 'high',
-                message: `ยอดขาย ${sale.flavor} ${sale.size}ml สูงกว่าคาดการณ์ ${Math.round(((sale.sales_qty / forecast.forecast_qty) - 1) * 100)}%`,
+                message: `${sale.flavor} ${sale.size}ml sales are ${Math.round(((sale.sales_qty / forecast.forecast_qty) - 1) * 100)}% above forecast`,
                 recommended_action: [
-                    'ตรวจสอบสาเหตุการเพิ่มขึ้น',
-                    'ปรับแผนการผลิตเดือนหน้า',
-                    'เพิ่ม safety stock'
+                    'Investigate the cause of the increase',
+                    'Adjust next month production plan',
+                    'Raise safety stock'
                 ],
             });
         }
@@ -219,10 +219,10 @@ export function generateAlerts(
                 size: promo.size,
                 alert_type: 'promo_conflict',
                 severity: 'medium',
-                message: `โปรโมชัน ${promo.flavor} ${promo.size}ml ยาวนาน (${promo.promo_days} วัน) และลดสูง (${promo.discount_pct}%)`,
+                message: `${promo.flavor} ${promo.size}ml promo runs long (${promo.promo_days} days) with a steep discount (${promo.discount_pct}%)`,
                 recommended_action: [
-                    'ตรวจสอบผลกระทบต่อ margin',
-                    'เตรียม stock เพิ่ม',
+                    'Review the impact on margin',
+                    'Prepare additional stock',
                 ],
             });
         }
@@ -280,14 +280,14 @@ export const globalSummary = calculateGlobalSummary(
 export function formatMonth(yearMonth: string): string {
     const [year, month] = yearMonth.split('-');
     const monthNames = [
-        'ม.ค.', 'ก.พ.', 'มี.ค.', 'เม.ย.', 'พ.ค.', 'มิ.ย.',
-        'ก.ค.', 'ส.ค.', 'ก.ย.', 'ต.ค.', 'พ.ย.', 'ธ.ค.'
+        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
     ];
-    return `${monthNames[parseInt(month) - 1]} ${parseInt(year) + 543}`;
+    return `${monthNames[parseInt(month) - 1]} ${year}`;
 }
 
 export function formatQuantity(qty: number): string {
-    return new Intl.NumberFormat('th-TH').format(qty);
+    return new Intl.NumberFormat('en-US').format(qty);
 }
 
 export function formatPercent(value: number): string {

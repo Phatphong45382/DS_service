@@ -35,53 +35,53 @@ export function GlobalSummaryCards() {
             {/* Last Month Actual */}
             <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">ยอดขายเดือนล่าสุด</span>
+                    <span className="text-sm font-medium text-gray-600">Latest month sales</span>
                     <span className="text-2xl">📊</span>
                 </div>
                 <div className="text-2xl font-bold text-gray-900">
                     {formatQuantity(globalSummary.last_month_actual)}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">หน่วย</div>
+                <div className="text-xs text-gray-500 mt-1">Units</div>
             </div>
 
             {/* Next Month Forecast */}
             <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">ทำนายเดือนหน้า</span>
+                    <span className="text-sm font-medium text-gray-600">Next month forecast</span>
                     <span className="text-2xl">🔮</span>
                 </div>
                 <div className="text-2xl font-bold text-[#FF8A5B]">
                     {formatQuantity(globalSummary.next_month_forecast)}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">หน่วย (Baseline)</div>
+                <div className="text-xs text-gray-500 mt-1">Units (Baseline)</div>
             </div>
 
             {/* Recommended Production */}
             <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">แนะนำผลิต</span>
+                    <span className="text-sm font-medium text-gray-600">Recommended production</span>
                     <span className="text-2xl">🏭</span>
                 </div>
                 <div className="text-2xl font-bold text-[#81C784]">
                     {formatQuantity(globalSummary.recommended_production)}
                 </div>
-                <div className="text-xs text-gray-500 mt-1">หน่วย (รวม safety stock)</div>
+                <div className="text-xs text-gray-500 mt-1">Units (incl. safety stock)</div>
             </div>
 
             {/* Risk Badge */}
             <div className="bg-white rounded-xl p-5 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                 <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium text-gray-600">ระดับความเสี่ยง</span>
+                    <span className="text-sm font-medium text-gray-600">Risk level</span>
                     <span className="text-2xl">⚠️</span>
                 </div>
                 <div className="mt-2">
                     <span className={`inline-flex items-center px-4 py-2 rounded-full text-sm font-semibold border ${getRiskBadgeColor(globalSummary.risk_badge)}`}>
-                        {globalSummary.risk_badge === 'Low' && 'ต่ำ'}
-                        {globalSummary.risk_badge === 'Med' && 'ปานกลาง'}
-                        {globalSummary.risk_badge === 'High' && 'สูง'}
+                        {globalSummary.risk_badge === 'Low' && 'Low'}
+                        {globalSummary.risk_badge === 'Med' && 'Medium'}
+                        {globalSummary.risk_badge === 'High' && 'High'}
                     </span>
                 </div>
-                <div className="text-xs text-gray-500 mt-2">จาก volatility analysis</div>
+                <div className="text-xs text-gray-500 mt-2">From volatility analysis</div>
             </div>
         </div>
     );

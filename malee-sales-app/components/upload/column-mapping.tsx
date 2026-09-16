@@ -16,18 +16,18 @@ interface ModelColumn {
 }
 
 const MODEL_COLUMNS: ModelColumn[] = [
-    { key: 'customer', label: 'Customer', description: 'ชื่อลูกค้า/ช่องทาง', required: true, example: 'FreshMart' },
-    { key: 'destination', label: 'Destination', description: 'ปลายทาง/สาขา', required: true, example: 'DC Central 1' },
-    { key: 'year', label: 'Year', description: 'ปี (พ.ศ. หรือ ค.ศ.)', required: true, example: '2025' },
-    { key: 'month', label: 'Month', description: 'เดือน (1-12)', required: true, example: '1' },
-    { key: 'product', label: 'Product', description: 'กลุ่มสินค้า', required: true, example: 'Chips' },
-    { key: 'flavor', label: 'Flavor', description: 'รสชาติ', required: true, example: 'Original' },
-    { key: 'size', label: 'Size', description: 'ขนาด', required: true, example: '150g' },
-    { key: 'quantity', label: 'Quantity', description: 'จำนวนที่ขาย', required: true, example: '150' },
-    { key: 'planed_sales_from_start', label: 'Planned Sales', description: 'ยอดขายเป้าหมาย', required: false, defaultValue: '0', example: '160000' },
-    { key: 'has_promotion', label: 'Has Promotion', description: 'มี Promo หรือไม่ (0/1)', required: false, defaultValue: '0', example: '0' },
-    { key: 'discount_pct', label: 'Discount %', description: '% ส่วนลด', required: false, defaultValue: '0', example: '10' },
-    { key: 'promo_days', label: 'Promo Days', description: 'จำนวนวัน Promo', required: false, defaultValue: '0', example: '7' },
+    { key: 'customer', label: 'Customer', description: 'Customer name / channel', required: true, example: 'FreshMart' },
+    { key: 'destination', label: 'Destination', description: 'Destination / branch', required: true, example: 'DC Central 1' },
+    { key: 'year', label: 'Year', description: 'Year (BE or CE)', required: true, example: '2025' },
+    { key: 'month', label: 'Month', description: 'Month (1-12)', required: true, example: '1' },
+    { key: 'product', label: 'Product', description: 'Product group', required: true, example: 'Chips' },
+    { key: 'flavor', label: 'Flavor', description: 'Flavor', required: true, example: 'Original' },
+    { key: 'size', label: 'Size', description: 'Size', required: true, example: '150g' },
+    { key: 'quantity', label: 'Quantity', description: 'Quantity sold', required: true, example: '150' },
+    { key: 'planed_sales_from_start', label: 'Planned Sales', description: 'Target sales', required: false, defaultValue: '0', example: '160000' },
+    { key: 'has_promotion', label: 'Has Promotion', description: 'Has promo (0/1)', required: false, defaultValue: '0', example: '0' },
+    { key: 'discount_pct', label: 'Discount %', description: 'Discount %', required: false, defaultValue: '0', example: '10' },
+    { key: 'promo_days', label: 'Promo Days', description: 'Promo days', required: false, defaultValue: '0', example: '7' },
 ];
 
 // ── Mapping types ──
@@ -203,7 +203,7 @@ export function ColumnMapping({ data, fileName, onConfirm, onBack }: ColumnMappi
                     <div>
                         <h2 className="text-lg font-bold text-slate-900">Column Mapping</h2>
                         <p className="text-xs text-slate-500 mt-0.5">
-                            จับคู่คอลัมน์จาก <span className="font-medium text-slate-700">{fileName}</span> กับ features ที่โมเดลต้องการ
+                            Map columns from <span className="font-medium text-slate-700">{fileName}</span> to the features the model needs
                         </p>
                     </div>
                 </div>
@@ -371,7 +371,7 @@ export function ColumnMapping({ data, fileName, onConfirm, onBack }: ColumnMappi
                                                     </button>
                                                 </div>
                                                 <p className="text-[10px] text-slate-400 mt-1 pl-5">
-                                                    ค่านี้จะใช้เหมือนกันทุกแถว — กด Enter หรือ Apply
+                                                    This value applies to every row — press Enter or Apply
                                                 </p>
                                             </div>
                                         </div>

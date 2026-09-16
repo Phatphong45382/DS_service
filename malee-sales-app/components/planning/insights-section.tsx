@@ -35,7 +35,7 @@ export function InsightsSection() {
             setAiInsight(result.insight);
         } catch (err: any) {
             console.error('AI Insight error:', err);
-            setAiError(err.message || 'ไม่สามารถสร้าง insight ได้');
+            setAiError(err.message || 'Could not generate insight');
         } finally {
             setAiLoading(false);
         }
@@ -97,7 +97,7 @@ export function InsightsSection() {
     }
 
     const volatility = 12.5;
-    const volatilityLevel = volatility < 10 ? 'ต่ำ' : volatility < 20 ? 'ปานกลาง' : 'สูง';
+    const volatilityLevel = volatility < 10 ? 'Low' : volatility < 20 ? 'Medium' : 'High';
     const riskLevel = globalSummary.risk_badge;
 
     const insights = [
@@ -139,7 +139,7 @@ export function InsightsSection() {
             return (
                 <div className="flex items-center gap-3 text-sm text-blue-600">
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>AI กำลังวิเคราะห์ข้อมูล...</span>
+                    <span>AI is analyzing the data...</span>
                 </div>
             );
         }
@@ -162,7 +162,7 @@ export function InsightsSection() {
 
         return (
             <p className="text-sm text-slate-400 italic">
-                กด Refresh เพื่อให้ AI วิเคราะห์ข้อมูล
+                Click Refresh to have the AI analyze the data
             </p>
         );
     };

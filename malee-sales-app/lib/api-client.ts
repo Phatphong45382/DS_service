@@ -99,9 +99,9 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
         // Network error
         if (error instanceof TypeError && error.message.includes('fetch')) {
             throw new DataikuAPIError(
-                '⚠️ ไม่สามารถเชื่อมต่อกับ backend ได้',
+                '⚠️ Cannot connect to the backend',
                 undefined,
-                `กรุณาตรวจสอบว่า FastAPI server กำลังทำงานอยู่ที่ ${API_BASE_URL}`
+                `Check that the FastAPI server is running at ${API_BASE_URL}`
             );
         }
 
@@ -123,7 +123,7 @@ export async function checkBackendHealth(): Promise<DataikuHealthResponse> {
  */
 export async function uploadFileToDataiku(file: File): Promise<DataikuUploadResponse> {
     if (!file.name.toLowerCase().endsWith('.csv')) {
-        throw new DataikuAPIError('รองรับเฉพาะไฟล์ CSV เท่านั้น');
+        throw new DataikuAPIError('Only CSV files are supported');
     }
 
     const formData = new FormData();

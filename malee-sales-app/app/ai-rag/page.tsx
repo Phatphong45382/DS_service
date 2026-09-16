@@ -30,10 +30,10 @@ interface ChatMessage {
 // ─── Quick Questions ───
 
 const QUICK_QUESTIONS = [
-    'สรุปเนื้อหาหลักของเอกสารนี้',
-    'มีข้อมูลสำคัญอะไรบ้าง?',
-    'มีตัวเลขหรือสถิติอะไรที่น่าสนใจ?',
-    'ข้อสรุปหรือคำแนะนำคืออะไร?',
+    'Summarize the main content of this document',
+    'What are the key facts?',
+    'Any notable figures or statistics?',
+    'What are the conclusions or recommendations?',
 ];
 
 export default function AIRagPage() {
@@ -85,7 +85,7 @@ export default function AIRagPage() {
             setDoc(result);
             setMessages([]);
         } catch (err: any) {
-            setUploadError(err.message || 'อัปโหลดไม่สำเร็จ');
+            setUploadError(err.message || 'Upload failed');
         } finally {
             setUploading(false);
         }
@@ -145,7 +145,7 @@ export default function AIRagPage() {
             const errorMsg: ChatMessage = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: `เกิดข้อผิดพลาด: ${err.message}`,
+                content: `Error: ${err.message}`,
                 timestamp: new Date(),
             };
             setMessages(prev => [...prev, errorMsg]);
@@ -216,7 +216,7 @@ export default function AIRagPage() {
                                 <span className="px-1.5 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-700 rounded">RAG</span>
                             </div>
                             <p className="text-[11px] text-slate-500 mt-0.5">
-                                อัปโหลดเอกสาร แล้วถามคำถามจากเนื้อหา
+                                Upload a document, then ask questions about its content
                             </p>
                         </div>
                     </div>
@@ -242,14 +242,14 @@ export default function AIRagPage() {
                                 <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                                 <span className="text-sm font-medium text-emerald-800">{doc.filename}</span>
                                 <span className="text-[11px] text-emerald-600">
-                                    ({formatFileSize(doc.file_size)} | {doc.text_length.toLocaleString()} ตัวอักษร)
+                                    ({formatFileSize(doc.file_size)} | {doc.text_length.toLocaleString()} characters)
                                 </span>
                             </div>
                             <button
                                 onClick={() => setShowPreview(!showPreview)}
                                 className="text-[11px] text-emerald-600 hover:text-emerald-800 font-medium cursor-pointer"
                             >
-                                {showPreview ? 'ซ่อน Preview' : 'ดู Preview'}
+                                {showPreview ? 'Hide Preview' : 'Show Preview'}
                             </button>
                         </div>
                         {showPreview && (
@@ -270,7 +270,7 @@ export default function AIRagPage() {
                             </div>
                             <h2 className="text-xl font-bold text-slate-900 mb-2">Document Q&A (RAG)</h2>
                             <p className="text-sm text-slate-500 mb-6 text-center max-w-md leading-relaxed">
-                                อัปโหลดเอกสาร แล้ว AI จะอ่านและตอบคำถามจากเนื้อหาในเอกสารให้
+                                Upload a document and the AI will read it and answer questions from its content
                             </p>
 
                             {/* Upload Area */}
@@ -283,7 +283,7 @@ export default function AIRagPage() {
                                 {uploading ? (
                                     <div className="flex flex-col items-center gap-3">
                                         <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />
-                                        <p className="text-sm text-slate-600">AI กำลังอ่านเอกสาร...</p>
+                                        <p className="text-sm text-slate-600">AI is reading the document...</p>
                                     </div>
                                 ) : (
                                     <div className="flex flex-col items-center gap-3">
@@ -292,10 +292,10 @@ export default function AIRagPage() {
                                         </div>
                                         <div>
                                             <p className="text-sm font-medium text-slate-700">
-                                                ลากไฟล์มาวาง หรือ คลิกเพื่อเลือก
+                                                Drag &amp; drop or click to browse
                                             </p>
                                             <p className="text-xs text-slate-400 mt-1">
-                                                รองรับ PDF, TXT, CSV, รูปภาพ (สูงสุด 20MB)
+                                                PDF, TXT, CSV, images — max 20MB
                                             </p>
                                         </div>
                                     </div>
@@ -317,7 +317,7 @@ export default function AIRagPage() {
                             )}
 
                             <p className="text-[11px] text-slate-400 mt-8">
-                                Simple RAG — AI อ่านเอกสารทั้งหมดแล้วตอบคำถาม
+                                Simple RAG — the AI reads the whole document, then answers
                             </p>
                         </div>
                     ) : messages.length === 0 ? (
@@ -326,9 +326,9 @@ export default function AIRagPage() {
                             <div className="w-14 h-14 rounded-2xl bg-emerald-100 flex items-center justify-center mb-4">
                                 <FileText className="w-7 h-7 text-emerald-600" />
                             </div>
-                            <h3 className="text-lg font-bold text-slate-900 mb-1">เอกสารพร้อมแล้ว</h3>
+                            <h3 className="text-lg font-bold text-slate-900 mb-1">Document ready</h3>
                             <p className="text-sm text-slate-500 mb-6 text-center">
-                                ถามคำถามเกี่ยวกับ <span className="font-medium text-emerald-700">{doc.filename}</span> ได้เลย
+                                Ask anything about <span className="font-medium text-emerald-700">{doc.filename}</span>
                             </p>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-w-lg w-full">
@@ -399,7 +399,7 @@ export default function AIRagPage() {
                                                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '150ms' }} />
                                                     <div className="w-2 h-2 rounded-full bg-emerald-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                                                 </div>
-                                                <span className="text-xs text-slate-400">กำลังค้นหาคำตอบจากเอกสาร...</span>
+                                                <span className="text-xs text-slate-400">Searching the document for an answer...</span>
                                             </div>
                                         </div>
                                     </div>
@@ -429,7 +429,7 @@ export default function AIRagPage() {
                                     value={input}
                                     onChange={handleInputChange}
                                     onKeyDown={handleKeyDown}
-                                    placeholder="ถามคำถามเกี่ยวกับเอกสาร..."
+                                    placeholder="Ask a question about the document..."
                                     rows={1}
                                     className="flex-1 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400 bg-transparent border-none outline-none resize-none"
                                     style={{ minHeight: '44px', maxHeight: '120px' }}
@@ -447,7 +447,7 @@ export default function AIRagPage() {
                                 </button>
                             </div>
                             <p className="text-[11px] text-slate-400 mt-2 text-center">
-                                AI ตอบจากเนื้อหาในเอกสารเท่านั้น
+                                The AI answers only from this document&apos;s content
                             </p>
                         </div>
                     </div>

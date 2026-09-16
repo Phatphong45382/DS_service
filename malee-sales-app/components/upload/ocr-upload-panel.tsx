@@ -219,7 +219,7 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                             </div>
                             <div>
                                 <p className="text-sm font-semibold text-slate-800">
-                                    ลากไฟล์มาวาง หรือคลิกเพื่อเลือก
+                                    Drag &amp; drop or click to browse
                                 </p>
                                 <p className="text-xs text-slate-400 mt-0.5">PNG, JPEG, WebP, PDF — max 10MB</p>
                             </div>
@@ -249,7 +249,7 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                                     onClick={() => fileInputRef.current?.click()}
                                     className="text-xs text-violet-600 hover:text-violet-700 font-medium"
                                 >
-                                    เปลี่ยนไฟล์
+                                    Change file
                                 </button>
                                 <input
                                     ref={fileInputRef}
@@ -277,7 +277,7 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                                         <FileImage className="w-8 h-8 text-rose-400" />
                                     </div>
                                     <p className="text-sm text-slate-600 font-medium">{file.name}</p>
-                                    <p className="text-xs text-slate-400 mt-1">PDF Preview ไม่สามารถแสดงได้ — กด OCR เพื่ออ่านข้อมูล</p>
+                                    <p className="text-xs text-slate-400 mt-1">PDF preview unavailable — run OCR to read the data</p>
                                 </div>
                             )}
                         </div>
@@ -290,12 +290,12 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                             {loading ? (
                                 <>
                                     <Loader2 className="w-4 h-4 animate-spin" />
-                                    AI กำลังอ่านเอกสาร...
+                                    AI is reading the document...
                                 </>
                             ) : (
                                 <>
                                     <ScanLine className="w-4 h-4" />
-                                    อ่านเอกสารด้วย AI ({OCR_MODELS.find(m => m.id === selectedModel)?.name || 'AI'})
+                                    Read with AI ({OCR_MODELS.find(m => m.id === selectedModel)?.name || 'AI'})
                                 </>
                             )}
                         </button>
@@ -320,10 +320,10 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                             <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
                             <div className="flex-1">
                                 <p className="text-sm font-semibold text-emerald-800">
-                                    AI อ่านเอกสารสำเร็จ — {editableItems.length} รายการ
+                                    AI read the document — {editableItems.length} items
                                 </p>
                                 <p className="text-xs text-emerald-600 mt-0.5">
-                                    ใช้เวลา {(responseTime / 1000).toFixed(2)}s | {OCR_MODELS.find(m => m.id === modelUsed)?.name || 'AI Engine'}
+                                    Took {(responseTime / 1000).toFixed(2)}s | {OCR_MODELS.find(m => m.id === modelUsed)?.name || 'AI Engine'}
                                 </p>
                             </div>
                         </div>
@@ -332,9 +332,9 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                         <div className="flex items-center gap-2 px-3 py-2 bg-amber-50 border border-amber-200 rounded-lg">
                             <Pencil className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                             <p className="text-xs text-amber-700">
-                                <span className="font-semibold">คลิกที่ค่าเพื่อแก้ไข</span> — ถ้า AI อ่านผิด สามารถแก้ได้ก่อนกด confirm | เซลล์ที่แก้แล้วจะเป็น
+                                <span className="font-semibold">Click a value to edit</span> — if the AI misread it, fix it before confirming | edited cells turn
                                 <span className="inline-block w-3 h-3 bg-amber-100 ring-1 ring-amber-300 rounded-sm mx-1 align-middle" />
-                                สีเหลือง
+                                amber
                             </p>
                         </div>
 
@@ -498,11 +498,11 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                             </div>
                             <div className="flex justify-between text-sm font-bold border-t border-blue-200 pt-1.5">
                                 <span className="text-blue-800">Grand Total</span>
-                                <span className="font-mono text-blue-800">{computedGrandTotal.toLocaleString()} บาท</span>
+                                <span className="font-mono text-blue-800">{computedGrandTotal.toLocaleString()} THB</span>
                             </div>
                             {editedCells.size > 0 && (
                                 <p className="text-[10px] text-amber-600 pt-1">
-                                    * Subtotal/VAT/Grand Total คำนวณใหม่อัตโนมัติจากค่าที่แก้ไข
+                                    * Subtotal/VAT/Grand Total recalculate automatically from edited values
                                 </p>
                             )}
                         </div>
@@ -511,7 +511,7 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                         {editedCells.size > 0 && (
                             <div className="flex items-center gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
                                 <Pencil className="w-3 h-3" />
-                                <span>แก้ไขแล้ว {editedCells.size} จุด</span>
+                                <span>{editedCells.size} cells edited</span>
                             </div>
                         )}
 
@@ -521,13 +521,13 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                                 onClick={clearAll}
                                 className="flex-1 px-4 py-3 border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-colors text-sm font-medium"
                             >
-                                อ่านใหม่
+                                Re-scan
                             </button>
                             <button
                                 onClick={handleConfirmOCR}
                                 className="flex-1 px-4 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors text-sm font-semibold shadow-sm"
                             >
-                                ใช้ข้อมูลนี้ → Preview
+                                Use this data → Preview
                             </button>
                         </div>
                     </div>
@@ -536,7 +536,7 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
 
             {/* Footer with model selector + clear */}
             <div className="px-4 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/50">
-                <p className="text-xs text-slate-400">AI จะอ่านข้อมูลจากรูป/PDF อัตโนมัติ</p>
+                <p className="text-xs text-slate-400">The AI reads data from images/PDF automatically</p>
                 <div className="flex items-center gap-2">
                     {/* Model Selector */}
                     <div className="relative">

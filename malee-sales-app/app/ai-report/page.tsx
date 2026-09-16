@@ -79,7 +79,7 @@ export default function AIReportPage() {
             debug.status = 'error';
             debug.errorDetail = err.message;
             setDebugInfo({ ...debug });
-            setError(err.message || 'ไม่สามารถสร้างรายงานได้');
+            setError(err.message || 'Could not generate the report');
         } finally {
             setLoading(false);
         }
@@ -88,7 +88,7 @@ export default function AIReportPage() {
     return (
         <MainLayout
             title="AI Report Generator"
-            description="สร้างรายงานสรุปยอดขายด้วย AI แล้วส่งไปทาง Email"
+            description="Generate an AI sales summary report and send it by email"
             action={<ModelSelector />}
         >
             <div className="space-y-6">
@@ -173,7 +173,7 @@ export default function AIReportPage() {
                         <div className="mt-4 flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-lg">
                             <CheckCircle2 className="w-5 h-5 text-emerald-600" />
                             <span className="text-sm text-emerald-800 font-medium">
-                                ส่ง Email สำเร็จไปที่ {email}
+                                Email sent to {email}
                             </span>
                         </div>
                     )}
@@ -196,8 +196,8 @@ export default function AIReportPage() {
                             <div className="flex flex-col items-center justify-center py-16 gap-4">
                                 <div className="w-12 h-12 rounded-full border-4 border-blue-100 border-t-blue-600 animate-spin" />
                                 <div className="text-center">
-                                    <p className="text-sm font-medium text-slate-700">AI กำลังสร้างรายงาน...</p>
-                                    <p className="text-xs text-slate-400 mt-1">กำลังวิเคราะห์ข้อมูลจาก {dataSource === 'dashboard' ? 'Dashboard' : 'Analytics'}</p>
+                                    <p className="text-sm font-medium text-slate-700">AI is generating the report...</p>
+                                    <p className="text-xs text-slate-400 mt-1">Analyzing data from {dataSource === 'dashboard' ? 'Dashboard' : 'Analytics'}</p>
                                 </div>
                             </div>
                         )}
@@ -206,7 +206,7 @@ export default function AIReportPage() {
                             <div className="flex items-center gap-3 p-4 bg-rose-50 border border-rose-200 rounded-lg">
                                 <XCircle className="w-5 h-5 text-rose-600" />
                                 <div>
-                                    <p className="text-sm font-medium text-rose-800">เกิดข้อผิดพลาด</p>
+                                    <p className="text-sm font-medium text-rose-800">Something went wrong</p>
                                     <p className="text-xs text-rose-600 mt-0.5">{error}</p>
                                 </div>
                             </div>
@@ -224,8 +224,8 @@ export default function AIReportPage() {
                                     <FileText className="w-8 h-8 text-slate-300" />
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-slate-500">ยังไม่มีรายงาน</p>
-                                    <p className="text-xs text-slate-400 mt-1">กดปุ่ม "Generate Report" เพื่อสร้างรายงาน</p>
+                                    <p className="text-sm font-medium text-slate-500">No report yet</p>
+                                    <p className="text-xs text-slate-400 mt-1">Click &quot;Generate Report&quot; to create one</p>
                                 </div>
                             </div>
                         )}
@@ -254,7 +254,7 @@ export default function AIReportPage() {
                     </div>
                     <div className="px-5 py-3 font-mono text-[11px]">
                         {!debugInfo ? (
-                            <p className="text-slate-500 italic">กด Generate เพื่อดูสถานะ</p>
+                            <p className="text-slate-500 italic">Click Generate to see status</p>
                         ) : (
                             <div className="space-y-1.5">
                                 <div className="flex flex-wrap gap-x-6 gap-y-1">

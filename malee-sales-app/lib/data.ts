@@ -40,19 +40,19 @@ export const categoryData = [
 // KPI metrics
 export const kpiMetrics: KPI[] = [
     {
-        label: 'รายได้รวม',
+        label: 'Total Revenue',
         value: 12450000,
         trend: 12.5,
         format: 'currency',
     },
     {
-        label: 'ยอดขาย',
+        label: 'Sales',
         value: 8750,
         trend: 8.3,
         format: 'number',
     },
     {
-        label: 'ลูกค้า',
+        label: 'Customers',
         value: 3420,
         trend: 15.7,
         format: 'number',
