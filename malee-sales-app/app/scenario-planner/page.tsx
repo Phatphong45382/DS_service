@@ -34,6 +34,7 @@ interface FilterOptions {
   product_groups: string[]
   flavors: string[]
   sizes: string[]
+  mechgroups?: string[]
 }
 
 const MONTHS = [
@@ -50,8 +51,6 @@ const MONTHS = [
   { value: 11, label: "November" },
   { value: 12, label: "December" },
 ]
-
-const PROMO_TYPES = ["None", "Corporate", "Consumer", "Bundle", "Seasonal"]
 
 const YEARS = [2023, 2024, 2025, 2026]
 
@@ -217,7 +216,7 @@ export default function ScenarioPlannerPage() {
 
   // Promo
   const [promoEnabled, setPromoEnabled] = useState(false)
-  const [promoType, setPromoType] = useState("None")
+  const [promoType, setPromoType] = useState("Weekly Deal")
   const [discountPct, setDiscountPct] = useState(0)
   const [promoDays, setPromoDays] = useState(0)
 
@@ -309,7 +308,7 @@ export default function ScenarioPlannerPage() {
       month,
       promo_days_in_month: promoEnabled ? promoDays : 0,
       promo_discount_pct: promoEnabled ? discountPct : 0,
-      promo_type: promoEnabled ? promoType : "None",
+      promo_type: promoEnabled ? promoType : "No Promotion",
     }
 
     setLoading(true)
@@ -502,7 +501,7 @@ export default function ScenarioPlannerPage() {
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
-                            {PROMO_TYPES.map((t) => (
+                            {(filterOptions?.mechgroups ?? []).filter((m) => m !== "No Promotion").map((t) => (
                               <SelectItem key={t} value={t}>{t}</SelectItem>
                             ))}
                           </SelectContent>

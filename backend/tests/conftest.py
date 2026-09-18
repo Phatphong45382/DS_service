@@ -20,9 +20,28 @@ def dataset_path(tmp_path_factory) -> str:
 
 
 @pytest.fixture(scope="session")
-def client(dataset_path) -> TestClient:
+def model_dir(tmp_path_factory, dataset_path) -> str:
+    """A throwaway artifact trained on the test dataset; also points the local model backend at it."""
+    from backend.model.train import train_from_parquet
+
+    out = tmp_path_factory.mktemp("model")
+    train_from_parquet(dataset_path, out)
+    os.environ["MODEL_BACKEND"] = "local"
+    os.environ["MODEL_PATH"] = str(out)
+    from backend.config import settings
+    settings.MODEL_BACKEND, settings.MODEL_PATH = "local", str(out)
+    return str(out)
+
+
+@pytest.fixture(scope="session")
+def client(dataset_path, model_dir) -> TestClient:
     os.environ["DATA_SOURCE"] = "local"
     os.environ["DATA_PATH"] = dataset_path
+    # backend.config may already be imported (test modules import services at collection), so patch it too
+    from backend.config import settings
+    from backend.data import loader
+    settings.DATA_SOURCE, settings.DATA_PATH = "local", dataset_path
+    loader.clear_cache()
     from backend.main import app
 
     with TestClient(app) as c:

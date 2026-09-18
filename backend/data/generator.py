@@ -76,6 +76,20 @@ def generate(seed: int = 42, end_month: str | None = None, months: int = 48) -> 
         for c, sites in SITES.items() for s in sites
     }
 
+    # A Promotion is a campaign on a Product for one month, run across every Customer and Site.
+    promotions: dict[tuple, tuple] = {}
+    for p in cat["products"]:
+        key = (p["product_group"], p["flavor"], p["size"])
+        for t in range(len(dates)):
+            mech, days, disc, lift = NO_PROMOTION, 0, 0.0, 1.0
+            if rng.random() < PROMO_PROBABILITY:
+                mech = rng.choice(list(MECHANICS), p=[m[0] for m in MECHANICS.values()])
+                _, (d_lo, d_hi), (p_lo, p_hi), (l_lo, l_hi) = MECHANICS[mech]
+                days = int(rng.integers(d_lo, d_hi + 1))
+                disc = float(round(rng.uniform(p_lo, p_hi), 1))
+                lift = rng.uniform(l_lo, l_hi)
+            promotions[(key, t)] = (mech, days, disc, lift)
+
     rows = []
     for c, sites in SITES.items():
         for s in sites:
@@ -86,14 +100,7 @@ def generate(seed: int = 42, end_month: str | None = None, months: int = 48) -> 
                     seasonal = 1 + 0.25 * np.cos(2 * np.pi * (d.month - 12) / 12)
                     trend = 1 + 0.015 * (t / 12)
                     expected = base * seasonal * trend
-
-                    mech, days, disc, lift = NO_PROMOTION, 0, 0.0, 1.0
-                    if rng.random() < PROMO_PROBABILITY:
-                        mech = rng.choice(list(MECHANICS), p=[m[0] for m in MECHANICS.values()])
-                        _, (d_lo, d_hi), (p_lo, p_hi), (l_lo, l_hi) = MECHANICS[mech]
-                        days = int(rng.integers(d_lo, d_hi + 1))
-                        disc = float(round(rng.uniform(p_lo, p_hi), 1))
-                        lift = rng.uniform(l_lo, l_hi)
+                    mech, days, disc, lift = promotions[(key, t)]
 
                     actual = max(1, int(round(expected * lift * rng.lognormal(0, 0.08))))
                     plan = max(1, int(round(expected * (1 + PLAN_BIAS[c]) * rng.lognormal(0, 0.03))))

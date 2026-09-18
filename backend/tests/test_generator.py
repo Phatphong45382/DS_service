@@ -67,10 +67,13 @@ def test_promotion_fields_are_consistent(df):
     assert (df.loc[~no_promo, "promotion_dt"] > 0).all()
 
 
-def test_every_mechanic_lifts_actual(df):
-    base = df.loc[df["MechGroup"] == "No Promotion", "Actual_sale"].mean()
+def test_every_mechanic_lifts_actual_against_the_same_site_product(df):
+    keys = ["site_name_public", "Product_Group", "Flavor", "Size"]
+    baseline = df[df["MechGroup"] == "No Promotion"].groupby(keys)["Actual_sale"].mean().rename("baseline")
+    lift = df.join(baseline, on=keys).eval("Actual_sale / baseline")
     for mech in MECHANICS - {"No Promotion"}:
-        assert df.loc[df["MechGroup"] == mech, "Actual_sale"].mean() > base, mech
+        assert lift[df["MechGroup"] == mech].mean() > 1.0, mech
+    assert lift[df["MechGroup"] == "Weekly Deal"].mean() > lift[df["MechGroup"] == "Loyalty Points"].mean()
 
 
 def test_weekly_deal_is_short_and_deep_b2b_long_and_shallow(df):

@@ -38,7 +38,8 @@ _Avoid_: location, ship-to, DC (in prose)
 ### Promotions
 
 **Promotion**:
-A Mechanic applied to a Product for a Customer in a month, with its Discount and Promo Days. A month with no Promotion has Mechanic "No Promotion", zero Discount and zero Promo Days.
+A Mechanic applied to a Product for one month, across every Customer and Site, with its Discount and Promo Days. A month with no Promotion has Mechanic "No Promotion", zero Discount and zero Promo Days.
+_Avoid_: per-Customer or per-Site promotions (the model and the Scenario Planner see a Promotion at Product-month grain)
 _Avoid_: promo (in prose), campaign, deal
 
 **Mechanic**:

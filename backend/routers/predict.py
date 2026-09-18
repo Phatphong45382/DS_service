@@ -4,6 +4,8 @@ from typing import Dict, Any
 import logging
 
 from ..schemas.common import APIResponse
+from ..model.service import predict as model_predict
+from ..data.loader import load_frame
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -18,7 +20,7 @@ class PredictRequest(BaseModel):
     promo_flag: int = 0
     promo_days_in_month: int = 0
     promo_discount_pct: float = 0  # 0-100 from frontend
-    promo_type: str = "None"
+    promo_type: str = "No Promotion"
 
 
 class CompareRequest(BaseModel):
@@ -29,7 +31,7 @@ class CompareRequest(BaseModel):
     month: int
     promo_days_in_month: int = 0
     promo_discount_pct: float = 0  # 0-100 from frontend
-    promo_type: str = "None"
+    promo_type: str = "No Promotion"
 
 
 def _features(product_group, flavor, size, year, month, promo_flag, promo_days_in_month, promo_discount_pct, promo_type) -> dict:
@@ -47,21 +49,28 @@ def _features(product_group, flavor, size, year, month, promo_flag, promo_days_i
     }
 
 
-def _predict(features: dict) -> dict:
-    """Returns {"prediction": float, "explanations": {feature: contribution}}.
+def _require_known_product(product_group: str, flavor: str, size: str) -> None:
+    known = load_frame()[["Product_Group", "Flavor", "Size"]].drop_duplicates()
+    if not ((known["Product_Group"] == product_group) & (known["Flavor"] == flavor) & (known["Size"] == size)).any():
+        raise HTTPException(status_code=422, detail=f"Unknown Product: {product_group} / {flavor} / {size}")
 
-    Filled in by the forecast-model ticket; until then the Planner gets a clear 503.
-    """
-    raise HTTPException(status_code=503, detail="Model backend not configured")
+
+def _predict(features: dict) -> dict:
+    """One prediction with its interval and per-feature explanations (see model.service)."""
+    (r,) = model_predict([features], explain=True)
+    return {"prediction": r["prediction"], "p10": r["p10"], "p90": r["p90"],
+            "explanations": r["explanations"], "base": r["base"]}
 
 
 @router.post("/single", response_model=APIResponse[Dict[str, Any]])
 async def predict_single(req: PredictRequest):
     """Single prediction with explanations."""
     try:
+        _require_known_product(req.product_group, req.flavor, req.size)
+        promo_flag = int(req.promo_type != "No Promotion")
         result = _predict(_features(
             req.product_group, req.flavor, req.size, req.year, req.month,
-            req.promo_flag, req.promo_days_in_month, req.promo_discount_pct, req.promo_type,
+            promo_flag, req.promo_days_in_month, req.promo_discount_pct, req.promo_type,
         ))
         return APIResponse(success=True, data=result)
     except HTTPException:
@@ -75,10 +84,12 @@ async def predict_single(req: PredictRequest):
 async def predict_compare(req: CompareRequest):
     """Compare baseline (no Promotion) vs scenario (with Promotion). Returns both predictions + delta."""
     try:
-        baseline = _predict(_features(req.product_group, req.flavor, req.size, req.year, req.month, 0, 0, 0, "None"))
+        _require_known_product(req.product_group, req.flavor, req.size)
+        promo_flag = int(req.promo_type != "No Promotion")
+        baseline = _predict(_features(req.product_group, req.flavor, req.size, req.year, req.month, 0, 0, 0, "No Promotion"))
         scenario = _predict(_features(
             req.product_group, req.flavor, req.size, req.year, req.month,
-            1, req.promo_days_in_month, req.promo_discount_pct, req.promo_type,
+            promo_flag, req.promo_days_in_month if promo_flag else 0, req.promo_discount_pct if promo_flag else 0, req.promo_type,
         ))
         baseline_pred = baseline.get("prediction", 0)
         scenario_pred = scenario.get("prediction", 0)

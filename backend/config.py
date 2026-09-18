@@ -23,6 +23,10 @@ class Settings:
     DATA_SOURCE: str = os.getenv("DATA_SOURCE", "local")
     DATA_PATH: str = os.getenv("DATA_PATH", str(_REPO_ROOT / "data" / "sales.parquet"))
 
+    # Forecast model: in-process artifact now, SageMaker endpoint with the AWS backends ticket
+    MODEL_BACKEND: str = os.getenv("MODEL_BACKEND", "local")
+    MODEL_PATH: str = os.getenv("MODEL_PATH", str(_REPO_ROOT / "model"))
+
     # Gemini AI Settings (replaced by Bedrock in the AI ticket)
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")

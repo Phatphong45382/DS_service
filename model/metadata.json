@@ -1,0 +1,64 @@
+{
+  "model_name": "LightGBM",
+  "version": "20260918-140010",
+  "features": [
+    "product_group",
+    "flavor",
+    "size",
+    "promo_type",
+    "year",
+    "month",
+    "month_id",
+    "promo_flag",
+    "promo_days_in_month",
+    "promo_discount_pct"
+  ],
+  "categorical": [
+    "product_group",
+    "flavor",
+    "size",
+    "promo_type"
+  ],
+  "categories": {
+    "product_group": [
+      "Chips",
+      "Crackers",
+      "Rice Crackers"
+    ],
+    "flavor": [
+      "BBQ",
+      "Cheese",
+      "Honey Butter",
+      "Hot Spicy",
+      "Original",
+      "Salted Egg",
+      "Seaweed",
+      "Sour Cream",
+      "Teriyaki",
+      "Tom Yum",
+      "Truffle",
+      "Wasabi"
+    ],
+    "size": [
+      "150g",
+      "20g",
+      "30g",
+      "50g",
+      "75g"
+    ],
+    "promo_type": [
+      "B2B Program",
+      "Loyalty Points",
+      "No Promotion",
+      "Weekly Deal"
+    ]
+  },
+  "q10": -0.09429386638295206,
+  "q90": 0.04356756148095131,
+  "metrics": {
+    "holdout_wape": 5.489025094053736,
+    "holdout_bias": 3.158387883194983,
+    "holdout_months": 6,
+    "train_rows": 1152
+  }
+}
