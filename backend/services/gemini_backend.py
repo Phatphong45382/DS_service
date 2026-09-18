@@ -21,8 +21,9 @@ class GeminiBackend:
         return settings.GEMINI_MODEL
 
     def available_models(self) -> list[ModelOption]:
-        blurbs = ["fast, free quota", "balanced", "highest quality"]
-        return [ModelOption(i, label, f"Gemini {i.removeprefix('gemini-')} — {b}") for i, label, b in zip(settings.GEMINI_AVAILABLE_MODELS, TIER_LABELS, blurbs)]
+        # Tier wording only: the vendor and model id stay out of the UI by request; the id is still returned for switching.
+        blurbs = ["quickest answers, lowest cost", "balanced speed and quality", "highest quality, slower"]
+        return [ModelOption(i, label, b.capitalize()) for i, label, b in zip(settings.GEMINI_AVAILABLE_MODELS, TIER_LABELS, blurbs)]
 
     def set_model(self, model_id: str) -> None:
         settings.GEMINI_MODEL = model_id
