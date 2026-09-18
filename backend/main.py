@@ -5,30 +5,31 @@ import uvicorn
 import logging
 
 from backend.config import settings
+from backend.logging_setup import configure_logging, log_requests
 from backend.routers import dashboard, health, analytics, ai, predict, runs
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
+configure_logging()
 logger = logging.getLogger(__name__)
 
 def create_app() -> FastAPI:
+    production = settings.ENV == "production"
     app = FastAPI(
         title=settings.PROJECT_NAME,
-        openapi_url=f"{settings.API_V1_STR}/openapi.json",
         version="1.0.0",
+        # no API surface listing in production: nothing for a scanner to enumerate
+        openapi_url=None if production else f"{settings.API_V1_STR}/openapi.json",
+        docs_url=None if production else "/docs",
+        redoc_url=None if production else "/redoc",
     )
 
-    # CORS
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=["*"], # In production, replace with specific origins
+        allow_origins=settings.CORS_ORIGINS,
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.middleware("http")(log_requests)
 
     # Include Routers
     app.include_router(dashboard.router, prefix=f"{settings.API_V1_STR}/dashboard", tags=["dashboard"])

@@ -40,19 +40,48 @@ export class ApiError extends Error {
     }
 }
 
+
+const DEFAULT_TIMEOUT_MS = 30_000;
+const UPLOAD_TIMEOUT_MS = 120_000;
+
+/** fetch that gives up after `ms` and reports as a timeout. */
+async function fetchWithTimeout(url: string, options: RequestInit, ms: number): Promise<Response> {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), ms);
+    try {
+        return await fetch(url, { ...options, signal: controller.signal });
+    } catch (err) {
+        if (err instanceof DOMException && err.name === 'AbortError') {
+            throw new ApiError(`Request timed out after ${Math.round(ms / 1000)}s`, undefined, undefined, 'TIMEOUT');
+        }
+        throw err;
+    } finally {
+        window.clearTimeout(timer);
+    }
+}
+
+/** Every failed request is announced once so the UI can show it (see components/api-error-toasts). */
+function reportApiError(err: unknown, endpoint: string): void {
+    if (typeof window === 'undefined') return;
+    const e = err as Partial<ApiError> & { message?: string };
+    window.dispatchEvent(new CustomEvent('api-error', {
+        detail: { message: e?.message || String(err), code: e?.code, status: e?.statusCode, endpoint },
+    }));
+}
+
 /**
  * Helper to handle fetch and standardized responses
  */
 async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_URL}${endpoint}`;
     try {
-        const response = await fetch(url, {
+        const response = await fetchWithTimeout(url, {
             ...options,
             headers: {
                 'Accept': 'application/json',
                 ...options.headers,
             },
-        });
+        }, DEFAULT_TIMEOUT_MS);
 
         if (!response.ok) {
             let errorMsg = `Server error: ${response.status}`;
@@ -87,20 +116,17 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
         return result.data as T;
     } catch (error) {
         console.error("fetchAPI Exception:", error);
-        if (error instanceof ApiError) throw error;
-
-        // Network error
-        if (error instanceof TypeError && error.message.includes('fetch')) {
-            throw new ApiError(
-                '⚠️ Cannot connect to the backend',
-                undefined,
-                `Check that the FastAPI server is running at ${API_BASE_URL}`
-            );
+        if (error instanceof ApiError) {
+            reportApiError(error, endpoint);
+            throw error;
         }
 
-        throw new ApiError(
-            error instanceof Error ? error.message : String(error)
-        );
+        // Network error
+        const wrapped = error instanceof TypeError && error.message.includes('fetch')
+            ? new ApiError('Cannot connect to the backend', undefined, `Check that the API is running at ${API_BASE_URL}`, 'NETWORK')
+            : new ApiError(error instanceof Error ? error.message : String(error));
+        reportApiError(wrapped, endpoint);
+        throw wrapped;
     }
 }
 
@@ -294,11 +320,11 @@ export async function ocrPurchaseOrder(
     }
 
     const url = `${API_URL}/ai/ocr`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
         method: 'POST',
         headers: { 'Accept': 'application/json' },
         body: formData,
-    });
+    }, UPLOAD_TIMEOUT_MS).catch((err) => { reportApiError(err, url); throw err; });
 
     if (!response.ok) {
         let errorMsg = `Server error: ${response.status}`;
@@ -306,7 +332,9 @@ export async function ocrPurchaseOrder(
             const errorData = await response.json();
             errorMsg = errorData.error?.message || errorMsg;
         } catch (_) {}
-        throw new ApiError(errorMsg, response.status);
+        const failure = new ApiError(errorMsg, response.status);
+        reportApiError(failure, url);
+        throw failure;
     }
 
     const result: ApiResponse<any> = await response.json();
@@ -415,11 +443,11 @@ export async function ragUploadDocument(file: File): Promise<{
     formData.append('file', file);
 
     const url = `${API_URL}/ai/rag/upload`;
-    const response = await fetch(url, {
+    const response = await fetchWithTimeout(url, {
         method: 'POST',
         headers: { 'Accept': 'application/json' },
         body: formData,
-    });
+    }, UPLOAD_TIMEOUT_MS).catch((err) => { reportApiError(err, url); throw err; });
 
     if (!response.ok) {
         let errorMsg = `Server error: ${response.status}`;
@@ -427,7 +455,9 @@ export async function ragUploadDocument(file: File): Promise<{
             const errorData = await response.json();
             errorMsg = errorData.error?.message || errorMsg;
         } catch (_) {}
-        throw new ApiError(errorMsg, response.status);
+        const failure = new ApiError(errorMsg, response.status);
+        reportApiError(failure, url);
+        throw failure;
     }
 
     const result: ApiResponse<any> = await response.json();
