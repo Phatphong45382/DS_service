@@ -174,7 +174,8 @@ export function ErrorHeatmap({ title, type, data, loading }: ErrorHeatmapProps) 
                                                                 <span className="font-mono text-right">{formatNumber(cell.planned)}</span>
 
                                                                 <span className="text-slate-400">Error:</span>
-                                                                <span className={`font-mono text-right ${cell.error > 0 ? 'text-red-400' : 'text-emerald-400'}`}>
+                                                                {/* error is planned - actual: red still marks the Plan falling short of demand */}
+                                                                <span className={`font-mono text-right ${cell.error < 0 ? 'text-red-400' : 'text-emerald-400'}`}>
                                                                     {cell.error > 0 ? '+' : ''}{formatNumber(cell.error)}
                                                                 </span>
                                                             </div>

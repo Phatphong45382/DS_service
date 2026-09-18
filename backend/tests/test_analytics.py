@@ -90,7 +90,34 @@ def test_under_and_over_plan_volumes_mean_what_the_rankings_mean(client, df):
     kpi = data["kpi"]
     # every ranked under-plan row is a shortfall, so the shortfall volume cannot be the smaller one
     assert all(item["actual"] > item["planned"] for item in data["ranking_under_plan"])
-    assert kpi["bias"] > 0 and kpi["under_plan_volume"] > kpi["over_plan_volume"]
+    # Bias is signed from the Plan (#14), so under-planning reads negative
+    assert kpi["bias"] < 0 and kpi["under_plan_volume"] > kpi["over_plan_volume"]
+
+
+def test_bias_is_signed_from_the_plan_the_way_a_run_is_signed_from_the_forecast(client, df):
+    """One sign convention for Bias across the app, and the one the glossary states.
+
+    A Run reports (forecast - actual) / actual, so negative means it forecast too low. Analytics
+    reported (actual - planned) / actual, so the same situation came back positive: a Bias of
+    -5 % on the Runs page and on the Deep Dive page described opposite things (issue #14).
+    """
+    rows = df[(df["date"] >= "2025-01-01") & (df["date"] <= "2025-12-31")]
+    actual, planned = rows["Actual_sale"].sum(), rows["Planed_sales_from_start"].sum()
+    expected = (planned - actual) / actual * 100
+
+    for endpoint in ("deep-dive", "summary"):
+        kpi = ok(client.get(f"{API}/{endpoint}", params=YEAR_2025))["kpi"]
+        assert kpi["bias"] == pytest.approx(expected, rel=1e-6), endpoint
+
+    # this dataset outsells its Plan, which the glossary calls under-planning: negative
+    assert expected < 0
+    data = ok(client.get(f"{API}/deep-dive", params=YEAR_2025))
+    assert data["kpi"]["bias"] < 0
+    assert data["kpi"]["under_plan_volume"] > data["kpi"]["over_plan_volume"]
+
+    # every derived Bias follows the same sign, or a heatmap cell contradicts the card above it
+    weighted = sum(c["bias"] * c["actual"] for c in data["heatmap_customer"])
+    assert weighted / sum(c["actual"] for c in data["heatmap_customer"]) < 0
 
 
 def test_deep_dive_promotion_filter_keeps_only_promotion_rows(client):
