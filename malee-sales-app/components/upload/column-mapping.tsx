@@ -15,7 +15,7 @@ interface ModelColumn {
     example?: string;
 }
 
-const MODEL_COLUMNS: ModelColumn[] = [
+export const MODEL_COLUMNS: ModelColumn[] = [
     { key: 'customer', label: 'Customer', description: 'Customer name / channel', required: true, example: 'FreshMart' },
     { key: 'destination', label: 'Destination', description: 'Destination / branch', required: true, example: 'DC Central 1' },
     { key: 'year', label: 'Year', description: 'Year (BE or CE)', required: true, example: '2025' },

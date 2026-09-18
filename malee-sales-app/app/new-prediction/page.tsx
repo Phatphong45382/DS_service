@@ -5,14 +5,14 @@ import { MainLayout } from '@/components/layout/main-layout';
 import { UploadPanel } from '@/components/upload/upload-panel';
 import { OCRUploadPanel } from '@/components/upload/ocr-upload-panel';
 import { DataPreview } from '@/components/upload/data-preview';
-import { ColumnMapping } from '@/components/upload/column-mapping';
+import { ColumnMapping, MODEL_COLUMNS } from '@/components/upload/column-mapping';
 import { ForecastConfig } from '@/components/upload/forecast-config';
 import { RunResults } from '@/components/upload/run-results';
 import { ParsedData } from '@/lib/file-utils';
 import { createRun, getRunForecast, uploadRunInput } from '@/lib/api-client';
 import { aggregateByMonth, aggregateForecastByMonth, toCsv } from '@/lib/forecast-utils';
 import { useState } from 'react';
-import { FileSpreadsheet, ScanLine, Check, Upload, Eye, Settings2, BarChart3, ChevronRight, Download, ArrowRight, Lightbulb, RotateCcw, CheckCircle2, AlertTriangle, XCircle, AlertCircle, Database } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight, Download, ScanLine, Database, RotateCcw, CheckCircle2, AlertTriangle, XCircle, AlertCircle } from 'lucide-react';
 
 type Step = 'upload' | 'preview' | 'mapping' | 'configure' | 'results';
 type UploadMode = 'excel' | 'ocr';
@@ -88,11 +88,11 @@ export default function NewPredictionPage() {
         }
     };
     const stepperItems = [
-        { key: 'upload', label: 'Upload', icon: Upload },
-        { key: 'preview', label: 'Preview', icon: Eye },
-        { key: 'mapping', label: 'Mapping', icon: Database },
-        { key: 'configure', label: 'Configure', icon: Settings2 },
-        { key: 'results', label: 'Results', icon: BarChart3 },
+        { key: 'upload', label: 'Upload' },
+        { key: 'preview', label: 'Preview' },
+        { key: 'mapping', label: 'Map columns' },
+        { key: 'configure', label: 'Configure' },
+        { key: 'results', label: 'Results' },
     ];
     const stepKeys = ['upload', 'preview', 'mapping', 'configure', 'results'];
     // When data is uploaded but still on upload step, treat as "preview" active
@@ -104,74 +104,102 @@ export default function NewPredictionPage() {
             title="New Prediction"
             description="Upload new sales data to generate updated forecasts"
         >
-            <div className="space-y-6 max-w-6xl mx-auto pt-0">
+            <div className="space-y-6 max-w-4xl mx-auto pt-0">
 
-                {/* Compact Inline Stepper */}
-                <div className="flex items-center gap-1.5">
+                {/* Steps: a line of names, the current one in blue, finished ones ticked */}
+                <ol className="flex items-center gap-3 overflow-x-auto whitespace-nowrap text-sm">
                     {stepperItems.map((step, idx, arr) => {
                         const isActive = effectiveStep === step.key;
                         const isCompleted = currentIdx > idx;
-                        const Icon = step.icon;
                         return (
-                            <div key={step.key} className="flex items-center gap-1.5">
-                                <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                                    isActive ? 'bg-blue-600 text-white shadow-sm'
-                                    : isCompleted ? 'bg-emerald-50 text-emerald-700'
-                                    : 'bg-slate-100 text-slate-400'
+                            <li key={step.key} className="flex items-center gap-3">
+                                <span className={`inline-flex items-center gap-1.5 ${
+                                    isActive ? 'font-semibold text-blue-700' : isCompleted ? 'text-slate-700' : 'text-slate-400'
                                 }`}>
-                                    {isCompleted ? <Check className="w-3 h-3" /> : <Icon className="w-3 h-3" />}
+                                    {isCompleted
+                                        ? <Check className="h-3.5 w-3.5 text-emerald-600" />
+                                        : <span className={`h-1.5 w-1.5 rounded-full ${isActive ? 'bg-blue-600' : 'bg-slate-300'}`} />}
                                     {step.label}
-                                </div>
-                                {idx < arr.length - 1 && (
-                                    <ChevronRight className={`w-3 h-3 ${currentIdx > idx ? 'text-emerald-400' : 'text-slate-300'}`} />
-                                )}
-                            </div>
+                                </span>
+                                {idx < arr.length - 1 && <span className={`h-px w-6 ${isCompleted ? 'bg-emerald-300' : 'bg-slate-200'}`} />}
+                            </li>
                         );
                     })}
-                </div>
+                </ol>
 
                 {/* Content Area */}
                 <div className="min-h-[500px]">
-                    {currentStep === 'upload' && (
-                        <div className="space-y-5">
-                            {/* Upload Mode - Compact Pill Tabs */}
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={() => setUploadMode('excel')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                                        uploadMode === 'excel'
-                                            ? 'bg-blue-600 text-white shadow-sm'
-                                            : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200 hover:border-slate-300'
-                                    }`}
-                                >
-                                    <FileSpreadsheet className="w-4 h-4" />
-                                    Excel / CSV
-                                </button>
-                                <button
-                                    onClick={() => setUploadMode('ocr')}
-                                    className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
-                                        uploadMode === 'ocr'
-                                            ? 'bg-violet-600 text-white shadow-sm'
-                                            : 'bg-white text-slate-500 hover:text-slate-700 border border-slate-200 hover:border-slate-300'
-                                    }`}
-                                >
-                                    <ScanLine className="w-4 h-4" />
-                                    AI OCR
-                                    <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-bold ${
-                                        uploadMode === 'ocr' ? 'bg-white/20 text-white' : 'bg-violet-100 text-violet-600'
-                                    }`}>
-                                        GenAI
-                                    </span>
+                    {currentStep === 'upload' && !uploadedData && (
+                        <div className="space-y-8">
+                            {uploadMode === 'ocr' ? (
+                                <div className="space-y-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setUploadMode('excel')}
+                                        className="inline-flex items-center gap-1.5 text-sm font-medium text-slate-600 hover:text-slate-900"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                        Back to file upload
+                                    </button>
+                                    <OCRUploadPanel onDataParsed={handleDataParsed} />
+                                </div>
+                            ) : (
+                                <UploadPanel onDataParsed={handleDataParsed} />
+                            )}
+
+                            {/* The two other ways in, as sentences rather than a second set of tabs */}
+                            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-slate-600">
+                                <span className="text-slate-400">No file to hand?</span>
+                                {uploadMode !== 'ocr' && (
+                                    <button type="button" onClick={() => setUploadMode('ocr')} className="inline-flex items-center gap-1.5 font-medium text-violet-700 hover:text-violet-900">
+                                        <ScanLine className="h-4 w-4" />
+                                        Scan a purchase order with AI OCR
+                                    </button>
+                                )}
+                                <button type="button" onClick={handleUseDataset} className="inline-flex items-center gap-1.5 font-medium text-blue-700 hover:text-blue-900">
+                                    <Database className="h-4 w-4" />
+                                    Run on the built-in sales dataset
                                 </button>
                             </div>
 
-                            {/* 2-Column Layout */}
-                            <div className="grid grid-cols-5 gap-5">
-                                {/* Left — Upload or Inline Preview (3/5) */}
-                                <div className="col-span-3">
-                                    {uploadedData ? (
-                                        /* Inline Preview */
-                                        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden h-full flex flex-col">
+                            {/* What a good file contains: the real column list, from the mapping step */}
+                            <div className="border-t border-slate-200 pt-6">
+                                <h3 className="text-sm font-semibold text-slate-900">Columns we look for</h3>
+                                <p className="mt-1 text-sm text-slate-500">
+                                    Names can differ; you match them on the next step. Optional columns default to no promotion.
+                                </p>
+                                <dl className="mt-4 grid gap-x-8 gap-y-3 sm:grid-cols-2">
+                                    <div>
+                                        <dt className="text-xs font-medium text-slate-500">Required</dt>
+                                        <dd className="mt-1.5 flex flex-wrap gap-1.5">
+                                            {MODEL_COLUMNS.filter(c => c.required).map(c => (
+                                                <span key={c.key} title={c.description} className="rounded-md bg-slate-100 px-2 py-1 text-xs font-medium text-slate-700">{c.label}</span>
+                                            ))}
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt className="text-xs font-medium text-slate-500">Optional</dt>
+                                        <dd className="mt-1.5 flex flex-wrap gap-1.5">
+                                            {MODEL_COLUMNS.filter(c => !c.required).map(c => (
+                                                <span key={c.key} title={c.description} className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-500">{c.label}</span>
+                                            ))}
+                                        </dd>
+                                    </div>
+                                </dl>
+                                <a
+                                    href="/templates/sales_history_template.csv"
+                                    download
+                                    className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-blue-700 hover:text-blue-900"
+                                >
+                                    <Download className="h-4 w-4" />
+                                    Download the CSV template
+                                </a>
+                            </div>
+                        </div>
+                    )}
+
+                    {currentStep === 'upload' && uploadedData && (
+                        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden flex flex-col">
                                             {/* Validation banner */}
                                             {(() => {
                                                 const valid = uploadedData.summary.emptyCells === 0;
@@ -255,105 +283,11 @@ export default function NewPredictionPage() {
                                                             : 'bg-blue-600 text-white hover:bg-blue-700 shadow-sm'
                                                     }`}
                                                 >
-                                                    Proceed to Mapping
+                                                    Continue to map columns
                                                     <ChevronRight className="w-3 h-3" />
                                                 </button>
                                             </div>
                                         </div>
-                                    ) : (
-                                        /* Upload Panel */
-                                        <div className="space-y-3">
-                                            {uploadMode === 'excel' ? (
-                                                <UploadPanel onDataParsed={handleDataParsed} />
-                                            ) : (
-                                                <OCRUploadPanel onDataParsed={handleDataParsed} />
-                                            )}
-                                            <div className="flex items-center gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
-                                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-amber-100">
-                                                    <BarChart3 className="h-4 w-4 text-amber-700" />
-                                                </div>
-                                                <div className="min-w-0 flex-1">
-                                                    <p className="text-xs font-semibold text-amber-900">No source file handy?</p>
-                                                    <p className="text-[11px] text-amber-700">Try the complete forecast flow with sample sales data.</p>
-                                                </div>
-                                                <button
-                                                    type="button"
-                                                    onClick={handleUseDataset}
-                                                    className="shrink-0 rounded-lg bg-amber-400 px-3 py-2 text-xs font-bold text-amber-950 shadow-sm transition-colors hover:bg-amber-300"
-                                                >
-                                                    Use sales dataset
-                                                </button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Right — Info Cards (2/5) */}
-                                <div className="col-span-2 space-y-4">
-                                    {/* How it works */}
-                                    <div className="bg-white rounded-xl border border-slate-200 p-4">
-                                        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">How it works</h3>
-                                        <div className="space-y-2.5">
-                                            {[
-                                                { n: '1', text: 'Upload data or scan PO', active: true },
-                                                { n: '2', text: 'Preview & validate', active: false },
-                                                { n: '3', text: 'Configure parameters', active: false },
-                                                { n: '4', text: 'View results', active: false },
-                                            ].map((s) => (
-                                                <div key={s.n} className="flex items-center gap-2.5">
-                                                    <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold shrink-0 ${
-                                                        s.active ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-400'
-                                                    }`}>{s.n}</div>
-                                                    <span className={`text-xs ${s.active ? 'text-slate-700 font-medium' : 'text-slate-400'}`}>{s.text}</span>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-
-                                    {/* Template Download */}
-                                    <button className="w-full flex items-center gap-3 p-3.5 bg-blue-50 hover:bg-blue-100/70 rounded-xl border border-blue-100 transition-colors group">
-                                        <div className="p-1.5 bg-blue-100 rounded-lg group-hover:bg-blue-200 transition-colors">
-                                            <Download className="w-4 h-4 text-blue-600" />
-                                        </div>
-                                        <div className="flex-1 text-left">
-                                            <p className="text-xs font-semibold text-blue-800">Download Template</p>
-                                            <p className="text-[10px] text-blue-500">CSV with required columns</p>
-                                        </div>
-                                        <ArrowRight className="w-3.5 h-3.5 text-blue-400 group-hover:translate-x-0.5 transition-transform" />
-                                    </button>
-
-                                    {/* Tips */}
-                                    <div className="bg-amber-50 rounded-xl border border-amber-100 p-4">
-                                        <div className="flex items-center gap-2 mb-2.5">
-                                            <Lightbulb className="w-3.5 h-3.5 text-amber-600" />
-                                            <h3 className="text-xs font-semibold text-amber-800">Quick Tips</h3>
-                                        </div>
-                                        <ul className="space-y-1.5 text-[11px] text-amber-700">
-                                            <li className="flex items-start gap-1.5">
-                                                <span className="mt-1 w-1 h-1 rounded-full bg-amber-400 shrink-0" />
-                                                Use the template to ensure correct column format
-                                            </li>
-                                            <li className="flex items-start gap-1.5">
-                                                <span className="mt-1 w-1 h-1 rounded-full bg-amber-400 shrink-0" />
-                                                AI OCR works best with clear, high-res images
-                                            </li>
-                                            <li className="flex items-start gap-1.5">
-                                                <span className="mt-1 w-1 h-1 rounded-full bg-amber-400 shrink-0" />
-                                                More historical data = better forecast accuracy
-                                            </li>
-                                        </ul>
-                                    </div>
-
-                                    {/* Supported formats */}
-                                    <div className="flex flex-wrap gap-1.5">
-                                        {['CSV', 'XLS', 'XLSX', 'PNG', 'JPEG', 'PDF'].map((fmt) => (
-                                            <span key={fmt} className="px-2 py-1 bg-slate-100 rounded-md text-[10px] font-medium text-slate-500">{fmt}</span>
-                                        ))}
-                                        <span className="px-2 py-1 bg-slate-50 rounded-md text-[10px] text-slate-400">max 10MB</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     )}
 
                     {currentStep === 'preview' && uploadedData && (
