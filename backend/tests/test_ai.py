@@ -102,3 +102,10 @@ def test_an_uploaded_document_survives_a_backend_restart(client):
     q = client.post("/api/v1/ai/rag/query", json={"doc_id": doc_id, "question": "Chips?"}).json()
     # no AI key in tests, so the answer itself fails later - but the document must have been found
     assert (q.get("error") or {}).get("code") != "DOC_NOT_FOUND", q
+
+
+def test_model_tiers_do_not_name_the_vendor(client):
+    """The customer-facing picker shows tiers, not "Gemini": the vendor stays behind the API."""
+    data = ok(client.get(f"{API}/model"))
+    for m in data["available"]:
+        assert "gemini" not in (m["label"] + m["description"]).lower()
