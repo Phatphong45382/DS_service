@@ -34,7 +34,7 @@
 | **วัตถุประสงค์** | Demand Forecasting & Sales Analytics Platform |
 | **ภาษา UI** | Thai (th) |
 | **ประเภท** | Enterprise Dashboard + ML Integration |
-| **ฟีเจอร์หลัก** | Sales Dashboard, Forecast Accuracy (WAPE/Bias), Scenario Planner, Dataiku AI Integration |
+| **ฟีเจอร์หลัก** | Sales Dashboard, Plan Accuracy (WAPE/Bias), Scenario Planner, Runs, AI บน Amazon Bedrock |
 
 ---
 
@@ -55,14 +55,13 @@
 │              Port: 8080  Prefix: /api/v1                    │
 │              In-memory cache (5 min TTL)                    │
 └──────────────────────┬──────────────────────────────────────┘
-                       │ Dataiku API Client
+                       │ boto3
                        ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                     DATA LAYER                              │
-│              Dataiku DSS (ML Pipeline)                      │
-│              Datasets: sale_data_final_1,                   │
-│              join_data_cl_fill_prepared                      │
-│              Models: LightGBM + Prophet                     │
+│                     DATA LAYER (AWS)                        │
+│      S3 sales.parquet  ·  DynamoDB Runs/uploads/docs        │
+│      SageMaker Serverless (LightGBM) + in-process fallback  │
+│      Amazon Bedrock (Claude) for the AI pages               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
@@ -98,7 +97,7 @@
 | Uvicorn | ASGI server |
 | Pydantic | Data validation & serialization |
 | python-multipart | File upload handling |
-| dataiku-api-client | Dataiku DSS integration |
+| boto3 | S3, DynamoDB, SageMaker, Bedrock |
 | pandas | Data manipulation |
 | aiofiles | Async file I/O |
 
@@ -111,17 +110,17 @@ project-root/
 │
 ├── backend/                      # Python FastAPI Backend
 │   ├── main.py                   # App factory + CORS middleware
-│   ├── config.py                 # Environment vars (Dataiku host, keys)
+│   ├── config.py                 # One switch per backend (data, store, model, AI)
 │   ├── routers/                  # Endpoint modules
 │   │   ├── health.py             # GET /health
 │   │   ├── dashboard.py          # GET /dashboard/summary, /dashboard/filters
 │   │   ├── analytics.py          # GET /analytics/summary, /analytics/filters, /analytics/deep-dive
-│   │   └── scoring.py            # POST /scoring/upload, /scoring/run, GET /scoring/results
+│   │   └── runs.py               # POST /runs, /runs/upload, GET /runs, /runs/compare
 │   ├── schemas/                  # Pydantic models
 │   │   ├── common.py             # APIResponse[T] wrapper
 │   │   └── dashboard_v2.py       # KPI, MonthlyTSPoint, DeepDiveResponse, etc.
 │   └── services/
-│       └── dataiku_service.py    # Singleton Dataiku API client
+│       └── ai_service.py         # One AI seam: Bedrock or Gemini behind AI_BACKEND
 │
 ├── malee-sales-app/              # Next.js Frontend
 │   ├── app/                      # App Router pages
@@ -156,7 +155,7 @@ project-root/
 │   │   ├── sidebar-context.tsx   # Sidebar collapse state
 │   │   ├── mock-data.ts          # Dev mock data
 │   │   └── types/
-│   │       └── dataiku.ts        # API type definitions
+│   │       └── runs.ts           # API type definitions
 │   │
 │   └── types/                    # Global TypeScript types
 │       ├── index.ts              # SalesData, Product, KPI types
@@ -545,9 +544,9 @@ api-client.ts → fetch(`/api/v1/...?params`)
     ↓
 Backend Router → Check DATA_CACHE (5 min TTL)
     ├── Cache HIT  → return cached data
-    └── Cache MISS → DataikuService.get_dataset_rows()
+    └── Cache MISS → loader.load_frame()
                          ↓
-                     Dataiku DSS → return raw rows
+                     S3 or local Parquet → return raw rows
                          ↓
                      Filter → Aggregate → Calculate KPIs
                          ↓
@@ -669,11 +668,11 @@ const CHART_COLORS = {
        ↓
 2. Frontend parses preview (papaparse)
        ↓
-3. POST /api/v1/scoring/upload → Backend uploads to Dataiku folder
+3. POST /api/v1/runs/upload → Backend stores the file and validates it
        ↓
 4. User clicks "Run Forecast"
        ↓
-5. POST /api/v1/scoring/run/{scenario_id} → Trigger Dataiku scenario
+5. POST /api/v1/runs → Run the model over the horizon
        ↓
 6. Frontend polls GET /api/v1/scoring/jobs/{scenario_id}/{run_id}
        ↓ (every 3-5 seconds until DONE)
@@ -691,7 +690,7 @@ const CHART_COLORS = {
 |------|-----------|---------|
 | React component | `kebab-case.tsx` | `kpi-card.tsx` |
 | Page (Next.js) | `page.tsx` inside folder | `forecast/page.tsx` |
-| Python module | `snake_case.py` | `dataiku_service.py` |
+| Python module | `snake_case.py` | `ai_service.py` |
 | Type file | `kebab-case.ts` | `types/planning.ts` |
 | Context | `kebab-case-context.tsx` | `planning-context.tsx` |
 
@@ -761,7 +760,7 @@ export function MyComponent({ ... }: Props) {
 
 - [ ] Create `api-client.ts` with fetchAPI helper + error handling
 - [ ] Setup backend routers by domain (dashboard, analytics, scoring)
-- [ ] Implement data service (Dataiku or database)
+- [ ] Implement data service (local Parquet or S3)
 - [ ] Add in-memory caching (5 min TTL)
 - [ ] Define Pydantic schemas for all responses
 
@@ -797,5 +796,5 @@ export function MyComponent({ ... }: Props) {
 | State management | `malee-sales-app/lib/planning-context.tsx` |
 | API response wrapper | `backend/schemas/common.py` |
 | Router pattern | `backend/routers/dashboard.py` |
-| Data service | `backend/services/dataiku_service.py` |
+| Data service | `backend/data/loader.py` |
 | Type definitions | `malee-sales-app/types/planning.ts` |

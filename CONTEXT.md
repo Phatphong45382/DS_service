@@ -88,7 +88,7 @@ The signed tendency of a Plan or Forecast to be above or below Actual, as a perc
 
 **Run**:
 One on-demand execution of the forecast model over the sales history, started by a user from the web, producing a Forecast for every Product over a Horizon plus that Forecast's accuracy on recent months.
-_Avoid_: job, scenario (Dataiku term), prediction run, batch
+_Avoid_: job, scenario, prediction run, batch
 
 **Horizon**:
 How many months ahead a Run forecasts (1, 3 or 6).
