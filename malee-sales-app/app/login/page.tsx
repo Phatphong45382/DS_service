@@ -12,7 +12,10 @@ import { markAuthDisabled, storeToken } from "@/lib/auth"
 function LoginForm() {
     const router = useRouter()
     const params = useSearchParams()
-    const next = params.get("next") || "/"
+    // Same-origin only: `next` comes from the URL, and an absolute or protocol-relative value
+    // would hard-navigate anyone who signs in straight off this site.
+    const raw = params.get("next") || "/"
+    const next = raw.startsWith("/") && !raw.startsWith("//") ? raw : "/"
     const [password, setPassword] = useState("")
     const [error, setError] = useState("")
     const [busy, setBusy] = useState(false)

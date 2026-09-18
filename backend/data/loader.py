@@ -1,7 +1,7 @@
 """The one place the sales dataset is read from.
 
 DATA_SOURCE=local reads the Parquet at DATA_PATH; DATA_SOURCE=s3 reads the same file from the
-bucket (scripts/upload_dataset.py puts it there).
+bucket (scripts/aws_deploy.py data puts it there).
 The DataFrame is cached for five minutes; each call hands out fresh row dicts so callers
 that annotate rows (the routers add _year/_month) never mutate the cache.
 """

@@ -3,7 +3,7 @@
     python scripts/aws_deploy.py data       # upload data/sales.parquet to s3://<bucket>/data/
     python scripts/aws_deploy.py endpoint   # package the model, create the Serverless endpoint
     python scripts/aws_deploy.py status     # what exists right now
-    python scripts/aws_deploy.py down --yes # delete endpoint, config and model (the bucket stays)
+    python scripts/aws_deploy.py down --yes # delete endpoint, config, model and the models bucket
 
 Resources are created by boto3, tagged like everything else, and named from backend/config.py, so
 the app needs no extra configuration beyond DATA_SOURCE=s3 / STORE_BACKEND=aws / MODEL_BACKEND=sagemaker.
@@ -29,6 +29,7 @@ MODEL_REGION = settings.SAGEMAKER_REGION           # the endpoint: see the note 
 session = boto3.Session(region_name=REGION)
 ACCOUNT = session.client("sts").get_caller_identity()["Account"]
 BUCKET = settings.S3_BUCKET or f"demand-demo-{ACCOUNT}"
+BUCKET_IS_GUESSED = not settings.S3_BUCKET
 # SageMaker will only read a model artifact from a bucket in the endpoint's own region
 MODEL_BUCKET = f"{BUCKET}-models"
 ENDPOINT = settings.SAGEMAKER_ENDPOINT
@@ -68,10 +69,15 @@ def artifact() -> bytes:
     """model.tar.gz = the trained artifact plus code/ that SageMaker runs."""
     buf = io.BytesIO()
     with tarfile.open(fileobj=buf, mode="w:gz") as tar:
-        for name in ("model.pkl", "metadata.json"):
-            path = Path(settings.MODEL_PATH) / name
-            if path.exists():
-                tar.add(path, arcname=name)
+        model = Path(settings.MODEL_PATH) / "model.pkl"
+        if not model.exists():
+            # without this the endpoint still reaches InService and fails every invocation, while
+            # the app quietly serves everything from the local fallback
+            sys.exit(f"no model at {model}: run python -m backend.model.train first")
+        tar.add(model, arcname="model.pkl")
+        meta = Path(settings.MODEL_PATH) / "metadata.json"
+        if meta.exists():
+            tar.add(meta, arcname="metadata.json")
         for name, text in (("code/inference.py", HANDLER.read_text(encoding="utf-8")),
                            ("code/requirements.txt", REQUIREMENTS)):
             info = tarfile.TarInfo(name)
@@ -97,7 +103,9 @@ def model_bucket(role_arn: str):
     "sagemaker" in the name, so a bucket policy grants it this one. Writing a bucket policy needs
     no IAM permission, which is what makes this work without an admin (see #3)."""
     try:
-        ms3.create_bucket(Bucket=MODEL_BUCKET, CreateBucketConfiguration={"LocationConstraint": MODEL_REGION})
+        # us-east-1 is the one region that rejects an explicit LocationConstraint
+        extra = {} if MODEL_REGION == "us-east-1" else {"CreateBucketConfiguration": {"LocationConstraint": MODEL_REGION}}
+        ms3.create_bucket(Bucket=MODEL_BUCKET, **extra)
     except ClientError as e:
         if e.response["Error"]["Code"] not in ("BucketAlreadyOwnedByYou", "BucketAlreadyExists"):
             raise
@@ -146,11 +154,45 @@ def create_endpoint():
     try:
         sm.create_endpoint(EndpointName=ENDPOINT, EndpointConfigName=CONFIG_NAME, Tags=TAGS)
     except ClientError as e:
-        if e.response["Error"]["Code"] != "ValidationException":
+        # only "it already exists" is ours to handle; a region without serverless also answers
+        # ValidationException, and swallowing that hides the one diagnosis ADR-0002 is about
+        if "already exist" not in e.response["Error"]["Message"]:
             raise
         sm.update_endpoint(EndpointName=ENDPOINT, EndpointConfigName=CONFIG_NAME)
     print(f"  ..   endpoint {ENDPOINT} creating; this takes a few minutes")
-    wait()
+    if wait() == "InService":
+        smoke()
+
+
+def smoke():
+    """Invoke it once for real.
+
+    InService only means the endpoint exists. A missing artifact, a dependency the container
+    cannot install, or a pickle it cannot read all leave it InService and failing every call —
+    and the app hides that behind its fallback, so nothing else would ever say so.
+    """
+    import pickle
+
+    with open(Path(settings.MODEL_PATH) / "model.pkl", "rb") as f:
+        categories = pickle.load(f)["categories"]
+    row = {"product_group": categories["product_group"][0], "flavor": categories["flavor"][0],
+           "size": categories["size"][0], "year": 2026, "month": 1, "month_id": (2026 - 2021) * 12 + 1,
+           "promo_flag": 0, "promo_days_in_month": 0, "promo_discount_pct": 0,
+           "promo_type": categories["promo_type"][0]}
+    runtime = boto3.client("sagemaker-runtime", region_name=MODEL_REGION)
+    started = time.perf_counter()
+    try:
+        body = runtime.invoke_endpoint(EndpointName=ENDPOINT, ContentType="application/json",
+                                       Accept="application/json",
+                                       Body=json.dumps({"rows": [row], "explain": True}).encode())
+        answer = json.loads(body["Body"].read())["predictions"][0]
+    except Exception as e:
+        sys.exit(f"  FAIL endpoint is InService but does not answer: {type(e).__name__}: {e}\n"
+                 f"       logs: /aws/sagemaker/Endpoints/{ENDPOINT} in {MODEL_REGION}")
+    if "explanations" not in answer:
+        sys.exit("  FAIL endpoint answered without explanations: the Planner needs them")
+    print(f"  ok   endpoint answered in {round((time.perf_counter() - started) * 1000):,} ms "
+          f"(prediction {answer['prediction']:,.0f}, {len(answer['explanations'])} contributions)")
 
 
 def wait():
@@ -196,12 +238,25 @@ def down():
     except ClientError as e:
         print(f"  skip endpoint: {e.response['Error']['Code']}")
     drop_model()
-    print("  ok   model and endpoint config deleted (bucket and table untouched)")
+    print("  ok   model and endpoint config deleted")
+    try:  # this script created the model bucket, so this script removes it
+        for page in ms3.get_paginator("list_objects_v2").paginate(Bucket=MODEL_BUCKET):
+            objects = [{"Key": o["Key"]} for o in page.get("Contents", [])]
+            if objects:
+                ms3.delete_objects(Bucket=MODEL_BUCKET, Delete={"Objects": objects})
+        ms3.delete_bucket(Bucket=MODEL_BUCKET)
+        print(f"  ok   bucket {MODEL_BUCKET} deleted")
+    except ClientError as e:
+        print(f"  skip bucket {MODEL_BUCKET}: {e.response['Error']['Code']}")
+    print("  the data bucket and the DynamoDB table are untouched (scripts/aws_foundation.py down)")
 
 
 if __name__ == "__main__":
     cmd = sys.argv[1] if len(sys.argv) > 1 else "status"
     print(f"account {ACCOUNT}, data in {REGION} ({BUCKET}), endpoint in {MODEL_REGION}")
+    if BUCKET_IS_GUESSED:
+        # the app has no such default: it would read from Bucket="" and fail on every request
+        print(f"  note S3_BUCKET is not set, assuming {BUCKET}. Set S3_BUCKET={BUCKET} in .env and on Render.")
     if cmd == "data":
         upload_data()
     elif cmd == "endpoint":

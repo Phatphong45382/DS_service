@@ -171,8 +171,12 @@ def up_iam():
             RENDER_ENV.write_text(f"AWS_ACCESS_KEY_ID={key['AccessKeyId']}\nAWS_SECRET_ACCESS_KEY={key['SecretAccessKey']}\n"
                                   f"AWS_REGION={REGION}\nSAGEMAKER_REGION={SAGEMAKER_REGION}\n"
                                   f"S3_BUCKET={BUCKET}\nDYNAMODB_TABLE={TABLE}\nSAGEMAKER_ENDPOINT={ENDPOINT}\n"
-                                  f"DATA_SOURCE=s3\nSTORE_BACKEND=aws\nMODEL_BACKEND=sagemaker\n")
+                                  f"DATA_SOURCE=s3\nSTORE_BACKEND=aws\nMODEL_BACKEND=sagemaker\n"
+                                  # the backend refuses to start with ENV=production and no
+                                  # password, so name it where the operator is already reading
+                                  f"ENV=production\nDEMO_PASSWORD=\n")
             ok(f"access key for {USER} written to {RENDER_ENV.name} (gitignored) - copy it into Render")
+            ok("fill in DEMO_PASSWORD before deploying: ENV=production will not start without one")
         else:
             ok(f"user {USER} already has an access key (not regenerated)")
         try:

@@ -40,7 +40,14 @@ def _model():
     from ..aws import client
     state = client("sagemaker", region=settings.SAGEMAKER_REGION).describe_endpoint(
         EndpointName=settings.SAGEMAKER_ENDPOINT)["EndpointStatus"]
-    return f"endpoint {settings.SAGEMAKER_ENDPOINT} is {state}", "ok" if state == "InService" else "degraded"
+    detail = f"endpoint {settings.SAGEMAKER_ENDPOINT} is {state}"
+    if state != "InService":
+        return detail, "degraded"
+    # InService only means it exists. An endpoint that errors on every invoke stays InService
+    # forever, so say so when the last prediction actually came from the fallback.
+    if info["last_path"] == "fallback":
+        return f"{detail} but the last prediction came from the local fallback", "degraded"
+    return f"{detail} ({info['last_path']})", "ok"
 
 
 def _ai():

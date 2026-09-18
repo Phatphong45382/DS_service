@@ -66,6 +66,30 @@ def test_a_malformed_reply_falls_back_rather_than_raising(sagemaker):
     assert out[0]["p10"] <= out[0]["prediction"] <= out[0]["p90"]
 
 
+def test_a_short_reply_falls_back_rather_than_losing_rows(sagemaker):
+    """One prediction for two rows would silently truncate a Run's forecast."""
+    sagemaker.runtime = Answering({"predictions": [{"prediction": 1.0, "p10": 0.5, "p90": 1.5}]})
+    out = sagemaker.predict([ROW, ROW])
+    assert len(out) == 2
+    assert sagemaker.last_path == "fallback"
+
+
+def test_a_reply_without_explanations_falls_back_when_they_were_asked_for(sagemaker):
+    """An endpoint on an older handler answers without them; the Planner would raise KeyError."""
+    sagemaker.runtime = Answering({"predictions": [{"prediction": 1.0, "p10": 0.5, "p90": 1.5}]})
+    out = sagemaker.predict([ROW], explain=True)
+    assert "explanations" in out[0] and "base" in out[0]
+    assert sagemaker.last_path == "fallback"
+
+
+def test_the_invoke_client_gets_one_attempt_so_the_fallback_fits_the_browser_budget(sagemaker):
+    """botocore retries read timeouts, so two attempts at SAGEMAKER_TIMEOUT_SEC outlast the
+    frontend's 30 s abort and the fallback answer never reaches the page."""
+    assert sagemaker.runtime.meta.config.retries["total_max_attempts"] == 1
+    assert sagemaker.runtime.meta.config.read_timeout == settings.SAGEMAKER_TIMEOUT_SEC
+    assert settings.SAGEMAKER_TIMEOUT_SEC < 30
+
+
 def test_model_info_reports_the_endpoint_and_the_path_taken(sagemaker):
     sagemaker.runtime = Dead()
     sagemaker.predict([ROW])

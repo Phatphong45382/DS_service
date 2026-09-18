@@ -62,7 +62,7 @@ class SageMakerModel:
         self.endpoint = endpoint
         self.fallback = fallback
         self.runtime = client("sagemaker-runtime", read_timeout=settings.SAGEMAKER_TIMEOUT_SEC,
-                              region=settings.SAGEMAKER_REGION)
+                              region=settings.SAGEMAKER_REGION, total_attempts=1)
         self.version = f"{fallback.version} via endpoint {endpoint}"
         self.metrics = fallback.metrics
         self.last_path = "unknown"  # "endpoint" or "fallback": /health reports it
@@ -77,6 +77,12 @@ class SageMakerModel:
                 Body=json.dumps({"rows": rows, "explain": explain}).encode(),
             )
             out = json.loads(response["Body"].read())["predictions"]
+            # An endpoint running an older handler can answer well-formed but wrong: too few rows,
+            # or no explanations. Trusting that returns silent nonsense; the fallback is correct.
+            if len(out) != len(rows):
+                raise ValueError(f"endpoint returned {len(out)} predictions for {len(rows)} rows")
+            if explain and not all("explanations" in o for o in out):
+                raise ValueError("endpoint ignored explain=True")
             self.last_path = "endpoint"
             logger.info("predict served by endpoint", extra={"rows": len(rows), "path": "endpoint",
                                                              "ms": round((time.perf_counter() - started) * 1000, 1)})

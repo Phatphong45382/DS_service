@@ -20,7 +20,9 @@ from fastapi.responses import JSONResponse
 from .config import settings
 
 TOKEN_TTL_SEC = 12 * 3600
-# health is the readiness probe Render and the presenter call before logging in; login is the door itself.
+# Exact paths only. /health is the readiness probe Render and the presenter call before logging in,
+# and login is the door itself; /health/warm is deliberately NOT here, because it runs a real,
+# billable model invocation and an open one is a way to burn the AWS credit from outside.
 # The schema is not an API route: ENV=production already removes it, so the token does not govern it.
 OPEN_PATHS = ("/health", "/auth/login", "/openapi.json")
 
@@ -44,7 +46,9 @@ def mint(now: float | None = None) -> dict:
 
 def valid(token: str) -> bool:
     expiry, _, signature = (token or "").partition(".")
-    if not expiry.isdigit() or not signature:
+    # str.isdigit() is true for characters int() rejects, e.g. superscripts; compare_digest raises
+    # TypeError on non-ASCII str. Anything a stranger can post must come back False, never a 500.
+    if not expiry.isascii() or not expiry.isdigit() or not signature.isascii() or not signature:
         return False
     if not hmac.compare_digest(signature, _sign(int(expiry))):
         return False
@@ -52,12 +56,12 @@ def valid(token: str) -> bool:
 
 
 def check_password(password: str) -> bool:
-    return hmac.compare_digest(password or "", settings.DEMO_PASSWORD)
+    """Compared as bytes: a password with an accent or Thai characters is a wrong password, not a crash."""
+    return hmac.compare_digest((password or "").encode(), settings.DEMO_PASSWORD.encode())
 
 
 def _open(path: str) -> bool:
-    rest = path[len(settings.API_V1_STR):]
-    return any(rest == p or rest.startswith(p + "/") for p in OPEN_PATHS)
+    return path[len(settings.API_V1_STR):] in OPEN_PATHS
 
 
 async def require_token(request: Request, call_next):
