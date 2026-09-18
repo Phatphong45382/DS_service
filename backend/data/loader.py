@@ -1,11 +1,13 @@
 """The one place the sales dataset is read from.
 
-DATA_SOURCE=local reads the Parquet at DATA_PATH; DATA_SOURCE=s3 arrives with the AWS ticket.
+DATA_SOURCE=local reads the Parquet at DATA_PATH; DATA_SOURCE=s3 reads the same file from the
+bucket (scripts/upload_dataset.py puts it there).
 The DataFrame is cached for five minutes; each call hands out fresh row dicts so callers
 that annotate rows (the routers add _year/_month) never mutate the cache.
 """
 from __future__ import annotations
 
+import io
 import logging
 import time
 
@@ -24,7 +26,11 @@ def _read() -> pd.DataFrame:
         logger.info("Loading dataset from %s", settings.DATA_PATH)
         return pd.read_parquet(settings.DATA_PATH)
     if settings.DATA_SOURCE == "s3":
-        raise NotImplementedError("DATA_SOURCE=s3 is delivered by the AWS backends ticket")
+        # boto3 straight to bytes: pandas can read the buffer, so no s3fs/fsspec dependency
+        logger.info("Loading dataset from s3://%s/%s", settings.S3_BUCKET, settings.S3_DATA_KEY)
+        from ..aws import client
+        body = client("s3", read_timeout=30).get_object(Bucket=settings.S3_BUCKET, Key=settings.S3_DATA_KEY)["Body"].read()
+        return pd.read_parquet(io.BytesIO(body))
     raise ValueError(f"Unknown DATA_SOURCE {settings.DATA_SOURCE!r}")
 
 
