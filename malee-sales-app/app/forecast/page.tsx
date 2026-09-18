@@ -53,15 +53,19 @@ export default function ForecastPage() {
   const [runs, setRuns] = useState<RunRecord[]>([])
   const [forecastRows, setForecastRows] = useState<ForecastRecord[]>([])
   const [history, setHistory] = useState<HistoryRecord[]>([])
+  const [runsState, setRunsState] = useState<"loading" | "ready" | "failed">("loading")
+  const [reload, setReload] = useState(0)
   useEffect(() => {
+    setRunsState("loading")
     listRuns()
       .then((rs) => {
         setRuns(rs)
+        setRunsState("ready")
         const latest = rs.find((r) => r.status === "success")
         if (latest) setSelectedRunId(latest.run_id)
       })
-      .catch(console.error)
-  }, [])
+      .catch((e) => { console.error(e); setRunsState("failed") })
+  }, [reload])
   useEffect(() => {
     if (!selectedRunId) return
     getRunForecast(selectedRunId)
@@ -200,6 +204,18 @@ export default function ForecastPage() {
       }
     >
       <div className="flex flex-col gap-6">
+        {runsState === "failed" && (
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm">
+            <span className="text-rose-800">The list of Runs could not be loaded. The API may be restarting.</span>
+            <Button size="sm" variant="outline" className="bg-white" onClick={() => setReload((n) => n + 1)}>Try again</Button>
+          </div>
+        )}
+        {runsState === "ready" && successfulRuns.length === 0 && (
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm">
+            <span className="text-amber-900">There is no Run yet. Create one and it will show here.</span>
+            <Button size="sm" asChild><Link href="/new-prediction">New Prediction</Link></Button>
+          </div>
+        )}
         {/* Filters: SKU selector + Run selector + toggles */}
         <div className="flex flex-wrap items-center gap-3 bg-white rounded-xl border border-slate-200 px-4 py-2.5 shadow-enterprise-sm">
           <div className="flex items-center gap-2">
