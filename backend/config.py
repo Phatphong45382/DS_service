@@ -18,6 +18,11 @@ class Settings:
     # App Settings
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Sales Forecast App API"
+    ENV: str = os.getenv("ENV", "development")  # "production" hides docs and enforces CORS_ORIGINS
+    CORS_ORIGINS: list = [o.strip() for o in os.getenv(
+        "CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000,https://demand.forecast.phatphong.work"
+    ).split(",") if o.strip()]
+    AI_TIMEOUT_SEC: int = int(os.getenv("AI_TIMEOUT_SEC", "30"))
 
     # Dataset: local Parquet now, S3 with the AWS backends ticket
     DATA_SOURCE: str = os.getenv("DATA_SOURCE", "local")

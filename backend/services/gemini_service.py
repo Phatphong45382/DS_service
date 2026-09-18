@@ -30,7 +30,7 @@ class GeminiService:
 
     def _get_client(self):
         if self._client is None:
-            self._client = genai.Client(api_key=settings.GEMINI_API_KEY)
+            self._client = genai.Client(api_key=settings.GEMINI_API_KEY, http_options={"timeout": settings.AI_TIMEOUT_SEC * 1000})
         return self._client
 
     def _call_generate(self, client, model, contents, config):
