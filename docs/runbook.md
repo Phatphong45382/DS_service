@@ -47,7 +47,7 @@ Four dependencies, each with a status and a latency:
 
 `status: degraded` at the top means at least one line above is not `ok`. Read the line, not the summary.
 
-**4. Open the app in a fresh browser window** and log in. Click Forecast, then Runs. Both should show a Run. If Runs is empty, create one from New Prediction now rather than on stage.
+**4. Open the app in a fresh browser window** and log in. Click Forecast, then Runs. Both should show a Run: the backend makes one at startup whenever the store is empty, and its notes say so. If Runs is still empty, the seed failed and the API log says why; create one from New Prediction now rather than on stage.
 
 ## During the demo
 

@@ -67,7 +67,7 @@ def servers():
         pytest.exit("no frontend build: run `npm run build` in malee-sales-app first", 2)
 
     store = tempfile.mkdtemp(prefix="e2e-store-")
-    env = {**os.environ, "DATA_SOURCE": "local", "STORE_BACKEND": "local", "MODEL_BACKEND": "local",
+    env = {**os.environ, "DATA_SOURCE": "local", "STORE_BACKEND": "local", "MODEL_BACKEND": "local", "SEED_RUN_ON_START": "0",
            "STORE_PATH": store, "DEMO_PASSWORD": PASSWORD, "ENV": "development",
            "AI_BACKEND": "gemini", "GEMINI_API_KEY": ""}
     api = subprocess.Popen([sys.executable, "-m", "uvicorn", "backend.main:app", "--port", str(API_PORT)],

@@ -114,3 +114,19 @@ def test_upload_of_a_valid_history_produces_a_run_on_that_data(client, dataset_p
     assert run["status"] == "success", run["validation"]
     fc = ok(client.get(f"{API}/{run['run_id']}/forecast"))["forecast"]
     assert {r["sku"] for r in fc} == {"BBQ 30g"} and len(fc) == 2
+
+
+def test_startup_seeds_one_baseline_run_only_when_the_store_is_empty(client):
+    """Render loses its Runs on every redeploy, so the app makes one; it must not make a second."""
+    from backend.main import seed_baseline_run
+    from backend.runs import service
+
+    before = {r["run_id"] for r in service.list_runs()}
+    seed_baseline_run()
+    seeded = {r["run_id"] for r in service.list_runs()} - before
+    if before:
+        assert seeded == set(), "a store that already has a Run is left alone"
+        return
+    assert len(seeded) == 1
+    seed_baseline_run()
+    assert {r["run_id"] for r in service.list_runs()} - before == seeded

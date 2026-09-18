@@ -36,6 +36,7 @@ def model_dir(tmp_path_factory, dataset_path) -> str:
 @pytest.fixture(scope="session")
 def client(dataset_path, model_dir, tmp_path_factory) -> TestClient:
     store_dir = str(tmp_path_factory.mktemp("store"))
+    os.environ["SEED_RUN_ON_START"] = "0"  # tests assert on the Runs they create, not a seeded one
     os.environ["DATA_SOURCE"] = "local"
     os.environ["DATA_PATH"] = dataset_path
     os.environ["STORE_BACKEND"] = "local"
@@ -44,6 +45,7 @@ def client(dataset_path, model_dir, tmp_path_factory) -> TestClient:
     from backend.config import settings
     from backend.data import loader
     from backend.store import service as store_service
+    settings.SEED_RUN_ON_START = False
     settings.DATA_SOURCE, settings.DATA_PATH = "local", dataset_path
     settings.STORE_BACKEND, settings.STORE_PATH = "local", store_dir
     loader.clear_cache()
