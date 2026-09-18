@@ -237,21 +237,32 @@ export async function getAnalyticsFilters(params: Record<string, any> = {}): Pro
  * Get deep dive analytics data
  */
 export async function getDeepDiveAnalytics(params: Record<string, any> = {}): Promise<any> {
+    return fetchAPI<any>(`/analytics/deep-dive${analyticsQuery(params)}`);
+}
+
+export interface BoxStats { name: string; count: number; min: number; q1: number; median: number; q3: number; max: number }
+export interface DecompositionPoint { year: number; month: number; actual: number; trend: number; seasonality: number; residual: number }
+export interface AnalysisData {
+    promo_distribution: BoxStats[];
+    correlation: { variables: string[]; matrix: number[][] };
+    decomposition: DecompositionPoint[];
+    meta: { record_count: number; history_months: number };
+}
+
+/** The Analysis tab: box stats, correlation matrix and trend decomposition, same filters as /summary. */
+export async function getAnalysisData(params: Record<string, any> = {}): Promise<AnalysisData> {
+    return fetchAPI<AnalysisData>(`/analytics/analysis${analyticsQuery(params)}`);
+}
+
+function analyticsQuery(params: Record<string, any>): string {
     const queryParams = new URLSearchParams();
     Object.entries(params).forEach(([key, value]) => {
-        if (value !== undefined && value !== null && value !== '' && value !== 'all') {
-            if (key === 'has_promotion') {
-                queryParams.append(key, String(value));
-            } else if (Array.isArray(value)) {
-                value.forEach(v => queryParams.append(key, String(v)));
-            } else {
-                queryParams.append(key, String(value));
-            }
-        }
+        if (value === undefined || value === null || value === '' || value === 'all') return;
+        if (Array.isArray(value)) value.forEach(v => queryParams.append(key, String(v)));
+        else if (typeof value !== 'object') queryParams.append(key, String(value)); // date_range is already split into year/month
     });
     const queryString = queryParams.toString();
-    const endpoint = `/analytics/deep-dive${queryString ? `?${queryString}` : ''}`;
-    return fetchAPI<any>(endpoint);
+    return queryString ? `?${queryString}` : '';
 }
 
 

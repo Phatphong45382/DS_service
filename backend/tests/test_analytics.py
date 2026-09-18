@@ -124,3 +124,37 @@ def test_deep_dive_promotion_filter_keeps_only_promotion_rows(client):
     data = ok(client.get(f"{API}/deep-dive", params={**YEAR_2025, "has_promotion": 1}))
     assert all(p["is_promo"] for p in data["scatter_data"])
     assert all(item["has_promotion"] for item in data["ranking_under_plan"])
+
+
+
+def test_analysis_reads_the_dataset_not_a_generator(client, df):
+    data = ok(client.get(f"{API}/analysis", params=YEAR_2025))
+    d = df[pd.to_datetime(df["date"]).dt.year == 2025]
+
+    boxes = {b["name"]: b for b in data["promo_distribution"]}
+    promo = d[d["has_promotion"] == 1]["Actual_sale"]
+    assert boxes["Promotion"]["count"] == len(promo)
+    assert boxes["Promotion"]["median"] == pytest.approx(promo.median())
+    assert boxes["Non-Promo"]["count"] + boxes["Promotion"]["count"] == len(d)
+
+    m = data["correlation"]["matrix"]
+    assert data["correlation"]["variables"] == ["Discount", "Promo Days", "Actual"]
+    assert m[0][0] == pytest.approx(1.0) and m[0][1] == pytest.approx(m[1][0])
+    assert m[0][1] == pytest.approx(d["discount_pct"].corr(d["promotion_dt"]))
+
+    pts = data["decomposition"]
+    assert [(p["year"], p["month"]) for p in pts] == [(2025, m) for m in range(1, 13)]
+    assert sum(p["actual"] for p in pts) == pytest.approx(d["Actual_sale"].sum())
+    for p in pts:
+        assert p["actual"] == pytest.approx(p["trend"] + p["seasonality"] + p["residual"])
+    # seasonality is the same calendar-month figure whichever year is selected
+    other = ok(client.get(f"{API}/analysis", params=dict(year_from=2024, month_from=1, year_to=2024, month_to=12)))
+    assert [p["seasonality"] for p in other["decomposition"]] == pytest.approx([p["seasonality"] for p in pts])
+
+
+def test_analysis_filters_follow_summary(client):
+    data = ok(client.get(f"{API}/analysis", params={**YEAR_2025, "has_promotion": 1}))
+    boxes = {b["name"]: b for b in data["promo_distribution"]}
+    assert boxes["Non-Promo"]["count"] == 0 and boxes["Promotion"]["count"] > 0
+    empty = ok(client.get(f"{API}/analysis", params={**YEAR_2025, "customer": "Nobody"}))
+    assert empty["decomposition"] == [] and empty["meta"]["record_count"] == 0

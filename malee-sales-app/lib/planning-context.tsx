@@ -2,8 +2,8 @@
 
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
-import { GlobalFilters, ScenarioParams, GlobalSummary, KPI } from '@/types/planning';
-import { generateYearMonth, globalSummary as initialGlobalSummary } from './planning-data';
+import { GlobalFilters, ScenarioParams, KPI } from '@/types/planning';
+import { generateYearMonth } from './planning-data';
 import { getDashboardData, getDashboardFilters, getAnalyticsData, getAnalyticsFilters } from './api-client';
 import { FilterOptionsResponse } from '@/types/planning';
 
@@ -65,10 +65,6 @@ interface PlanningContextType {
     scenarioParams: ScenarioParams;
     setScenarioParams: (params: ScenarioParams) => void;
 
-    // Global summary
-    globalSummary: GlobalSummary | null;
-    setGlobalSummary: (summary: GlobalSummary) => void;
-
     // Real Data (Adapted for backward compatibility)
     dashboardData: SalesMonthly[];
 
@@ -120,7 +116,6 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
         safety_stock_pct: 15,
     });
 
-    const [globalSummary, setGlobalSummary] = useState<GlobalSummary | null>(initialGlobalSummary);
     const [dashboardData, setDashboardData] = useState<SalesMonthly[]>([]);
     const [fullSummary, setFullSummary] = useState<DashboardSummaryResponse | null>(null);
     const [filterOptions, setFilterOptions] = useState<FilterOptionsResponse | null>(null);
@@ -203,13 +198,6 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
                     }));
                     setDashboardData(adapted);
 
-                    if (data.kpi) {
-                        setGlobalSummary({
-                            ...initialGlobalSummary,
-                            total_revenue: data.kpi.total_qty * 15,
-                            last_month_actual: data.monthly_ts.length > 0 ? data.monthly_ts[data.monthly_ts.length - 1].qty : 0,
-                        });
-                    }
                 }
             } catch (error) {
                 console.error("Failed to fetch dashboard data:", error);
@@ -252,15 +240,13 @@ export function PlanningProvider({ children }: { children: ReactNode }) {
         setIsDrawerOpen,
         scenarioParams,
         setScenarioParams,
-        globalSummary,
-        setGlobalSummary,
         dashboardData,
         fullSummary,
         filterOptions,
         isLoading
     }), [
         filters, activePage, pendingFilters, isDrawerOpen, scenarioParams,
-        globalSummary, dashboardData, fullSummary, filterOptions, isLoading
+        dashboardData, fullSummary, filterOptions, isLoading
     ]);
 
     return (

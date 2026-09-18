@@ -19,7 +19,7 @@ import { Package, Target, Activity, TrendingUp, ArrowDownCircle, LayoutDashboard
 import { Button } from "@/components/ui/button";
 
 import { usePlanning } from "@/lib/planning-context";
-import { getAnalyticsData } from "@/lib/api-client";
+import { getAnalyticsData, getAnalysisData, type AnalysisData } from "@/lib/api-client";
 
 const formatQty = (val: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -43,6 +43,21 @@ export default function AnalyticsDashboardPage() {
     const [title, setTitle] = useState("Actual Sales Overview");
     const [activeTab, setActiveTab] = useState("overview");
     const [showInterpret, setShowInterpret] = useState(false);
+    const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
+
+    // Analysis tab: one request feeds the box plot, the correlation matrix and the decomposition
+    useEffect(() => {
+        if (!filters) return;
+        setAnalysis(null);
+        const timer = setTimeout(async () => {
+            try {
+                setAnalysis(await getAnalysisData(getQueryParams(filters)));
+            } catch (error) {
+                console.error("Failed to fetch analysis data", error);
+            }
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [filters]);
 
     // Reset chart when global data changes if at top level
     useEffect(() => {
@@ -313,16 +328,16 @@ export default function AnalyticsDashboardPage() {
                     {/* Row 1: Sales Distribution + Correlation Matrix */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div className="h-full">
-                            <PromoDistributionChart globalFilters={filters} showInterpret={showInterpret} />
+                            <PromoDistributionChart data={analysis?.promo_distribution} showInterpret={showInterpret} />
                         </div>
                         <div className="h-full">
-                            <CorrelationHeatmap globalFilters={filters} showInterpret={showInterpret} />
+                            <CorrelationHeatmap data={analysis?.correlation} showInterpret={showInterpret} />
                         </div>
                     </div>
 
                     {/* Row 2: Trend Decomposition */}
                     <div className="min-h-[320px]">
-                        <TrendDecompositionChart globalFilters={filters} showInterpret={showInterpret} />
+                        <TrendDecompositionChart data={analysis?.decomposition} historyMonths={analysis?.meta.history_months} showInterpret={showInterpret} />
                     </div>
 
                     {/* Row 3: Seasonal Heatmap */}

@@ -121,3 +121,31 @@ class DeepDiveResponse(BaseModel):
     stability_trend: List[TimeSeriesPoint]
     sales_trend: List[TimeSeriesPoint]
     meta: Dict[str, Any]
+
+
+class BoxStats(BaseModel):
+    name: str
+    count: int
+    min: float
+    q1: float
+    median: float
+    q3: float
+    max: float
+
+class CorrelationMatrix(BaseModel):
+    variables: List[str]
+    matrix: List[List[float]]
+
+class DecompositionPoint(BaseModel):
+    year: int
+    month: int
+    actual: float
+    trend: float
+    seasonality: float
+    residual: float
+
+class AnalysisResponse(BaseModel):
+    promo_distribution: List[BoxStats]
+    correlation: CorrelationMatrix
+    decomposition: List[DecompositionPoint]
+    meta: Dict[str, Any]

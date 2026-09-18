@@ -194,3 +194,20 @@ def test_top_bar_keeps_its_controls_clear_of_the_subtitle(page):
     control = page.get_by_text("All Products").first.bounding_box()
     assert sub and control
     assert sub["x"] + sub["width"] <= control["x"], "subtitle overlaps the first toolbar control"
+
+
+def test_analysis_tab_and_deep_dive_bottom_read_the_dataset(page):
+    """The six charts that used to draw browser-generated numbers (#16) now render from the API."""
+    page.goto(f"{WEB}/analytics-dashboard")
+    page.get_by_role("tab", name="Analysis").click()
+    expect(page.get_by_text("Promo vs Non-Promo median")).to_be_visible()
+    text = re.sub(r"\s+", " ", page.locator("main").inner_text())
+    assert re.search(r"Promo vs Non-Promo median [+-][\d.]+%", text), text[:400]
+    assert text.count("1.00") >= 3, "correlation diagonal comes only from data"
+    assert "No rows match" not in text and "Loading…" not in text
+
+    page.goto(f"{WEB}/accuracy-deep-dive")
+    expect(page.get_by_text("WAPE (Error Magnitude)")).to_be_visible()
+    text = re.sub(r"\s+", " ", page.locator("main").inner_text())
+    assert "No rows match" not in text and "Loading…" not in text
+    assert "Promotion" in text and "Ideal" in text, "scatter legend and the error-distribution reference line"

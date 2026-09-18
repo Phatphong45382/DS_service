@@ -107,26 +107,6 @@ export default function SettingsPage() {
                             </div>
                         </Card>
 
-                        {/* Application Settings (Mock) */}
-                        <Card className="p-8 bg-white rounded-2xl border border-slate-200 shadow-sm">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h2 className="text-xl font-bold text-slate-900">Preferences</h2>
-                                    <p className="text-sm text-slate-500">Manage your notification settings</p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                {['Email Notifications', 'Push Notifications', 'Weekly Reports'].map((item) => (
-                                    <div key={item} className="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-200">
-                                        <span className="font-medium text-slate-900">{item}</span>
-                                        <div className="w-11 h-6 bg-blue-600 rounded-full relative cursor-pointer">
-                                            <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </Card>
                     </div>
                 </div>
             </div>
