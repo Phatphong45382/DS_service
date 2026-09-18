@@ -3,6 +3,7 @@ import time
 
 from fastapi import APIRouter
 
+from ..auth import enabled as auth_enabled
 from ..config import settings
 from ..schemas.common import APIResponse
 
@@ -47,7 +48,8 @@ def _ai():
 async def health_check():
     deps = [_timed("data", _data), _timed("store", _store), _timed("model", _model), _timed("ai", _ai)]
     status = "ok" if all(d["status"] == "ok" for d in deps) else "degraded"
-    return APIResponse(success=True, data={"status": status, "env": settings.ENV, "version": "1.0.0", "dependencies": deps})
+    return APIResponse(success=True, data={"status": status, "env": settings.ENV, "version": "1.0.0",
+                                          "auth_required": auth_enabled(), "dependencies": deps})
 
 
 @router.get("/warm", response_model=APIResponse[dict])

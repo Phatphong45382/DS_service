@@ -38,8 +38,9 @@ def test_production_hides_docs_and_restricts_cors():
     from backend.config import settings
     from backend.main import create_app
 
-    saved = settings.ENV, settings.CORS_ORIGINS
+    saved = settings.ENV, settings.CORS_ORIGINS, settings.DEMO_PASSWORD
     settings.ENV, settings.CORS_ORIGINS = "production", ["https://demo.example"]
+    settings.DEMO_PASSWORD = "prod-password"  # production refuses to start without one
     try:
         with TestClient(create_app()) as prod:
             assert prod.get("/docs").status_code == 404
@@ -50,7 +51,20 @@ def test_production_hides_docs_and_restricts_cors():
             denied = prod.get(API, headers={"Origin": "https://evil.example"})
             assert "access-control-allow-origin" not in denied.headers
     finally:
-        settings.ENV, settings.CORS_ORIGINS = saved
+        settings.ENV, settings.CORS_ORIGINS, settings.DEMO_PASSWORD = saved
+
+
+def test_production_without_a_password_refuses_to_start():
+    from backend.config import settings
+    from backend.main import create_app
+
+    saved = settings.ENV, settings.DEMO_PASSWORD
+    settings.ENV, settings.DEMO_PASSWORD = "production", ""
+    try:
+        with pytest.raises(RuntimeError, match="DEMO_PASSWORD"):
+            create_app()
+    finally:
+        settings.ENV, settings.DEMO_PASSWORD = saved
 
 
 def test_development_keeps_docs(client):
