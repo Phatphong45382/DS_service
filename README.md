@@ -67,6 +67,7 @@ Local and AWS differ only in configuration. Every switch lives in [`backend/conf
 - [`CONTEXT.md`](CONTEXT.md) — the glossary. Product, Plan, Forecast, Mechanic, Promotion and Run each mean one thing, and names in code, API and UI follow it.
 - [`docs/adr/`](docs/adr/) — decisions worth knowing before changing the model or the region.
 - [`DEPLOYMENT.md`](DEPLOYMENT.md) — putting it on AWS, Render and Vercel, including the steps only the account owner can do.
+- [`docs/runbook.md`](docs/runbook.md) — the fifteen minutes before a demo, the keep-alive loop during it, and what to do if the model is cold on stage.
 - [`docs/architecture.md`](docs/architecture.md) — the two diagrams with what each box is and why.
 - [`scripts/`](scripts/) — `aws_foundation.py` creates the bucket, table, backend user and budget; `aws_deploy.py` uploads the data and creates the endpoint.
 

@@ -66,17 +66,4 @@ Every dependency should read `ok`: the dataset row count and its source, the num
 
 ## Before a demo
 
-The Render free plan sleeps after fifteen minutes and takes 30–60 seconds to wake. The serverless endpoint scales to zero and pays a cold start on its first call. Both are woken by the same request:
-
-```bash
-TOKEN=$(curl -s -X POST https://<api>/api/v1/auth/login \
-  -H 'Content-Type: application/json' -d '{"password":"…"}' \
-  | python -c "import json,sys; print(json.load(sys.stdin)['data']['token'])")
-curl -s https://<api>/api/v1/health/warm -H "Authorization: Bearer $TOKEN"
-```
-
-Run it twice. The second call should come back in well under two seconds and say `endpoint`. Repeat every ten minutes during the demo to keep both awake.
-
-If the endpoint is cold on stage, nothing breaks: the request falls back to the in-process model and answers with the same numbers, a little slower.
-
-To check spend, open AWS Budgets and look at `demand-demo`. It only shows figures once the `Project` cost-allocation tag is active.
+Follow [`docs/runbook.md`](docs/runbook.md): one token, one warm-up call run twice, the health line to read, a keep-alive loop for the session, what to do if the endpoint is cold on stage, and how to check spend.
