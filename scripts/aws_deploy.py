@@ -45,8 +45,8 @@ TAGS = [{"Key": "Project", "Value": "demand-demo"}, {"Key": "Environment", "Valu
 #   - the scikit-learn framework container is not published in ap-southeast-7 either, so running
 #     the endpoint there would also have meant a multi-gigabyte deep-learning image. In
 #     MODEL_REGION the small scikit-learn container is available, and it is exactly the shape this
-#     model needs: a pickled estimator plus code/. LightGBM and SHAP install from requirements.txt
-#     at container start, which is the cold start ADR-0001 accepts and /health/warm pays upfront.
+#     model needs: a pickled estimator plus code/. Only lightgbm installs at container start,
+#     which is the cold start ADR-0001 accepts and /health/warm pays upfront.
 SKLEARN_ACCOUNTS = {"ap-southeast-1": "121021644041", "ap-southeast-2": "783357654285",
                     "ap-southeast-3": "951798379941", "ap-northeast-1": "354813040037",
                     "us-east-1": "683313688378", "eu-west-1": "141502667606"}
@@ -61,8 +61,11 @@ sm = boto3.client("sagemaker", region_name=MODEL_REGION)
 # pins it to the in-process model: a handler carrying its own copy of the feature order predicts
 # from the wrong columns without ever raising.
 HANDLER = ROOT / "backend" / "model" / "sagemaker_handler.py"
-# shap pulls numba; both are installed at container start, which is why the cold start is slow.
-REQUIREMENTS = "lightgbm==4.5.0\nshap==0.46.0\npandas\n"
+# Only lightgbm, pinned to the version that pickled the artifact. This container is Python 3.9 and
+# its numpy cannot satisfy numba, so any shap install imports and dies at the first request that
+# asks for explanations - and the handler does not need one, because LightGBM computes TreeSHAP
+# itself. One small wheel also keeps the cold start short.
+REQUIREMENTS = "lightgbm==4.7.0\n"
 
 
 def artifact() -> bytes:
