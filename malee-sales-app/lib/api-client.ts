@@ -78,10 +78,56 @@ function reportApiError(err: unknown, endpoint: string): void {
     }));
 }
 
+const GET_TTL_MS = 5 * 60_000;
+const RETRY_DELAYS_MS = [1_500, 4_000];
+const getCache = new Map<string, { at: number; promise: Promise<unknown> }>();
+
+/** Forget every cached GET, so the next read sees what a mutation just changed. */
+export function clearApiCache(): void {
+    getCache.clear();
+}
+
+/** Render restarting, asleep, or a dropped connection: worth one more try. A 4xx or a logic error is not. */
+function isTransient(err: unknown): boolean {
+    const e = err as Partial<ApiError>;
+    return e?.code === 'NETWORK' || e?.code === 'TIMEOUT' || (e?.statusCode != null && e.statusCode >= 502);
+}
+
 /**
- * Helper to handle fetch and standardized responses
+ * Every request goes through here. GETs are cached for five minutes and shared while in flight,
+ * so switching tabs does not refetch; any POST/PUT/DELETE clears the cache. A GET that fails for a
+ * transient reason is retried twice before the error is announced.
  */
 async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+    const method = (options.method ?? 'GET').toUpperCase();
+    const cacheable = method === 'GET' && !endpoint.startsWith('/health');
+    if (method !== 'GET') getCache.clear();
+
+    const hit = cacheable ? getCache.get(endpoint) : undefined;
+    if (hit && Date.now() - hit.at < GET_TTL_MS) return hit.promise as Promise<T>;
+
+    const run = async (): Promise<T> => {
+        for (let attempt = 0; ; attempt++) {
+            try {
+                return await fetchOnce<T>(endpoint, options);
+            } catch (err) {
+                if (method !== 'GET' || attempt >= RETRY_DELAYS_MS.length || !isTransient(err)) {
+                    reportApiError(err, endpoint);
+                    throw err;
+                }
+                await new Promise(r => setTimeout(r, RETRY_DELAYS_MS[attempt]));
+            }
+        }
+    };
+    const promise = run();
+    if (cacheable) {
+        getCache.set(endpoint, { at: Date.now(), promise });
+        promise.catch(() => getCache.delete(endpoint)); // a failure is never served from cache
+    }
+    return promise;
+}
+
+async function fetchOnce<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
     const url = `${API_URL}${endpoint}`;
     try {
         const response = await fetchWithTimeout(url, {
@@ -127,17 +173,12 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
         return result.data as T;
     } catch (error) {
         console.error("fetchAPI Exception:", error);
-        if (error instanceof ApiError) {
-            reportApiError(error, endpoint);
-            throw error;
-        }
+        if (error instanceof ApiError) throw error;
 
         // Network error
-        const wrapped = error instanceof TypeError && error.message.includes('fetch')
+        throw error instanceof TypeError && error.message.includes('fetch')
             ? new ApiError('Cannot connect to the backend', undefined, `Check that the API is running at ${API_BASE_URL}`, 'NETWORK')
             : new ApiError(error instanceof Error ? error.message : String(error));
-        reportApiError(wrapped, endpoint);
-        throw wrapped;
     }
 }
 
