@@ -29,3 +29,4 @@ pic/
 .playwright-mcp/
 .pytest_cache/
 .store/
+.env.render
