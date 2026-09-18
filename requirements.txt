@@ -6,7 +6,7 @@ aiofiles
 pandas
 pyarrow
 lightgbm
-shap
 google-genai
 requests
 anthropic
+boto3

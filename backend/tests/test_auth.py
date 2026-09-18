@@ -83,6 +83,25 @@ def test_health_and_login_stay_open(secured):
     assert secured.post("/api/v1/auth/login", json={"password": "x"}).status_code == 200
 
 
+def test_the_warm_up_is_guarded_because_it_costs_money(secured):
+    """/health/warm runs a real prediction; on SageMaker that is a billable invocation."""
+    assert secured.get("/api/v1/health/warm").status_code == 401
+    assert secured.get("/api/v1/health/warm", headers={"Authorization": f"Bearer {token(secured)}"}).status_code == 200
+
+
+def test_a_non_ascii_password_is_wrong_not_a_500(secured):
+    """Anyone can post this; hmac.compare_digest raises TypeError on non-ASCII str."""
+    body = secured.post("/api/v1/auth/login", json={"password": "café สวัสดี"}).json()
+    assert body["success"] is False and body["error"]["code"] == "BAD_PASSWORD"
+
+
+@pytest.mark.parametrize("forged", ["².abc", "99999999999.café", "๑๒๓.abc", "²²².²"])
+def test_a_non_ascii_token_is_invalid_not_an_exception(secured, forged):
+    """An HTTP client will not put these in a header, but valid() must still answer rather than raise:
+    str.isdigit() is true for superscripts that int() rejects, and compare_digest rejects non-ASCII str."""
+    assert auth.valid(forged) is False
+
+
 def test_auth_off_lets_everything_through(client):
     assert settings.DEMO_PASSWORD == ""
     assert client.get(GUARDED[0]).status_code == 200

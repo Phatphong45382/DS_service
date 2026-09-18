@@ -34,7 +34,20 @@ def _store():
 def _model():
     from ..model.service import model_info
     info = model_info()
-    return f"{info['version']} via {info['backend']}", "ok"
+    if settings.MODEL_BACKEND != "sagemaker":
+        return f"{info['version']} via {info['backend']}", "ok"
+    # the endpoint's own status, without paying for an invocation - /health/warm does that
+    from ..aws import client
+    state = client("sagemaker", region=settings.SAGEMAKER_REGION).describe_endpoint(
+        EndpointName=settings.SAGEMAKER_ENDPOINT)["EndpointStatus"]
+    detail = f"endpoint {settings.SAGEMAKER_ENDPOINT} is {state}"
+    if state != "InService":
+        return detail, "degraded"
+    # InService only means it exists. An endpoint that errors on every invoke stays InService
+    # forever, so say so when the last prediction actually came from the fallback.
+    if info["last_path"] == "fallback":
+        return f"{detail} but the last prediction came from the local fallback", "degraded"
+    return f"{detail} ({info['last_path']})", "ok"
 
 
 def _ai():
@@ -62,6 +75,8 @@ async def warm_model():
     p = load_frame()[["Product_Group", "Flavor", "Size"]].iloc[0]
     row = {"product_group": p["Product_Group"], "flavor": p["Flavor"], "size": p["Size"], "year": 2026, "month": 1,
            "month_id": month_id(2026, 1), "promo_flag": 0, "promo_days_in_month": 0, "promo_discount_pct": 0, "promo_type": NO_PROMOTION}
+    from ..model.service import model_info
+
     started = time.perf_counter()
     try:
         predict([row])
@@ -69,5 +84,6 @@ async def warm_model():
         return APIResponse(success=False, error={"code": "MODEL_UNAVAILABLE", "message": f"{type(e).__name__}: {e}"})
     return APIResponse(success=True, data={
         "status": "warm", "backend": settings.MODEL_BACKEND,
+        "served_by": model_info()["last_path"],  # "endpoint" or "fallback" when the endpoint is cold or gone
         "model_latency_ms": round((time.perf_counter() - started) * 1000, 1),
     })

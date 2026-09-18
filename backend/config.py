@@ -28,15 +28,26 @@ class Settings:
     DEMO_PASSWORD: str = os.getenv("DEMO_PASSWORD", "")
     AUTH_SECRET: str = os.getenv("AUTH_SECRET", "")  # defaults to a key derived from DEMO_PASSWORD
 
-    # Dataset: local Parquet now, S3 with the AWS backends ticket
+    # AWS resources created by scripts/aws_foundation.py; region ap-southeast-7 (Thailand)
+    AWS_REGION: str = os.getenv("AWS_REGION", os.getenv("BEDROCK_REGION", "ap-southeast-7"))
+    S3_BUCKET: str = os.getenv("S3_BUCKET", "")
+    DYNAMODB_TABLE: str = os.getenv("DYNAMODB_TABLE", "demand-demo")
+    SAGEMAKER_ENDPOINT: str = os.getenv("SAGEMAKER_ENDPOINT", "demand-demo-forecast")
+    # ap-southeast-7 (Thailand) does not offer Serverless Inference, so the endpoint lives in the
+    # nearest region that does; data and Runs stay in Thailand. Move it back by setting this.
+    SAGEMAKER_REGION: str = os.getenv("SAGEMAKER_REGION", "ap-southeast-1")
+    SAGEMAKER_TIMEOUT_SEC: int = int(os.getenv("SAGEMAKER_TIMEOUT_SEC", "25"))  # then fall back to the in-process model
+
+    # Dataset: local Parquet, or the same file read from S3 (DATA_SOURCE=s3)
     DATA_SOURCE: str = os.getenv("DATA_SOURCE", "local")
     DATA_PATH: str = os.getenv("DATA_PATH", str(_REPO_ROOT / "data" / "sales.parquet"))
+    S3_DATA_KEY: str = os.getenv("S3_DATA_KEY", "data/sales.parquet")
 
-    # Forecast model: in-process artifact now, SageMaker endpoint with the AWS backends ticket
+    # Forecast model: in-process artifact, or the SageMaker Serverless endpoint with this as its fallback
     MODEL_BACKEND: str = os.getenv("MODEL_BACKEND", "local")
     MODEL_PATH: str = os.getenv("MODEL_PATH", str(_REPO_ROOT / "model"))
 
-    # Store for Runs, uploads, documents and prompts: local directory now, DynamoDB + S3 with the AWS ticket
+    # Store for Runs, uploads, documents and prompts: a local directory, or DynamoDB records + S3 blobs
     STORE_BACKEND: str = os.getenv("STORE_BACKEND", "local")
     STORE_PATH: str = os.getenv("STORE_PATH", str(_REPO_ROOT / ".store"))
 
