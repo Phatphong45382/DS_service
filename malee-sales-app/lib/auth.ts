@@ -8,13 +8,7 @@
  * for twelve hours.
  */
 
-export const AUTH_COOKIE = 'demand_token';
-
-/** Structure and expiry only — the backend verifies the signature. */
-export function tokenLooksValid(token: string | undefined | null): boolean {
-    const [expiry, signature] = (token ?? '').split('.');
-    return Boolean(signature) && /^\d+$/.test(expiry ?? '') && Number(expiry) * 1000 > Date.now();
-}
+export const AUTH_COOKIE = 'demand_token';  // middleware.ts carries its own copy; keep them equal
 
 export function readToken(): string {
     if (typeof document === 'undefined') return '';
