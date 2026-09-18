@@ -61,11 +61,12 @@ sm = boto3.client("sagemaker", region_name=MODEL_REGION)
 # pins it to the in-process model: a handler carrying its own copy of the feature order predicts
 # from the wrong columns without ever raising.
 HANDLER = ROOT / "backend" / "model" / "sagemaker_handler.py"
-# Only lightgbm, pinned to the version that pickled the artifact. This container is Python 3.9 and
-# its numpy cannot satisfy numba, so any shap install imports and dies at the first request that
-# asks for explanations - and the handler does not need one, because LightGBM computes TreeSHAP
-# itself. One small wheel also keeps the cold start short.
-REQUIREMENTS = "lightgbm==4.7.0\n"
+# The container is Python 3.9, so the pin cannot simply track the version that pickled the
+# artifact: lightgbm 4.7 requires Python >= 3.10 and the install fails, which exits the model
+# process and turns every invocation into a 500. 4.6 is the newest release with 3.9 wheels and
+# reads the artifact correctly. Nothing else is installed - the handler computes its
+# explanations through LightGBM itself, so the container needs no shap and no numba.
+REQUIREMENTS = "lightgbm==4.6.0\n"
 
 
 def artifact() -> bytes:
@@ -133,6 +134,33 @@ def execution_role() -> str:
     sys.exit("no SageMaker execution role found in this region: an admin must create one (see #3)")
 
 
+def drop_endpoint():
+    """Remove an existing endpoint and wait for it to go.
+
+    Updating one in place leaves the previous container warm, so an invocation straight after
+    the update can be served by the revision being replaced - which is how a broken container
+    once passed its own smoke test here. Recreating guarantees the check faces a cold start.
+    """
+    try:
+        state = sm.describe_endpoint(EndpointName=ENDPOINT)["EndpointStatus"]
+    except ClientError:
+        return
+    while state in ("Creating", "Updating", "Deleting"):
+        time.sleep(15)
+        try:
+            state = sm.describe_endpoint(EndpointName=ENDPOINT)["EndpointStatus"]
+        except ClientError:
+            return
+    sm.delete_endpoint(EndpointName=ENDPOINT)
+    print(f"  ..   replacing endpoint {ENDPOINT}")
+    for _ in range(60):
+        try:
+            sm.describe_endpoint(EndpointName=ENDPOINT)
+        except ClientError:
+            return
+        time.sleep(10)
+
+
 def create_endpoint():
     role = execution_role()
     print(f"  role {role}")
@@ -141,6 +169,7 @@ def create_endpoint():
     ms3.put_object(Bucket=MODEL_BUCKET, Key=ARTIFACT_KEY, Body=data)
     print(f"  ok   s3://{MODEL_BUCKET}/{ARTIFACT_KEY} ({len(data):,} bytes)")
 
+    drop_endpoint()
     drop_model()
     sm.create_model(
         ModelName=MODEL_NAME, ExecutionRoleArn=role, Tags=TAGS,
@@ -154,14 +183,7 @@ def create_endpoint():
         ProductionVariants=[{"VariantName": "AllTraffic", "ModelName": MODEL_NAME,
                              "ServerlessConfig": {"MemorySizeInMB": 2048, "MaxConcurrency": 2}}])
     print(f"  ok   config {CONFIG_NAME} (serverless, 2 GB, concurrency 2 - scales to zero)")
-    try:
-        sm.create_endpoint(EndpointName=ENDPOINT, EndpointConfigName=CONFIG_NAME, Tags=TAGS)
-    except ClientError as e:
-        # only "it already exists" is ours to handle; a region without serverless also answers
-        # ValidationException, and swallowing that hides the one diagnosis ADR-0002 is about
-        if "already exist" not in e.response["Error"]["Message"]:
-            raise
-        sm.update_endpoint(EndpointName=ENDPOINT, EndpointConfigName=CONFIG_NAME)
+    sm.create_endpoint(EndpointName=ENDPOINT, EndpointConfigName=CONFIG_NAME, Tags=TAGS)
     print(f"  ..   endpoint {ENDPOINT} creating; this takes a few minutes")
     if wait() == "InService":
         smoke()
