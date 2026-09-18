@@ -21,7 +21,9 @@ for line in (ROOT / ".env").read_text().splitlines() if (ROOT / ".env").exists()
         k, _, v = line.partition("=")
         os.environ.setdefault(k.strip(), v.strip())
 
-REGION = os.getenv("BEDROCK_REGION", "ap-southeast-7")  # Thailand: data and inference enter the account here
+REGION = os.getenv("BEDROCK_REGION", "ap-southeast-7")  # Thailand: data and Runs live here
+# ap-southeast-7 has no Serverless Inference, so the endpoint sits one region over (ADR-0002)
+SAGEMAKER_REGION = os.getenv("SAGEMAKER_REGION", "ap-southeast-1")
 session = boto3.Session(profile_name=os.getenv("AWS_PROFILE"), region_name=REGION)
 sts = session.client("sts")
 IDENTITY = sts.get_caller_identity()
@@ -31,7 +33,7 @@ CALLER = IDENTITY["Arn"].rsplit("/", 1)[-1]
 BUCKET = f"demand-demo-{ACCOUNT}"
 TABLE = "demand-demo"
 BUDGET = "demand-demo"
-ENDPOINT = "demand-demo-forecast"  # SageMaker Serverless endpoint created by ticket #9
+ENDPOINT = "demand-demo-forecast"  # SageMaker Serverless endpoint, created by scripts/aws_deploy.py
 USER = "demand-render"
 POLICY = "demand-render"
 DENY_POLICY = "demand-demo-deny-invoke"
@@ -86,7 +88,7 @@ def render_policy():
              "Resource": [f"arn:aws:bedrock:{REGION}:{ACCOUNT}:inference-profile/global.{m}" for m in MODELS]
                          + [f"arn:aws:bedrock:*::foundation-model/{m}" for m in MODELS]},
             {"Sid": "Endpoint", "Effect": "Allow", "Action": ["sagemaker:InvokeEndpoint", "sagemaker:DescribeEndpoint"],
-             "Resource": f"arn:aws:sagemaker:{REGION}:{ACCOUNT}:endpoint/{ENDPOINT}"},
+             "Resource": f"arn:aws:sagemaker:{SAGEMAKER_REGION}:{ACCOUNT}:endpoint/{ENDPOINT}"},
         ],
     }
 
@@ -167,7 +169,9 @@ def up_iam():
         if not iam.list_access_keys(UserName=USER)["AccessKeyMetadata"]:
             key = iam.create_access_key(UserName=USER)["AccessKey"]
             RENDER_ENV.write_text(f"AWS_ACCESS_KEY_ID={key['AccessKeyId']}\nAWS_SECRET_ACCESS_KEY={key['SecretAccessKey']}\n"
-                                  f"AWS_REGION={REGION}\nS3_BUCKET={BUCKET}\nDYNAMODB_TABLE={TABLE}\nSAGEMAKER_ENDPOINT={ENDPOINT}\n")
+                                  f"AWS_REGION={REGION}\nSAGEMAKER_REGION={SAGEMAKER_REGION}\n"
+                                  f"S3_BUCKET={BUCKET}\nDYNAMODB_TABLE={TABLE}\nSAGEMAKER_ENDPOINT={ENDPOINT}\n"
+                                  f"DATA_SOURCE=s3\nSTORE_BACKEND=aws\nMODEL_BACKEND=sagemaker\n")
             ok(f"access key for {USER} written to {RENDER_ENV.name} (gitignored) - copy it into Render")
         else:
             ok(f"user {USER} already has an access key (not regenerated)")
