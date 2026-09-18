@@ -257,7 +257,13 @@ export default function NewPredictionPage() {
                     )}
 
                     {currentStep === 'results' && (
-                        <RunResults data={resultData} />
+                        <RunResults
+                            data={resultData}
+                            onRestart={() => {
+                                setResultData(null); setUploadedData(null); setMappedData(null); setFileName('');
+                                setUploadResult(null); setIsDatasetMode(false); setDatasetSample(null); setUploadMode('excel'); setCurrentStep('upload');
+                            }}
+                        />
                     )}
                 </div>
             </div>

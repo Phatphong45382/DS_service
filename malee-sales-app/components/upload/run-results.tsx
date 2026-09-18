@@ -1,21 +1,44 @@
 'use client';
 
-import { CheckCircle2, TrendingUp, Download, ArrowRight, BarChart3, Clock, Zap } from 'lucide-react';
 import Link from 'next/link';
-// import { TrendChart } from '@/components/planning/trend-chart';
-import PredictionChart from './prediction-chart';
-import { formatDuration, toCsv } from '@/lib/forecast-utils';
+import { useMemo } from 'react';
+import { Area, CartesianGrid, ComposedChart, Line, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { AlertTriangle, Download } from 'lucide-react';
+import type { RunRecord } from '@/types/runs';
+import { formatDuration, formatMonth, formatMonthShort, toCsv } from '@/lib/forecast-utils';
 
 interface RunResultsProps {
-    data?: any;
+    data?: { run: RunRecord; rows: { date: string; sales: number | null; forecast: number | null }[]; filename?: string } | null;
+    onRestart?: () => void;
 }
 
-export function RunResults({ data }: RunResultsProps) {
+const compact = new Intl.NumberFormat('en-US', { notation: 'compact', maximumFractionDigits: 2 }).format;
+
+/** Direction B: the number the Run produced leads, accuracy beside it, one chart, three ways onward. Fits one screen. */
+export function RunResults({ data, onRestart }: RunResultsProps) {
     const run = data?.run;
+    const rows = useMemo(() => data?.rows ?? [], [data]);
+
+    const facts = useMemo(() => {
+        const forecastRows = rows.filter(r => r.forecast != null);
+        const total = forecastRows.reduce((s, r) => s + (r.forecast ?? 0), 0);
+        const bySales = new Map(rows.filter(r => r.sales != null).map(r => [r.date, r.sales as number]));
+        // the same months a year earlier, only when every one of them is in the history
+        // the history keys the same shape the forecast uses ("2026-09-01"), so only the year moves
+        const prior = forecastRows.map(r => bySales.get(`${Number(r.date.slice(0, 4)) - 1}-${r.date.slice(5)}`));
+        const yoy = prior.length && prior.every(v => v != null) ? total / prior.reduce((s, v) => s + (v as number), 0) - 1 : null;
+        const first = forecastRows[0]?.date, last = forecastRows[forecastRows.length - 1]?.date;
+        return { total, yoy, first, last };
+    }, [rows]);
+
+    const chartData = useMemo(() => rows.map(r => ({
+        month: formatMonthShort(r.date),
+        actual: r.sales,
+        forecast: r.forecast,
+    })), [rows]);
 
     const handleDownload = () => {
-        const csv = toCsv(data?.rows ?? []);
-        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        const url = URL.createObjectURL(new Blob([toCsv(rows)], { type: 'text/csv' }));
         const link = document.createElement('a');
         link.href = url;
         link.download = `${run?.run_id ?? 'forecast'}.csv`;
@@ -23,119 +46,104 @@ export function RunResults({ data }: RunResultsProps) {
         URL.revokeObjectURL(url);
     };
 
+    if (!run) return null;
+
+    if (run.status !== 'success') {
+        const problems = run.validation.filter(v => v.status !== 'pass');
+        return (
+            <div className="flex flex-col gap-4 rounded-2xl border border-rose-200 bg-rose-50 p-6">
+                <div className="flex items-center gap-3">
+                    <AlertTriangle className="h-5 w-5 text-rose-600" />
+                    <h2 className="text-lg font-bold text-rose-900">The Run did not pass validation</h2>
+                </div>
+                <ul className="space-y-1.5 text-sm text-rose-800">
+                    {problems.map(p => <li key={p.rule}><span className="font-semibold">{p.rule}:</span> {p.message}</li>)}
+                </ul>
+                <div>
+                    <button type="button" onClick={onRestart} className="rounded-lg bg-rose-600 px-4 py-2 text-sm font-semibold text-white hover:bg-rose-700">Fix the file and start again</button>
+                </div>
+            </div>
+        );
+    }
+
+    const bias = run.bias ?? 0;
+
     return (
-        <div className="space-y-6">
-            {/* Success Banner */}
-            <div className="bg-emerald-50 border border-emerald-100 rounded-lg p-6 flex flex-col md:flex-row items-center justify-between shadow-sm gap-4">
-                <div className="flex items-center gap-4">
-                    <div className="bg-white p-3 rounded-full shadow-sm border border-emerald-100">
-                        <CheckCircle2 className="w-8 h-8 text-emerald-600" />
+        <div className="flex flex-col gap-4">
+            {/* The headline: what the Run produced */}
+            <div className="flex flex-col gap-5 rounded-2xl bg-slate-900 px-7 py-6 text-white sm:flex-row sm:items-end sm:justify-between">
+                <div className="min-w-0">
+                    <p className="text-sm text-slate-400">
+                        Forecast for {facts.first && facts.last ? `${formatMonth(facts.first)} – ${formatMonth(facts.last)}` : `${run.horizon_months} months`}, {run.product_count} products
+                    </p>
+                    <p className="mt-1.5 text-5xl font-extrabold leading-none tracking-tight">
+                        {compact(facts.total)} <span className="text-xl font-semibold text-slate-300">units</span>
+                    </p>
+                    <p className="mt-2 text-sm text-slate-300">
+                        {facts.yoy != null && <>{facts.yoy >= 0 ? '+' : ''}{(facts.yoy * 100).toFixed(1)}% on the same months last year · </>}
+                        saved as <span className="font-mono text-white">{run.run_id}</span>
+                    </p>
+                </div>
+                <div className="flex shrink-0 gap-8">
+                    <div>
+                        <p className="text-xs text-slate-400">WAPE</p>
+                        <p className="text-3xl font-extrabold">{run.wape != null ? `${run.wape.toFixed(1)}%` : '—'}</p>
+                        <p className="text-[11px] text-slate-400">{run.accuracy_basis?.startsWith('holdout') ? 'holdout, unseen months' : 'in-sample backtest'}</p>
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-emerald-900">{run?.status === 'failed' ? 'Run failed validation' : 'Forecast Generated Successfully'}</h2>
-                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-emerald-700 text-sm font-medium">
-                            <span className="flex items-center gap-1.5">
-                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                ID: {run?.run_id ?? '-'}
-                            </span>
-                            <span className="hidden md:inline text-emerald-300">•</span>
-                            <span>Duration: {run ? formatDuration(run.duration_sec) : '-'}</span>
-                            <span className="hidden md:inline text-emerald-300">•</span>
-                                <span>Model: {run ? `${run.model_name} ${run.model_version}` : '-'}</span>
-                        </div>
+                        <p className="text-xs text-slate-400">Bias</p>
+                        <p className={`text-3xl font-extrabold ${Math.abs(bias) < 2 ? 'text-white' : 'text-amber-400'}`}>{run.bias != null ? `${bias >= 0 ? '+' : ''}${bias.toFixed(1)}%` : '—'}</p>
+                        <p className="text-[11px] text-slate-400">{bias >= 0 ? 'over-forecast' : 'under-forecast'}</p>
                     </div>
-                </div>
-
-                <div className="flex items-center gap-3 w-full md:w-auto">
-                    <button
-                        onClick={handleDownload}
-                        className="flex-1 md:flex-none justify-center px-4 py-2 bg-white border border-emerald-200 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors flex items-center gap-2 shadow-sm text-sm"
-                    >
-                        <Download className="w-4 h-4" />
-                        Download CSV
-                    </button>
-                    <Link
-                        href="/scenario-planner"
-                        className="flex-1 md:flex-none justify-center px-4 py-2 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 duration-200 text-sm"
-                    >
-                        Go to Scenario Planner
-                        <ArrowRight className="w-4 h-4" />
-                    </Link>
                 </div>
             </div>
 
-            {/* Summary Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-all">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <BarChart3 className="w-16 h-16 text-blue-600" />
-                    </div>
-                    <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">Total Forecast Volume</p>
-                    <div className="mt-2 flex items-baseline gap-2 pb-2">
-                        <h3 className="text-3xl font-bold text-slate-900">
-                            {data?.rows ? data.rows.length.toLocaleString() : '1.2M'}
-                        </h3>
-                        {data?.rows ? (
-                            <span className="text-xs font-bold text-slate-500 bg-slate-50 px-2 py-0.5 rounded-full border border-slate-100">Rows</span>
-                        ) : (
-                            <span className="text-xs font-bold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">+5.2%</span>
-                        )}
-                    </div>
-                    <p className="text-xs text-slate-400 border-t border-slate-50 pt-2 mt-1">
-                        {data?.filename ? `Source: ${data.filename}` : `Horizon: ${run?.horizon_months ?? 6} months`}
-                    </p>
+            {/* One chart, no chrome around it */}
+            <div className="rounded-2xl border border-slate-200 bg-white px-5 pb-3 pt-4">
+                <div className="mb-2 flex flex-wrap items-baseline justify-between gap-2">
+                    <h3 className="text-sm font-bold text-slate-900">Actual and forecast, all products</h3>
+                    <p className="text-xs text-slate-500">monthly units · {run.model_name} {run.model_version} · {formatDuration(run.duration_sec)}</p>
                 </div>
-
-                <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm relative overflow-hidden group hover:border-indigo-300 transition-all">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Zap className="w-16 h-16 text-indigo-600" />
-                    </div>
-                    <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">Confidence Score</p>
-                    <div className="mt-2 flex items-baseline gap-2 pb-2">
-                        <h3 className="text-3xl font-bold text-slate-900">High</h3>
-                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">{run?.wape != null ? `${Math.max(0, Math.round(100 - run.wape))}%` : '-'}</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2">
-                        <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${run?.wape != null ? Math.max(0, Math.round(100 - run.wape)) : 0}%` }}></div>
-                    </div>
-                </div>
-
-                <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm relative overflow-hidden group hover:border-amber-300 transition-all">
-                    <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <Clock className="w-16 h-16 text-amber-600" />
-                    </div>
-                    <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">Processing Time</p>
-                    <div className="mt-2 flex items-baseline gap-2 pb-2">
-                        <h3 className="text-3xl font-bold text-slate-900">{run ? formatDuration(run.duration_sec) : '-'}</h3>
-                        <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">Fast Mode</span>
-                    </div>
-                    <p className="text-xs text-slate-400 border-t border-slate-50 pt-2 mt-1">
-                        Model run time (backtest + Horizon)
-                    </p>
+                <div className="h-[220px]">
+                    <ResponsiveContainer width="100%" height="100%">
+                        <ComposedChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
+                            <XAxis dataKey="month" tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={{ stroke: '#e2e8f0' }} interval="preserveStartEnd" />
+                            <YAxis tick={{ fontSize: 11, fill: '#94a3b8' }} tickLine={false} axisLine={false} tickFormatter={(v) => compact(v)} width={48} />
+                            <Tooltip formatter={(v: any, name: any) => [Number(v).toLocaleString(), name === 'actual' ? 'Actual' : 'Forecast']} labelStyle={{ fontWeight: 600 }} contentStyle={{ borderRadius: 8, borderColor: '#e2e8f0', fontSize: 12 }} />
+                            <Area type="monotone" dataKey="forecast" name="forecast" stroke="none" fill="#dbeafe" fillOpacity={0.8} connectNulls={false} isAnimationActive={false} />
+                            <Line type="monotone" dataKey="actual" name="actual" stroke="#0f172a" strokeWidth={2} dot={false} isAnimationActive={false} />
+                            <Line type="monotone" dataKey="forecast" name="forecast" stroke="#2563eb" strokeWidth={2} strokeDasharray="6 4" dot={false} isAnimationActive={false} />
+                        </ComposedChart>
+                    </ResponsiveContainer>
                 </div>
             </div>
 
-            {/* Chart Preview Section */}
-            <div className="bg-white p-6 rounded-lg border border-slate-200 shadow-sm">
-                <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
-                    <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-50 rounded-lg text-blue-600">
-                            <TrendingUp className="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 className="font-bold text-slate-900">Forecast Preview</h3>
-                            <p className="text-sm text-slate-500">Quick view of generated results</p>
-                        </div>
-                    </div>
-                    <button className="text-sm text-blue-600 font-medium hover:text-blue-700 hover:underline">
-                        View Full Report
-                    </button>
-                </div>
+            {/* Three ways onward */}
+            <div className="grid gap-3 sm:grid-cols-3">
+                <Link href="/forecast" className="rounded-xl border border-slate-200 bg-white px-4 py-3.5 transition-colors hover:border-blue-300 hover:bg-blue-50/40">
+                    <p className="text-sm font-bold text-blue-700">Open in Forecast</p>
+                    <p className="mt-0.5 text-xs text-slate-500">Per SKU, with the P10–P90 band and the Plan</p>
+                </Link>
+                <Link href={`/runs/compare?b=${run.run_id}`} className="rounded-xl border border-slate-200 bg-white px-4 py-3.5 transition-colors hover:border-blue-300 hover:bg-blue-50/40">
+                    <p className="text-sm font-bold text-blue-700">Compare with the previous Run</p>
+                    <p className="mt-0.5 text-xs text-slate-500">Side by side, month by month</p>
+                </Link>
+                <Link href="/scenario-planner" className="rounded-xl border border-slate-200 bg-white px-4 py-3.5 transition-colors hover:border-blue-300 hover:bg-blue-50/40">
+                    <p className="text-sm font-bold text-blue-700">Plan a scenario</p>
+                    <p className="mt-0.5 text-xs text-slate-500">Promotions and uplift on this forecast</p>
+                </Link>
+            </div>
 
-                {/* Reusing existing TrendChart for preview, wrapped in a fixed height container */}
-                <div className="w-full">
-                    <PredictionChart data={data?.rows} filename={data?.filename} />
-                </div>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-sm">
+                <button type="button" onClick={handleDownload} className="inline-flex items-center gap-1.5 font-semibold text-slate-700 hover:text-slate-900">
+                    <Download className="h-4 w-4" />
+                    Download CSV
+                </button>
+                <Link href={`/runs/${run.run_id}`} className="font-semibold text-slate-700 hover:text-slate-900">See it in Runs</Link>
+                {onRestart && (
+                    <button type="button" onClick={onRestart} className="ml-auto text-slate-500 hover:text-slate-800">Start another</button>
+                )}
             </div>
         </div>
     );
