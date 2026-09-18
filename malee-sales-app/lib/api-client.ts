@@ -249,6 +249,18 @@ export interface AnalysisData {
     meta: { record_count: number; history_months: number };
 }
 
+export interface DatasetSample {
+    headers: string[];
+    rows: Record<string, any>[];
+    summary: { rowCount: number; colCount: number; emptyCells: number };
+    months: { from: string; to: string; count: number };
+}
+
+/** First rows of the built-in dataset, so New Prediction can preview it like an uploaded file. */
+export async function getDatasetSample(limit = 5): Promise<DatasetSample> {
+    return fetchAPI<DatasetSample>(`/analytics/sample?limit=${limit}`);
+}
+
 /** The Analysis tab: box stats, correlation matrix and trend decomposition, same filters as /summary. */
 export async function getAnalysisData(params: Record<string, any> = {}): Promise<AnalysisData> {
     return fetchAPI<AnalysisData>(`/analytics/analysis${analyticsQuery(params)}`);
