@@ -134,7 +134,7 @@ def test_compare_two_runs(page, api, run_id):
 def test_new_prediction_creates_a_run_from_the_dataset(page, api):
     before = {r["run_id"] for r in api("GET", "/runs")}
     page.goto(f"{WEB}/new-prediction")
-    page.get_by_role("button", name="Use sales dataset").click()
+    page.get_by_role("button", name="Run on the built-in sales dataset").click()
     page.get_by_role("button", name="Run Forecast Model").click()
     page.wait_for_function("() => document.querySelector('main').innerText.includes('RUN-')", timeout=60000)
     after = {r["run_id"] for r in api("GET", "/runs")}

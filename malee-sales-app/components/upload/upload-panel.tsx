@@ -2,112 +2,95 @@
 
 import { useState, useCallback } from 'react';
 import { useDropzone } from 'react-dropzone';
-import { UploadCloud, AlertCircle, Download, Loader2 } from 'lucide-react';
+import { UploadCloud, AlertCircle, Loader2 } from 'lucide-react';
 import { ParsedData, parseFile } from '@/lib/file-utils';
 
 interface UploadPanelProps {
     onDataParsed: (data: ParsedData, fileName: string, uploadResult?: any) => void;
 }
 
+/** The page's one big element: a dropzone tall enough to be the obvious target. */
 export function UploadPanel({ onDataParsed }: UploadPanelProps) {
     const [isProcessing, setIsProcessing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const [uploadStatus, setUploadStatus] = useState<string>('');
-    const [progress, setProgress] = useState(0);
 
     const onDrop = useCallback(async (acceptedFiles: File[]) => {
         if (acceptedFiles.length === 0) return;
-
         const file = acceptedFiles[0];
         setIsProcessing(true);
         setError(null);
-        setUploadStatus('Uploading file...');
-        setProgress(0);
-
         try {
-            setUploadStatus('Parsing file...');
             const data = await parseFile(file);
-            setIsProcessing(false);
             onDataParsed(data, file.name);
         } catch (err: any) {
-            const errorMessage = err.detail || err.message || 'File upload failed';
-            setError(errorMessage);
-            setIsProcessing(false);
+            setError(err.detail || err.message || 'The file could not be read');
             console.error('Upload error:', err);
+        } finally {
+            setIsProcessing(false);
         }
     }, [onDataParsed]);
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
         onDrop,
         accept: {
             'text/csv': ['.csv'],
             'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
-            'application/vnd.ms-excel': ['.xls']
+            'application/vnd.ms-excel': ['.xls'],
         },
         maxFiles: 1,
-        disabled: isProcessing
+        maxSize: 10 * 1024 * 1024,
+        disabled: isProcessing,
+        noClick: true,
+        onDropRejected: (rejections) => setError(rejections[0]?.errors[0]?.message ?? 'That file type is not supported'),
     });
 
     return (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden h-full flex flex-col">
-            {/* Compact dropzone */}
+        <div>
             <div
                 {...getRootProps()}
-                className={`
-                    relative border-2 border-dashed rounded-lg m-4 flex-1 flex items-center justify-center text-center cursor-pointer transition-all
-                    ${isDragActive
-                        ? 'border-blue-500 bg-blue-50/50'
-                        : 'border-slate-200 hover:border-blue-400 hover:bg-slate-50/30'
-                    }
-                    ${isProcessing ? 'opacity-50 pointer-events-none' : ''}
-                    ${error ? 'border-rose-300 bg-rose-50/30' : ''}
-                `}
+                className={`relative flex min-h-[340px] flex-col items-center justify-center rounded-2xl border-2 border-dashed px-6 text-center transition-colors ${
+                    isDragActive ? 'border-blue-500 bg-blue-50'
+                    : error ? 'border-rose-300 bg-rose-50/40'
+                    : 'border-slate-300 bg-white hover:border-blue-400 hover:bg-blue-50/40'
+                } ${isProcessing ? 'pointer-events-none opacity-60' : ''}`}
             >
                 <input {...getInputProps()} />
-
                 {isProcessing ? (
-                    <div className="flex flex-col items-center gap-3 py-4">
-                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
-                        <div>
-                            <p className="text-sm font-medium text-slate-700">{uploadStatus}</p>
-                            {progress > 0 && (
-                                <div className="w-48 mx-auto h-1.5 bg-slate-200 rounded-full mt-2 overflow-hidden">
-                                    <div
-                                        className="h-full bg-blue-500 transition-all duration-500"
-                                        style={{ width: `${progress}%` }}
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    </div>
+                    <>
+                        <Loader2 className="h-10 w-10 animate-spin text-blue-600" />
+                        <p className="mt-4 text-base font-semibold text-slate-800">Reading the file…</p>
+                    </>
                 ) : (
-                    <div className="flex flex-col items-center gap-2 py-4">
-                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                            isDragActive ? 'bg-blue-100' : 'bg-slate-100'
-                        }`}>
-                            <UploadCloud className={`w-6 h-6 ${isDragActive ? 'text-blue-600' : 'text-slate-400'}`} />
+                    <>
+                        <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${isDragActive ? 'bg-blue-600 text-white' : 'bg-blue-50 text-blue-600'}`}>
+                            <UploadCloud className="h-8 w-8" strokeWidth={1.75} />
                         </div>
-                        <div>
-                            <p className="text-sm font-semibold text-slate-800">
-                                {isDragActive ? 'Drop file here' : 'Drag & drop or click to browse'}
-                            </p>
-                            <p className="text-xs text-slate-400 mt-0.5">CSV, Excel — max 10MB</p>
-                        </div>
-                    </div>
+                        <h2 className="mt-5 text-xl font-semibold tracking-tight text-slate-900">
+                            {isDragActive ? 'Drop it to start' : 'Drop your sales history here'}
+                        </h2>
+                        <p className="mt-1.5 text-sm text-slate-500">
+                            CSV or Excel, up to 10 MB. One row per customer, product and month.
+                        </p>
+                        <button
+                            type="button"
+                            onClick={open}
+                            className="mt-6 rounded-lg bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-600"
+                        >
+                            Choose a file
+                        </button>
+                    </>
                 )}
             </div>
 
-            {/* Error */}
             {error && (
-                <div className="mx-4 mb-4 p-3 bg-rose-50 border border-rose-100 rounded-lg flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 text-rose-600 mt-0.5 shrink-0" />
-                    <div>
-                        <p className="text-xs font-semibold text-rose-800">Upload Failed</p>
-                        <p className="text-xs text-rose-700 mt-0.5">{error}</p>
+                <div className="mt-3 flex items-start gap-2 rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
+                    <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-rose-600" />
+                    <div className="text-sm">
+                        <p className="font-semibold text-rose-800">The file was not accepted</p>
+                        <p className="text-rose-700">{error}</p>
                     </div>
                 </div>
             )}
-
         </div>
     );
 }
