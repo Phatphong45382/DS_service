@@ -43,6 +43,7 @@ Build `pip install -r requirements.txt`, start `python -m uvicorn backend.main:a
 | `SAGEMAKER_REGION` | `ap-southeast-1` |
 | `S3_BUCKET`, `DYNAMODB_TABLE`, `SAGEMAKER_ENDPOINT` | as created by the scripts |
 | `DATA_SOURCE`, `STORE_BACKEND`, `MODEL_BACKEND` | `s3`, `aws`, `sagemaker` |
+| `SEED_RUN_ON_START` | `1` (default): with `STORE_BACKEND=local` a redeploy leaves no Runs, so the app makes one at startup. Set `0` once the store is DynamoDB |
 | `AI_BACKEND` | `bedrock` once the quota is granted, `gemini` until then |
 | `ENV` | `production` — hides the API docs and enforces the CORS list |
 | `DEMO_PASSWORD` | the demo password |

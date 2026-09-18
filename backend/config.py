@@ -50,6 +50,9 @@ class Settings:
     # Store for Runs, uploads, documents and prompts: a local directory, or DynamoDB records + S3 blobs
     STORE_BACKEND: str = os.getenv("STORE_BACKEND", "local")
     STORE_PATH: str = os.getenv("STORE_PATH", str(_REPO_ROOT / ".store"))
+    # With STORE_BACKEND=local a redeploy leaves no Runs, so the app makes one at startup.
+    # Set to 0 where Runs must be exactly what the test or the operator created.
+    SEED_RUN_ON_START: bool = os.getenv("SEED_RUN_ON_START", "1") not in ("0", "false", "False")
 
     # AI backend: gemini (default until the Bedrock quota is raised) or bedrock
     AI_BACKEND: str = os.getenv("AI_BACKEND", "gemini")

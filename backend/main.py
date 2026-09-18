@@ -1,8 +1,11 @@
 
+import asyncio
+import logging
+from contextlib import asynccontextmanager
+
+import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-import uvicorn
-import logging
 
 from backend.auth import enabled as auth_enabled, require_token
 from backend.config import settings
@@ -11,6 +14,32 @@ from backend.routers import dashboard, health, analytics, ai, predict, runs, aut
 
 configure_logging()
 logger = logging.getLogger(__name__)
+
+def seed_baseline_run() -> None:
+    """One real Run, so Forecast and Runs are never empty.
+
+    On Render STORE_BACKEND=local, which means the Runs live on the container's own disk and a
+    redeploy leaves none (#3 switches the store to DynamoDB, which needs an IAM key from an admin).
+    Only ever runs when the store is empty, and the Run says in its notes that it was automatic.
+    """
+    try:
+        from backend.runs import service
+
+        if service.list_runs():
+            return
+        record = service.create_run(horizon=6, notes="Baseline created automatically at startup")
+        logger.info("seeded %s (%s)", record["run_id"], record["status"])
+    except Exception:  # a demo with no Run is bad; a backend that will not boot is worse
+        logger.warning("could not seed a baseline Run", exc_info=True)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # off the event loop: a cold model must not hold the port closed while Render waits for it
+    if settings.SEED_RUN_ON_START:
+        asyncio.get_running_loop().run_in_executor(None, seed_baseline_run)
+    yield
+
 
 def create_app() -> FastAPI:
     production = settings.ENV == "production"
@@ -23,6 +52,7 @@ def create_app() -> FastAPI:
         openapi_url=None if production else f"{settings.API_V1_STR}/openapi.json",
         docs_url=None if production else "/docs",
         redoc_url=None if production else "/redoc",
+        lifespan=lifespan,
     )
 
     # Starlette applies the last-added middleware outermost, so add them inside-out:
