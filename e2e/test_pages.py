@@ -149,14 +149,19 @@ def test_planner_predicts_and_explains(page):
     page.get_by_role("button", name="Run Scenario").click()
     # two explain-mode predictions; under a full suite run on a busy machine this outlasts
     # expect()'s own 5 s default, which page.set_default_timeout does not change
-    expect(page.get_by_text("ESTIMATED IMPACT")).to_be_visible(timeout=30000)
-    # the label lands before the numbers do; wait for a value, not the heading, before reading
-    expect(page.get_by_text(re.compile(r"^Baseline$")).first).to_be_visible(timeout=30000)
-    page.wait_for_function("() => /Baseline\\s+[\\d,]+\\s+Scenario\\s+[\\d,]+/.test(document.querySelector('main').innerText)")
+    expect(page.get_by_text("Where the units come from")).to_be_visible(timeout=30000)
+    page.wait_for_function(r"() => /Units this month\s+[\d,]+/.test(document.querySelector('main').innerText)")
     text = re.sub(r"\s+", " ", page.locator("main").inner_text())
-    assert "Driving the Change" in text
-    assert re.search(r"Baseline [\d,]+ Scenario [\d,]+", text), text[:400]
-    assert "Prediction" in text, "the waterfall must end at the prediction"
+
+    # the scenario, what it would sell, and what it would sell without the promotion
+    scenario, baseline = re.search(r"Units this month ([\d,]+) ([\d,]+) without a promotion", text).groups()
+    assert int(scenario.replace(",", "")) > 0 and int(baseline.replace(",", "")) > 0, text[:400]
+    assert re.search(r"Extra units [+−][\d,]+", text), text[:400]
+
+    # the model's own contributions, and the try kept for comparison
+    assert "TreeSHAP" in text
+    assert "Every try this session" in text
+    assert re.search(r"Try 1 .*?% off, \d+ days", text), text[:400]
 
 
 # ─── AI pages, without a key ────────────────────────────────────────────
