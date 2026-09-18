@@ -9,7 +9,8 @@ import { ColumnMapping } from '@/components/upload/column-mapping';
 import { ForecastConfig } from '@/components/upload/forecast-config';
 import { RunResults } from '@/components/upload/run-results';
 import { ParsedData } from '@/lib/file-utils';
-import { createDemoForecastResult, DEMO_FILE_NAME, getDemoInputData } from '@/lib/demo-data';
+import { createRun, getRunForecast, uploadRunInput } from '@/lib/api-client';
+import { aggregateByMonth, aggregateForecastByMonth, toCsv } from '@/lib/forecast-utils';
 import { useState } from 'react';
 import { FileSpreadsheet, ScanLine, Check, Upload, Eye, Settings2, BarChart3, ChevronRight, Download, ArrowRight, Lightbulb, RotateCcw, CheckCircle2, AlertTriangle, XCircle, AlertCircle, Database } from 'lucide-react';
 
@@ -23,23 +24,23 @@ export default function NewPredictionPage() {
     const [fileName, setFileName] = useState<string>('');
     const [uploadResult, setUploadResult] = useState<any>(null);
     const [isRunning, setIsRunning] = useState(false);
-    const [isDemoMode, setIsDemoMode] = useState(false);
+    const [isDatasetMode, setIsDatasetMode] = useState(false);
 
     const handleDataParsed = (data: ParsedData, name: string, result?: any) => {
         setUploadedData(data);
         setFileName(name);
         setUploadResult(result);
-        setIsDemoMode(false);
+        setIsDatasetMode(false);
         // Stay on upload step — show inline preview
     };
 
-    const handleUseDemoData = () => {
-        setUploadedData(getDemoInputData());
+    const handleUseDataset = () => {
+        setUploadedData(null);
         setMappedData(null);
-        setFileName(DEMO_FILE_NAME);
-        setUploadResult({ demo: true, filename: DEMO_FILE_NAME });
-        setIsDemoMode(true);
-        setCurrentStep('upload');
+        setFileName('sales.parquet');
+        setUploadResult(null);
+        setIsDatasetMode(true);
+        setCurrentStep('configure');
     };
 
     const [mappedData, setMappedData] = useState<ParsedData | null>(null);
@@ -55,37 +56,30 @@ export default function NewPredictionPage() {
 
     const [resultData, setResultData] = useState<any>(null);
 
-    const handleRunForecast = async () => {
+    const handleRunForecast = async (config: { horizon: number; model: string }) => {
         setIsRunning(true);
         try {
-            if (isDemoMode) {
-                await new Promise(resolve => setTimeout(resolve, 600));
-                setResultData(createDemoForecastResult());
-                setCurrentStep('results');
-                return;
+            let uploadId: string | undefined;
+            if (!isDatasetMode) {
+                const source = mappedData ?? uploadedData;
+                if (!source) throw new Error('No data to run on');
+                const file = new File([toCsv(source.rows)], fileName || 'history.csv', { type: 'text/csv' });
+                uploadId = (await uploadRunInput(file)).upload_id;
             }
-
-            const { runForecast, getForecastResults } = await import('@/lib/api-client');
-
-            console.log("Starting forecast...");
-            await runForecast();
-
-            console.log("Waiting for forecast processing...");
-            const WAIT_SECONDS = 25;
-
-            for (let i = 0; i < WAIT_SECONDS; i++) {
-                if (i % 5 === 0) {
-                    console.log(`... waiting ${i}/${WAIT_SECONDS}s`);
-                }
-                await new Promise(resolve => setTimeout(resolve, 1000));
-            }
-
-            console.log("Wait complete. Fetching results...");
-
-            const data = await getForecastResults();
-            setResultData(data);
+            const run = await createRun({
+                horizon: config.horizon,
+                upload_id: uploadId,
+                notes: `New Prediction on ${fileName || 'sales dataset'}`,
+            });
+            const detail = run.status === 'success' ? await getRunForecast(run.run_id) : null;
+            const rows = detail
+                ? [
+                    ...aggregateByMonth(detail.history, 'actual_units').map(({ month, value }) => ({ date: month, sales: value, forecast: null })),
+                    ...aggregateForecastByMonth(detail.forecast).map(({ month, forecast }) => ({ date: month, sales: null, forecast })),
+                ]
+                : [];
+            setResultData({ run, rows, filename: run.data_source_name });
             setCurrentStep('results');
-
         } catch (error) {
             console.error('Failed to run forecast:', error);
             alert("Forecast failed: " + (error instanceof Error ? error.message : "Unknown error"));
@@ -93,7 +87,6 @@ export default function NewPredictionPage() {
             setIsRunning(false);
         }
     };
-
     const stepperItems = [
         { key: 'upload', label: 'Upload', icon: Upload },
         { key: 'preview', label: 'Preview', icon: Eye },
@@ -198,7 +191,7 @@ export default function NewPredictionPage() {
                                                             <p className="text-[11px] text-slate-500">
                                                                 {uploadedData.summary.rowCount.toLocaleString()} rows, {uploadedData.summary.colCount} columns
                                                                 {fileName && <span className="ml-1 text-slate-400">— {fileName}</span>}
-                                                                {isDemoMode && <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-amber-700 font-semibold">Demo data</span>}
+                                                                {isDatasetMode && <span className="ml-2 rounded-full bg-amber-100 px-1.5 py-0.5 text-amber-700 font-semibold">Sales dataset</span>}
                                                             </p>
                                                             {errors.map((e, i) => (
                                                                 <div key={i} className="flex items-center gap-1 mt-1 text-[11px] text-rose-600">
@@ -247,7 +240,7 @@ export default function NewPredictionPage() {
                                             {/* Actions */}
                                             <div className="px-4 py-3 border-t border-slate-200 flex items-center gap-2 bg-white">
                                                 <button
-                                                    onClick={() => { setUploadedData(null); setFileName(''); setUploadResult(null); setIsDemoMode(false); }}
+                                                    onClick={() => { setUploadedData(null); setFileName(''); setUploadResult(null); setIsDatasetMode(false); }}
                                                     className="flex items-center gap-1.5 px-3 py-2 text-xs font-medium text-slate-600 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
                                                 >
                                                     <RotateCcw className="w-3 h-3" />
@@ -285,10 +278,10 @@ export default function NewPredictionPage() {
                                                 </div>
                                                 <button
                                                     type="button"
-                                                    onClick={handleUseDemoData}
+                                                    onClick={handleUseDataset}
                                                     className="shrink-0 rounded-lg bg-amber-400 px-3 py-2 text-xs font-bold text-amber-950 shadow-sm transition-colors hover:bg-amber-300"
                                                 >
-                                                    Use demo data
+                                                    Use sales dataset
                                                 </button>
                                             </div>
                                         </div>
@@ -385,7 +378,7 @@ export default function NewPredictionPage() {
                             onRun={handleRunForecast}
                             isLoading={isRunning}
                             uploadResult={uploadResult}
-                            demoMode={isDemoMode}
+                            demoMode={false}
                         />
                     )}
 

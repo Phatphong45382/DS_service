@@ -29,6 +29,7 @@ class LocalModel:
         self.categories = art["categories"]
         self.q10, self.q90 = art["q10"], art["q90"]
         self.version = f"{art['model_name']} {art['version']}"
+        self.metrics = art.get("metrics", {})  # holdout WAPE/bias measured at training time on unseen months
         self.explainer = shap.TreeExplainer(self.model)
         logger.info("Loaded %s from %s", self.version, path)
 
@@ -59,4 +60,5 @@ def predict(rows: list[dict], explain: bool = False) -> list[dict]:
 
 
 def model_info() -> dict:
-    return {"backend": settings.MODEL_BACKEND, "version": _backend().version}
+    b = _backend()
+    return {"backend": settings.MODEL_BACKEND, "version": b.version, "metrics": getattr(b, "metrics", {})}

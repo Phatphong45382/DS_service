@@ -34,14 +34,20 @@ def model_dir(tmp_path_factory, dataset_path) -> str:
 
 
 @pytest.fixture(scope="session")
-def client(dataset_path, model_dir) -> TestClient:
+def client(dataset_path, model_dir, tmp_path_factory) -> TestClient:
+    store_dir = str(tmp_path_factory.mktemp("store"))
     os.environ["DATA_SOURCE"] = "local"
     os.environ["DATA_PATH"] = dataset_path
+    os.environ["STORE_BACKEND"] = "local"
+    os.environ["STORE_PATH"] = store_dir
     # backend.config may already be imported (test modules import services at collection), so patch it too
     from backend.config import settings
     from backend.data import loader
+    from backend.store import service as store_service
     settings.DATA_SOURCE, settings.DATA_PATH = "local", dataset_path
+    settings.STORE_BACKEND, settings.STORE_PATH = "local", store_dir
     loader.clear_cache()
+    store_service.reset()
     from backend.main import app
 
     with TestClient(app) as c:

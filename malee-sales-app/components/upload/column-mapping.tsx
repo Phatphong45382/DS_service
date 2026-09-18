@@ -28,6 +28,7 @@ const MODEL_COLUMNS: ModelColumn[] = [
     { key: 'has_promotion', label: 'Has Promotion', description: 'Has promo (0/1)', required: false, defaultValue: '0', example: '0' },
     { key: 'discount_pct', label: 'Discount %', description: 'Discount %', required: false, defaultValue: '0', example: '10' },
     { key: 'promo_days', label: 'Promo Days', description: 'Promo days', required: false, defaultValue: '0', example: '7' },
+    { key: 'promo_type', label: 'Promotion Type', description: 'Mechanic (Weekly Deal / B2B Program / Loyalty Points)', required: false, defaultValue: 'No Promotion', example: 'Weekly Deal' },
 ];
 
 // ── Mapping types ──

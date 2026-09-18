@@ -27,6 +27,10 @@ class Settings:
     MODEL_BACKEND: str = os.getenv("MODEL_BACKEND", "local")
     MODEL_PATH: str = os.getenv("MODEL_PATH", str(_REPO_ROOT / "model"))
 
+    # Store for Runs, uploads, documents and prompts: local directory now, DynamoDB + S3 with the AWS ticket
+    STORE_BACKEND: str = os.getenv("STORE_BACKEND", "local")
+    STORE_PATH: str = os.getenv("STORE_PATH", str(_REPO_ROOT / ".store"))
+
     # Gemini AI Settings (replaced by Bedrock in the AI ticket)
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")

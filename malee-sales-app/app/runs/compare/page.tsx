@@ -1,19 +1,12 @@
 "use client"
 
-import { useMemo, Suspense } from "react"
+import { Suspense, useEffect, useMemo, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import Link from "next/link"
 import { MainLayout } from "@/components/layout/main-layout"
-import {
-  RUNS,
-  generateForecastData,
-  aggregateForecastByMonth,
-  formatNumber,
-  formatMonthShort,
-  formatDuration,
-  SKUS,
-  type SKU,
-} from "@/lib/mock-data"
+import { aggregateForecastByMonth, formatDuration, formatMonthShort, formatNumber, skusOf } from "@/lib/forecast-utils"
+import { compareRuns, listRuns } from "@/lib/api-client"
+import type { RunCompare, RunRecord } from "@/types/runs"
 
 import { ChartCard } from "@/components/chart-card"
 import { StatusBadge } from "@/components/status-badge"
@@ -57,14 +50,25 @@ export default function ComparePage() {
 
 function CompareContent() {
   const searchParams = useSearchParams()
-  const runIdA = searchParams.get("a") || "RUN-2025-001"
-  const runIdB = searchParams.get("b") || "RUN-2025-005"
+  const [runs, setRuns] = useState<RunRecord[]>([])
+  const [data, setData] = useState<RunCompare | null>(null)
+  useEffect(() => {
+    listRuns().then(setRuns).catch(console.error)
+  }, [])
+  // default to the two most recent Runs
+  const runIdA = searchParams.get("a") || runs[1]?.run_id || ""
+  const runIdB = searchParams.get("b") || runs[0]?.run_id || ""
+  useEffect(() => {
+    if (!runIdA || !runIdB) return
+    compareRuns(runIdA, runIdB).then(setData).catch(() => setData(null))
+  }, [runIdA, runIdB])
 
-  const runA = RUNS.find((r) => r.run_id === runIdA)
-  const runB = RUNS.find((r) => r.run_id === runIdB)
+  const runA = data?.a
+  const runB = data?.b
 
-  const forecastA = useMemo(() => generateForecastData(runIdA, 6), [runIdA])
-  const forecastB = useMemo(() => generateForecastData(runIdB, 6), [runIdB])
+  const forecastA = useMemo(() => data?.forecast_a ?? [], [data])
+  const forecastB = useMemo(() => data?.forecast_b ?? [], [data])
+  const skus = useMemo(() => skusOf([...forecastA, ...forecastB]), [forecastA, forecastB])
 
   const aggA = useMemo(() => aggregateForecastByMonth(forecastA), [forecastA])
   const aggB = useMemo(() => aggregateForecastByMonth(forecastB), [forecastB])
@@ -74,7 +78,7 @@ function CompareContent() {
       <MainLayout title="Compare Runs" description="One or both runs not found">
         <Card className="p-8 text-center">
           <p className="text-sm text-muted-foreground mb-4">
-            Could not find runs: {runIdA} and {runIdB}
+            Waiting for Runs {runIdA || '?'} and {runIdB || '?'}
           </p>
           <Button asChild>
             <Link href="/runs">
@@ -101,7 +105,7 @@ function CompareContent() {
   }))
 
   // SKU-level comparison
-  const skuComparison = SKUS.map((sku) => {
+  const skuComparison = skus.map((sku) => {
     const totalA = forecastA.filter((r) => r.sku === sku).reduce((s, r) => s + r.forecast_units, 0)
     const totalB = forecastB.filter((r) => r.sku === sku).reduce((s, r) => s + r.forecast_units, 0)
     const diff = totalB - totalA
@@ -111,8 +115,8 @@ function CompareContent() {
 
   // Radar data for model metrics
   const radarData = [
-    { metric: "WAPE", A: 100 - runA.wape, B: 100 - runB.wape },
-    { metric: "Bias", A: 100 - Math.abs(runA.bias), B: 100 - Math.abs(runB.bias) },
+    { metric: "WAPE", A: 100 - (runA.wape ?? 0), B: 100 - (runB.wape ?? 0) },
+    { metric: "Bias", A: 100 - Math.abs((runA.bias ?? 0)), B: 100 - Math.abs((runB.bias ?? 0)) },
     { metric: "Speed", A: Math.max(0, 100 - runA.duration_sec / 2), B: Math.max(0, 100 - runB.duration_sec / 2) },
     { metric: "Coverage", A: 90, B: 95 },
   ]
@@ -123,8 +127,8 @@ function CompareContent() {
     { label: "Status", a: runA.status, b: runB.status },
     { label: "Model", a: `${runA.model_name} ${runA.model_version}`, b: `${runB.model_name} ${runB.model_version}` },
     { label: "Horizon", a: `${runA.horizon_months}mo`, b: `${runB.horizon_months}mo` },
-    { label: "WAPE", a: `${runA.wape}%`, b: `${runB.wape}%` },
-    { label: "Bias", a: `${runA.bias}%`, b: `${runB.bias}%` },
+    { label: "WAPE", a: `${(runA.wape ?? 0)}%`, b: `${(runB.wape ?? 0)}%` },
+    { label: "Bias", a: `${(runA.bias ?? 0)}%`, b: `${(runB.bias ?? 0)}%` },
     { label: "Duration", a: formatDuration(runA.duration_sec), b: formatDuration(runB.duration_sec) },
     { label: "Owner", a: runA.owner, b: runB.owner },
     { label: "Data Source", a: runA.data_source_name, b: runB.data_source_name },

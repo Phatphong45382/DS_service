@@ -1,19 +1,11 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { MainLayout } from "@/components/layout/main-layout"
-import {
-  historicalData,
-  latestForecast,
-  RUNS,
-  LATEST_RUN,
-  formatNumber,
-  formatMonthShort,
-  aggregateByMonth,
-  aggregateForecastByMonth,
-  SKUS,
-} from "@/lib/mock-data"
+import { aggregateByMonth, aggregateForecastByMonth, formatMonthShort, formatNumber, skusOf } from "@/lib/forecast-utils"
+import { getRunForecast, listRuns } from "@/lib/api-client"
+import type { ForecastRecord, HistoryRecord, RunRecord } from "@/types/runs"
 
 import { ChartCard } from "@/components/chart-card"
 import { Button } from "@/components/ui/button"
@@ -55,22 +47,46 @@ import {
 
 export default function ForecastPage() {
   const [selectedSku, setSelectedSku] = useState<string>("all")
-  const [selectedRunId, setSelectedRunId] = useState(LATEST_RUN.run_id)
+  const [selectedRunId, setSelectedRunId] = useState<string>("")
   const [showPlan, setShowPlan] = useState(true)
   const [showBands, setShowBands] = useState(true)
+  const [runs, setRuns] = useState<RunRecord[]>([])
+  const [forecastRows, setForecastRows] = useState<ForecastRecord[]>([])
+  const [history, setHistory] = useState<HistoryRecord[]>([])
+  useEffect(() => {
+    listRuns()
+      .then((rs) => {
+        setRuns(rs)
+        const latest = rs.find((r) => r.status === "success")
+        if (latest) setSelectedRunId(latest.run_id)
+      })
+      .catch(console.error)
+  }, [])
+  useEffect(() => {
+    if (!selectedRunId) return
+    getRunForecast(selectedRunId)
+      .then((d) => {
+        setForecastRows(d.forecast)
+        setHistory(d.history)
+      })
+      .catch(console.error)
+  }, [selectedRunId])
+  const skus = useMemo(() => skusOf(forecastRows), [forecastRows])
+  const histMonths = useMemo(() => aggregateByMonth(history, "actual_units").map((m) => m.month), [history])
+  const fcMonths = useMemo(() => aggregateForecastByMonth(forecastRows).map((m) => m.month), [forecastRows])
 
-  const successfulRuns = RUNS.filter((r) => r.status === "success")
-  const selectedRun = RUNS.find((r) => r.run_id === selectedRunId) || LATEST_RUN
+  const successfulRuns = runs.filter((r) => r.status === "success")
+  const selectedRun = runs.find((r) => r.run_id === selectedRunId)
 
   const filteredHistory = useMemo(() => {
-    if (selectedSku === "all") return historicalData
-    return historicalData.filter((r) => r.sku === selectedSku)
-  }, [selectedSku])
+    if (selectedSku === "all") return history
+    return history.filter((r) => r.sku === selectedSku)
+  }, [selectedSku, history])
 
   const filteredForecast = useMemo(() => {
-    if (selectedSku === "all") return latestForecast
-    return latestForecast.filter((r) => r.sku === selectedSku)
-  }, [selectedSku])
+    if (selectedSku === "all") return forecastRows
+    return forecastRows.filter((r) => r.sku === selectedSku)
+  }, [selectedSku, forecastRows])
 
   // Combined chart data
   const chartData = useMemo(() => {
@@ -197,7 +213,7 @@ export default function ForecastPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All SKUs</SelectItem>
-                {SKUS.map((sku) => (
+                {skus.map((sku) => (
                   <SelectItem key={sku} value={sku}>
                     {sku}
                   </SelectItem>
@@ -249,7 +265,7 @@ export default function ForecastPage() {
         <div className="grid gap-4 lg:grid-cols-4">
           <ChartCard
             title="Actual + Forecast"
-            description={`History: Jan 2023 - Dec 2024 | Forecast: Jan - Jun 2025 (${selectedRun.model_name} ${selectedRun.model_version})`}
+            description={`History: ${histMonths.length ? `${formatMonthShort(histMonths[0])} - ${formatMonthShort(histMonths[histMonths.length - 1])}` : '-'} | Forecast: ${fcMonths.length ? `${formatMonthShort(fcMonths[0])} - ${formatMonthShort(fcMonths[fcMonths.length - 1])}` : '-'} (${selectedRun?.model_name ?? ''} ${selectedRun?.model_version ?? ''})`}
             className="lg:col-span-3"
           >
             <ResponsiveContainer width="100%" height={350}>
@@ -349,8 +365,8 @@ export default function ForecastPage() {
               </div>
               <div className="flex flex-col gap-1 text-xs text-slate-500">
                 <p>Based on 24 months of training data</p>
-                <p>Model: {selectedRun.model_name}</p>
-                <p>WAPE: {selectedRun.wape}% on validation set</p>
+                <p>Model: {selectedRun?.model_name ?? '-'}</p>
+                <p>WAPE: {selectedRun?.wape ?? '-'}% on the last 6 months of history</p>
               </div>
             </Card>
 

@@ -5,7 +5,7 @@ import uvicorn
 import logging
 
 from backend.config import settings
-from backend.routers import dashboard, health, analytics, ai, predict
+from backend.routers import dashboard, health, analytics, ai, predict, runs
 
 # Configure logging
 logging.basicConfig(
@@ -36,6 +36,7 @@ def create_app() -> FastAPI:
     app.include_router(analytics.router, prefix=f"{settings.API_V1_STR}/analytics", tags=["analytics"])
     app.include_router(ai.router, prefix=f"{settings.API_V1_STR}/ai", tags=["ai"])
     app.include_router(predict.router, prefix=f"{settings.API_V1_STR}/predict", tags=["predict"])
+    app.include_router(runs.router, prefix=f"{settings.API_V1_STR}/runs", tags=["runs"])
     
     return app
 

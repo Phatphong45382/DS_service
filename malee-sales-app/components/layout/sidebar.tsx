@@ -3,10 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-    LayoutDashboard, Target, Activity, PlusCircle, Settings, Users, Menu,
-    Home, BarChart3, PlayCircle, ChevronDown, Brain, MessageCircle, FileText, ScanLine, Bot
-} from "lucide-react";
+import { LayoutDashboard, Target, Activity, PlusCircle, Settings, Users, Menu, Home, BarChart3, PlayCircle, ChevronDown, Brain, MessageCircle, FileText, ScanLine, Bot, Lightbulb, BookOpen } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useSidebar } from "@/lib/sidebar-context";
@@ -29,8 +26,10 @@ const forecastItems = [
 // ── AI sub-items ──
 const aiSubItems = [
     { name: 'Chat', href: '/ai-chat', icon: MessageCircle },
+    { name: 'Insights', href: '/ai-insights', icon: Lightbulb },
     { name: 'Report', href: '/ai-report', icon: FileText },
     { name: 'OCR', href: '/ai-ocr', icon: ScanLine },
+    { name: 'Documents', href: '/ai-rag', icon: BookOpen },
     { name: 'Agent', href: '/ai-agent', icon: Bot },
 ];
 

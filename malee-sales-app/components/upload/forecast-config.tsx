@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 
 interface ForecastConfigProps {
-    onRun: () => void;
+    onRun: (config: { horizon: number; model: string }) => void;
     isLoading: boolean;
     uploadResult?: any;
     demoMode?: boolean;
@@ -170,7 +170,7 @@ export function ForecastConfig({ onRun, isLoading, uploadResult, demoMode = fals
             <div className="mt-8 pt-6 border-t border-slate-100">
                 {!isLoading ? (
                     <button
-                        onClick={onRun}
+                        onClick={() => onRun(config)}
                         className="w-full py-3.5 rounded-xl font-bold text-base flex items-center justify-center gap-2 transition-all shadow-md active:scale-[0.98] bg-slate-900 text-white hover:bg-slate-800 hover:shadow-lg"
                     >
                         <Play className="w-5 h-5 fill-current" />

@@ -25,42 +25,10 @@ export function UploadPanel({ onDataParsed }: UploadPanelProps) {
         setProgress(0);
 
         try {
-            const { uploadForecastInput, getJobStatus } = await import('@/lib/api-client');
-
-            const uploadResult = await uploadForecastInput(file);
-            console.log('✓ Upload started, Job ID:', uploadResult.job_id);
-
-            if (uploadResult.job_id) {
-                setUploadStatus('Processing data pipeline...');
-
-                const pollStatus = async () => {
-                    try {
-                        const status = await getJobStatus(uploadResult.job_id!);
-                        setProgress(status.progress || 0);
-
-                        if (status.status === 'completed') {
-                            setUploadStatus('Finalizing...');
-                            const data = await parseFile(file);
-                            setIsProcessing(false);
-                            onDataParsed(data, file.name, uploadResult);
-                        } else if (status.status === 'failed') {
-                            throw new Error(status.error || 'Pipeline processing failed');
-                        } else {
-                            setTimeout(pollStatus, 3000);
-                        }
-                    } catch (err: any) {
-                        const errorMessage = err.detail || err.message || 'Pipeline check failed';
-                        setError(errorMessage);
-                        setIsProcessing(false);
-                    }
-                };
-
-                await pollStatus();
-            } else {
-                const data = await parseFile(file);
-                setIsProcessing(false);
-                onDataParsed(data, file.name, uploadResult);
-            }
+            setUploadStatus('Parsing file...');
+            const data = await parseFile(file);
+            setIsProcessing(false);
+            onDataParsed(data, file.name);
         } catch (err: any) {
             const errorMessage = err.detail || err.message || 'File upload failed';
             setError(errorMessage);

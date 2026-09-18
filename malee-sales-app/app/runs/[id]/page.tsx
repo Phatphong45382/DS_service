@@ -1,21 +1,11 @@
 'use client'
 
-import { useMemo, useState, use } from 'react'
+import { use, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { MainLayout } from '@/components/layout/main-layout'
-import {
-  RUNS,
-  LATEST_RUN,
-  latestForecast,
-  historicalData,
-  validationChecks,
-  formatNumber,
-  formatMonthShort,
-  formatDuration,
-  formatDate,
-  aggregateForecastByMonth,
-  SKUS,
-} from '@/lib/mock-data'
+import { aggregateForecastByMonth, formatDate, formatDuration, formatMonthShort, formatNumber, formatPercent, skusOf } from '@/lib/forecast-utils'
+import { getRun, getRunForecast } from '@/lib/api-client'
+import type { ForecastRecord, HistoryRecord, RunRecord } from '@/types/runs'
 
 import { KPICard } from '@/components/kpi-card'
 import { ChartCard } from '@/components/chart-card'
@@ -67,9 +57,34 @@ export default function RunReportPage({
   params: Promise<{ id: string }>
 }) {
   const { id: runId } = use(params)
-  const run = RUNS.find((r) => r.run_id === runId) || LATEST_RUN
+  const [runState, setRunState] = useState<RunRecord | null>(null)
+  const [forecast, setForecast] = useState<ForecastRecord[]>([])
+  const [history, setHistory] = useState<HistoryRecord[]>([])
+  const [previous, setPrevious] = useState<ForecastRecord[]>([])
+  useEffect(() => {
+    getRun(runId)
+      .then(async (r) => {
+        setRunState(r)
+        const d = await getRunForecast(runId).catch(() => null)
+        if (d) {
+          setForecast(d.forecast)
+          setHistory(d.history)
+        }
+        if (r.previous_run_id) {
+          const p = await getRunForecast(r.previous_run_id).catch(() => null)
+          if (p) setPrevious(p.forecast)
+        }
+      })
+      .catch(console.error)
+  }, [runId])
+  const run: RunRecord = runState ?? {
+    run_id: runId, created_at: new Date().toISOString(), status: 'running', duration_sec: 0, model_name: '', model_version: '',
+    data_source_name: '', horizon_months: 0, owner: '', notes: '', tags: [], wape: null, bias: null, validation: [],
+    upload_id: null, product_count: 0, forecast_months: [], previous_run_id: null, accuracy_basis: undefined,
+  }
+  const validationChecks = run.validation
+  const skus = useMemo(() => skusOf(forecast), [forecast])
 
-  const forecast = useMemo(() => latestForecast, [])
   const fcAgg = useMemo(() => aggregateForecastByMonth(forecast), [forecast])
 
   const totalForecast = forecast.reduce((s, r) => s + r.forecast_units, 0)
@@ -111,6 +126,39 @@ export default function RunReportPage({
     }))
   }, [fcAgg])
 
+  const changes = useMemo(() => {
+    if (!previous.length) return ['No previous Run to compare against yet.']
+    // only the months both Runs forecast, otherwise a longer Horizon reads as growth
+    const shared = new Set(forecast.map((r) => r.date_month).filter((m) => previous.some((p) => p.date_month === m)))
+    if (!shared.size) return [`Previous Run ${run.previous_run_id} forecasts different months; nothing to compare.`]
+    const totals = (rows: ForecastRecord[]) => rows.filter((r) => shared.has(r.date_month)).reduce((m, r) => m.set(r.sku, (m.get(r.sku) || 0) + r.forecast_units), new Map<string, number>())
+    const cur = totals(forecast)
+    const prev = totals(previous)
+    const sum = (m: Map<string, number>) => Array.from(m.values()).reduce((a, b) => a + b, 0)
+    const total = sum(cur)
+    const prevTotal = sum(prev)
+    const diffs = Array.from(cur.entries())
+      .map(([sku, v]) => ({ sku, delta: v - (prev.get(sku) || 0), pct: prev.get(sku) ? ((v - (prev.get(sku) || 0)) / (prev.get(sku) || 1)) * 100 : 0 }))
+      .sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))
+    return [
+      `Over the ${shared.size} shared month${shared.size === 1 ? '' : 's'}, total Forecast is ${total >= prevTotal ? 'up' : 'down'} ${formatNumber(Math.abs(Math.round(total - prevTotal)))} units (${formatPercent(prevTotal ? ((total - prevTotal) / prevTotal) * 100 : 0)}) vs ${run.previous_run_id}.`,
+      ...diffs.slice(0, 2).map((d) => `${d.sku}: ${formatPercent(d.pct)} (${d.delta >= 0 ? '+' : ''}${formatNumber(Math.round(d.delta))} units).`),
+    ]
+  }, [forecast, previous, run.previous_run_id])
+  const drivers = useMemo(() => {
+    const agg = aggregateForecastByMonth(forecast)
+    const peak = agg.reduce((p, m) => (m.forecast > p.forecast ? m : p), agg[0] || { month: '', forecast: 0, baseline: 0, p10: 0, p90: 0, plan: 0 })
+    const uplift = (agg.reduce((s, m) => s + (m.baseline ? (m.forecast - m.baseline) / m.baseline : 0), 0) / (agg.length || 1)) * 100
+    const top = skus
+      .map((sku) => ({ sku, v: forecast.filter((r) => r.sku === sku).reduce((a, r) => a + r.forecast_units, 0) }))
+      .sort((a, b) => b.v - a.v)[0]
+    return [
+      { driver: 'Seasonality', impact: peak.month ? `Peak ${formatMonthShort(peak.month)}` : '-', desc: 'Highest total Forecast month in the Horizon.' },
+      { driver: 'Promotions', impact: formatPercent(uplift), desc: "Average lift over the no-Promotion baseline, assuming last year's Promotion calendar repeats." },
+      { driver: 'Top Product', impact: top?.sku ?? '-', desc: 'Largest share of the total Forecast.' },
+      { driver: 'Forecast Accuracy', impact: run.wape != null ? `WAPE ${run.wape}%` : '-', desc: run.accuracy_basis ?? 'Forecast Accuracy of this Run.' },
+    ]
+  }, [forecast, skus, run.wape])
   const [tab, setTab] = useState('summary')
 
   return (
@@ -253,8 +301,8 @@ export default function RunReportPage({
                   <div className="rounded-xl bg-slate-50 p-4 border border-slate-200">
                     <span className="text-xs font-semibold text-slate-500">Assumptions</span>
                     <ul className="text-xs text-slate-400 mt-1 space-y-1">
-                      <li>• Based on 24 months historical data</li>
-                      <li>• Promo patterns assumed similar to past</li>
+                      <li>• Based on the last 24 months of history</li>
+                      <li>• Promotions assumed to repeat last year&apos;s calendar</li>
                     </ul>
                   </div>
                 </div>
@@ -391,7 +439,7 @@ export default function RunReportPage({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {SKUS.map((sku) => {
+                    {skus.map((sku) => {
                       const rows = forecast.filter((r) => r.sku === sku)
                       const fc = rows.reduce((s, r) => s + r.forecast_units, 0)
                       const pl = rows.reduce((s, r) => s + r.plan_units, 0)
@@ -430,11 +478,7 @@ export default function RunReportPage({
               </CardHeader>
               <CardContent className="p-4">
                 <div className="space-y-3">
-                  {[
-                    'Updated December 2024 actuals showed stronger-than-expected seasonal recovery for Rice Cracker 30g (+8.2% vs prior estimate).',
-                    'Model version upgraded from v2.4.1 to v2.5.0 with improved seasonality detection, reducing overall WAPE by 0.7pp.',
-                    'Promo uplift coefficients recalibrated: Corn Stick 40g shows 12% higher promo sensitivity than previous model.',
-                  ].map((text, i) => (
+                  {changes.map((text, i) => (
                     <div
                       key={i}
                       className="flex items-start gap-3 rounded-xl bg-slate-50 p-3 border border-slate-200"
@@ -458,12 +502,7 @@ export default function RunReportPage({
               </CardHeader>
               <CardContent className="p-4">
                 <div className="grid gap-3 md:grid-cols-2">
-                  {[
-                    { driver: 'Seasonality', impact: 'Primary driver', desc: 'Strong summer peak pattern detected across all SKUs.' },
-                    { driver: 'Trend', impact: 'Growth +0.8%/mo', desc: 'Consistent positive trend observed in 24-month window.' },
-                    { driver: 'Promo Effect', impact: '+12-18% uplift', desc: 'Promotional periods show significant demand spikes.' },
-                    { driver: 'Product Mix', impact: 'Shifting', desc: '200ml formats gaining share vs 1000ml in recent months.' },
-                  ].map((item) => (
+                  {drivers.map((item) => (
                     <div key={item.driver} className="rounded-xl bg-slate-50 p-3 border border-slate-200">
                       <div className="flex items-center justify-between mb-1">
                         <span className="text-sm font-semibold text-slate-900">{item.driver}</span>
@@ -599,7 +638,7 @@ export default function RunReportPage({
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {historicalData.slice(0, 10).map((row, i) => (
+                    {history.slice(0, 10).map((row, i) => (
                       <TableRow key={i} className="hover:bg-slate-50">
                         <TableCell className="text-sm tabular-nums text-slate-900">{formatMonthShort(row.date_month)}</TableCell>
                         <TableCell className="text-sm text-slate-900">{row.sku}</TableCell>

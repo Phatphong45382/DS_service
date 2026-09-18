@@ -2,7 +2,8 @@
  * API client for the FastAPI backend.
  */
 
-import { UploadResponse, HealthResponse } from './types/api';
+import { HealthResponse } from './types/api';
+import type { RunRecord, RunForecast, RunCompare, UploadMeta } from '@/types/runs';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8080';
 const API_URL = `${API_BASE_URL}/api/v1`;
@@ -110,45 +111,9 @@ export async function checkBackendHealth(): Promise<HealthResponse> {
     return fetchAPI<HealthResponse>('/health');
 }
 
-/**
- * Upload a CSV file to the scoring input folder
- */
-export async function uploadForecastInput(file: File): Promise<UploadResponse> {
-    if (!file.name.toLowerCase().endsWith('.csv')) {
-        throw new ApiError('Only CSV files are supported');
-    }
 
-    const formData = new FormData();
-    formData.append('file', file);
 
-    return fetchAPI<UploadResponse>('/scoring/upload', {
-        method: 'POST',
-        body: formData,
-    });
-}
 
-/**
- * Get latest forecast results
- */
-export async function getForecastResults(): Promise<any> {
-    return fetchAPI<any>('/scoring/results/latest');
-}
-
-/**
- * Trigger forecast scenario
- */
-export async function runForecast(scenarioId: string = 'TEST'): Promise<{ run_id: string; scenario_id: string }> {
-    return fetchAPI<{ run_id: string; scenario_id: string }>(`/scoring/run/${scenarioId}`, {
-        method: 'POST',
-    });
-}
-
-/**
- * Get job status (scenario run)
- */
-export async function getJobStatus(jobId: string, scenarioId: string = 'TEST'): Promise<any> {
-    return fetchAPI<any>(`/scoring/jobs/${scenarioId}/${jobId}`);
-}
 
 /**
  * Get aggregated dashboard data from the sales dataset
@@ -252,19 +217,6 @@ export async function getDeepDiveAnalytics(params: Record<string, any> = {}): Pr
     return fetchAPI<any>(endpoint);
 }
 
-/**
- * Download forecast result file (Direct URL)
- */
-export function downloadForecastResultFile(filename?: string): void {
-    // Note: Standardized response doesn't apply to binary downloads
-    const url = `${API_URL}/scoring/results/download${filename ? `?filename=${encodeURIComponent(filename)}` : ''}`;
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', filename || 'forecast_results.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-}
 
 // ──────────────────────────────────────────
 // AI Endpoints
@@ -535,3 +487,37 @@ export async function predictCompare(features: {
     });
 }
 
+// ──────────────────────────────────────────
+// Runs (see CONTEXT.md: a Run is an on-demand execution of the forecast model)
+// ──────────────────────────────────────────
+
+export async function listRuns(): Promise<RunRecord[]> {
+    return fetchAPI<RunRecord[]>('/runs');
+}
+
+export async function getRun(runId: string): Promise<RunRecord> {
+    return fetchAPI<RunRecord>(`/runs/${encodeURIComponent(runId)}`);
+}
+
+export async function getRunForecast(runId: string): Promise<RunForecast> {
+    return fetchAPI<RunForecast>(`/runs/${encodeURIComponent(runId)}/forecast`);
+}
+
+export async function compareRuns(a: string, b: string): Promise<RunCompare> {
+    return fetchAPI<RunCompare>(`/runs/compare?a=${encodeURIComponent(a)}&b=${encodeURIComponent(b)}`);
+}
+
+export async function createRun(payload: { horizon: number; upload_id?: string; notes?: string }): Promise<RunRecord> {
+    return fetchAPI<RunRecord>('/runs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+    });
+}
+
+/** Upload a sales history (canonical upload columns) for a Run; returns its validation checks. */
+export async function uploadRunInput(file: File): Promise<UploadMeta> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return fetchAPI<UploadMeta>('/runs/upload', { method: 'POST', body: formData });
+}

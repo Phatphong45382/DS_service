@@ -1,13 +1,11 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import Link from "next/link"
 import { MainLayout } from "@/components/layout/main-layout"
-import {
-  RUNS,
-  formatDuration,
-  formatDate,
-} from "@/lib/mock-data"
+import { formatDate, formatDuration } from "@/lib/forecast-utils"
+import { listRuns } from "@/lib/api-client"
+import type { RunRecord } from "@/types/runs"
 
 import { StatusBadge } from "@/components/status-badge"
 import { Button } from "@/components/ui/button"
@@ -42,9 +40,13 @@ export default function RunsPage() {
   const [search, setSearch] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
   const [selectedRuns, setSelectedRuns] = useState<string[]>([])
+  const [runs, setRuns] = useState<RunRecord[]>([])
+  useEffect(() => {
+    listRuns().then(setRuns).catch(console.error)
+  }, [])
 
   const filteredRuns = useMemo(() => {
-    return RUNS.filter((r) => {
+    return runs.filter((r) => {
       if (statusFilter !== "all" && r.status !== statusFilter) return false
       if (
         search &&
@@ -59,7 +61,7 @@ export default function RunsPage() {
       (a, b) =>
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
     )
-  }, [search, statusFilter])
+  }, [runs, search, statusFilter])
 
   const toggleSelect = (runId: string) => {
     setSelectedRuns((prev) => {

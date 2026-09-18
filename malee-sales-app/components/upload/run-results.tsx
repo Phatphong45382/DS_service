@@ -3,23 +3,24 @@
 import { CheckCircle2, TrendingUp, Download, ArrowRight, BarChart3, Clock, Zap } from 'lucide-react';
 import Link from 'next/link';
 // import { TrendChart } from '@/components/planning/trend-chart';
-import { downloadForecastResultFile } from '@/lib/api-client';
 import PredictionChart from './prediction-chart';
-import { downloadDemoForecastResult } from '@/lib/demo-data';
+import { formatDuration, toCsv } from '@/lib/forecast-utils';
 
 interface RunResultsProps {
     data?: any;
 }
 
 export function RunResults({ data }: RunResultsProps) {
-    const isDemo = Boolean(data?.demo);
+    const run = data?.run;
 
     const handleDownload = () => {
-        if (isDemo) {
-            downloadDemoForecastResult(data.rows);
-        } else {
-            downloadForecastResultFile(data?.filename);
-        }
+        const csv = toCsv(data?.rows ?? []);
+        const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${run?.run_id ?? 'forecast'}.csv`;
+        link.click();
+        URL.revokeObjectURL(url);
     };
 
     return (
@@ -31,16 +32,16 @@ export function RunResults({ data }: RunResultsProps) {
                         <CheckCircle2 className="w-8 h-8 text-emerald-600" />
                     </div>
                     <div>
-                        <h2 className="text-xl font-bold text-emerald-900">{isDemo ? 'Demo Forecast Generated' : 'Forecast Generated Successfully'}</h2>
+                        <h2 className="text-xl font-bold text-emerald-900">{run?.status === 'failed' ? 'Run failed validation' : 'Forecast Generated Successfully'}</h2>
                         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-emerald-700 text-sm font-medium">
                             <span className="flex items-center gap-1.5">
                                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
-                                ID: #REQ-2024-001
+                                ID: {run?.run_id ?? '-'}
                             </span>
                             <span className="hidden md:inline text-emerald-300">•</span>
-                            <span>Duration: 45s</span>
+                            <span>Duration: {run ? formatDuration(run.duration_sec) : '-'}</span>
                             <span className="hidden md:inline text-emerald-300">•</span>
-                                <span>Model: {isDemo ? 'Demo model' : 'Time Series'}</span>
+                                <span>Model: {run ? `${run.model_name} ${run.model_version}` : '-'}</span>
                         </div>
                     </div>
                 </div>
@@ -51,7 +52,7 @@ export function RunResults({ data }: RunResultsProps) {
                         className="flex-1 md:flex-none justify-center px-4 py-2 bg-white border border-emerald-200 text-emerald-700 font-medium rounded-lg hover:bg-emerald-50 transition-colors flex items-center gap-2 shadow-sm text-sm"
                     >
                         <Download className="w-4 h-4" />
-                        {isDemo ? 'Download Demo CSV' : 'Download CSV'}
+                        Download CSV
                     </button>
                     <Link
                         href="/scenario-planner"
@@ -81,7 +82,7 @@ export function RunResults({ data }: RunResultsProps) {
                         )}
                     </div>
                     <p className="text-xs text-slate-400 border-t border-slate-50 pt-2 mt-1">
-                        {data?.filename ? `Source: ${data.filename}` : 'Aggregate for next 6 months vs baseline'}
+                        {data?.filename ? `Source: ${data.filename}` : `Horizon: ${run?.horizon_months ?? 6} months`}
                     </p>
                 </div>
 
@@ -92,10 +93,10 @@ export function RunResults({ data }: RunResultsProps) {
                     <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">Confidence Score</p>
                     <div className="mt-2 flex items-baseline gap-2 pb-2">
                         <h3 className="text-3xl font-bold text-slate-900">High</h3>
-                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">92%</span>
+                        <span className="text-xs font-bold text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">{run?.wape != null ? `${Math.max(0, Math.round(100 - run.wape))}%` : '-'}</span>
                     </div>
                     <div className="w-full bg-slate-100 rounded-full h-1.5 mt-2">
-                        <div className="bg-indigo-500 h-1.5 rounded-full w-[92%]"></div>
+                        <div className="bg-indigo-500 h-1.5 rounded-full" style={{ width: `${run?.wape != null ? Math.max(0, Math.round(100 - run.wape)) : 0}%` }}></div>
                     </div>
                 </div>
 
@@ -105,11 +106,11 @@ export function RunResults({ data }: RunResultsProps) {
                     </div>
                     <p className="text-sm font-medium text-slate-500 uppercase tracking-wide">Processing Time</p>
                     <div className="mt-2 flex items-baseline gap-2 pb-2">
-                        <h3 className="text-3xl font-bold text-slate-900">0.45s</h3>
+                        <h3 className="text-3xl font-bold text-slate-900">{run ? formatDuration(run.duration_sec) : '-'}</h3>
                         <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full border border-amber-100">Fast Mode</span>
                     </div>
                     <p className="text-xs text-slate-400 border-t border-slate-50 pt-2 mt-1">
-                        Server response latency
+                        Model run time (backtest + Horizon)
                     </p>
                 </div>
             </div>
