@@ -65,10 +65,11 @@ export function AccuracyKPIs({ data, loading }: AccuracyKPIsProps) {
                 icon={Crosshair}
                 color="blue"
             />
+            {/* Bias is (planned - actual) / actual, so negative means the Plan came in below Actual */}
             <KPICard
                 title="Bias"
                 value={`${data.bias > 0 ? '+' : ''}${data.bias.toFixed(1)}%`}
-                subValue={data.bias > 0 ? "Under Plan" : "Over Plan"}
+                subValue={data.bias < 0 ? "Under Plan" : "Over Plan"}
                 trend={Math.abs(data.bias) < 5 ? 'neutral' : 'down'}
                 icon={Scale}
                 color="purple"

@@ -559,7 +559,7 @@ def _build_data_summary(
         if total_planned > 0:
             lines.append(f"Total Actual: {total_actual:,.0f} vs Planned: {total_planned:,.0f}")
             lines.append(f"WAPE (Forecast Error): {wape:.1f}%")
-            lines.append(f"Bias: {bias:+.1f}%")
+            lines.append(f"Bias: {bias:+.1f}% (negative = the Plan came in below Actual)")
         lines.append(f"Promo Coverage: {promo_cov:.1f}%")
         lines.append(f"Avg Discount: {avg_disc:.1f}%")
 
@@ -591,7 +591,7 @@ def _build_data_summary(
             lines.append(f"Total Actual: {a_kpi.get('total_actual', 0):,.0f}")
             lines.append(f"Total Planned: {a_kpi.get('total_planned', 0):,.0f}")
             lines.append(f"WAPE: {a_kpi.get('wape', 0):.1f}%")
-            lines.append(f"Bias: {a_kpi.get('bias', 0):+.1f}%")
+            lines.append(f"Bias: {a_kpi.get('bias', 0):+.1f}% (negative = the Plan came in below Actual)")
             lines.append(f"Over-plan Rate: {a_kpi.get('over_plan_rate', 0):.1f}%")
             lines.append(f"Active Items: {a_kpi.get('total_active_items', 0)}")
             lines.append(f"Target Achievement: {a_kpi.get('target_achievement_rate', 0):.1f}%")

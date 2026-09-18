@@ -82,7 +82,7 @@ Weighted absolute percentage error: the sum of absolute errors divided by the su
 _Avoid_: MAPE, accuracy %
 
 **Bias**:
-The signed tendency of a Plan or Forecast to be above or below Actual, as a percentage of Actual. Negative means under-planning or under-forecasting.
+The signed tendency of a Plan or Forecast to be above or below Actual, as a percentage of Actual: `(Plan or Forecast − Actual) / Actual`. Negative means under-planning or under-forecasting. The same sign convention everywhere it is reported, on a Run and on Plan Accuracy alike.
 
 ### Forecasting
 
