@@ -146,7 +146,12 @@ def test_planner_predicts_and_explains(page):
     expect(page.get_by_role("combobox").first).to_contain_text("Chips")
     page.get_by_role("switch").click()
     page.get_by_role("button", name="Run Scenario").click()
-    expect(page.get_by_text("ESTIMATED IMPACT")).to_be_visible()
+    # two explain-mode predictions; under a full suite run on a busy machine this outlasts
+    # expect()'s own 5 s default, which page.set_default_timeout does not change
+    expect(page.get_by_text("ESTIMATED IMPACT")).to_be_visible(timeout=30000)
+    # the label lands before the numbers do; wait for a value, not the heading, before reading
+    expect(page.get_by_text(re.compile(r"^Baseline$")).first).to_be_visible(timeout=30000)
+    page.wait_for_function("() => /Baseline\\s+[\\d,]+\\s+Scenario\\s+[\\d,]+/.test(document.querySelector('main').innerText)")
     text = re.sub(r"\s+", " ", page.locator("main").inner_text())
     assert "Driving the Change" in text
     assert re.search(r"Baseline [\d,]+ Scenario [\d,]+", text), text[:400]
