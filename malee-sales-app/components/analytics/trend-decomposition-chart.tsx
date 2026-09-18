@@ -8,6 +8,7 @@ import type { DecompositionPoint } from '@/lib/api-client';
 interface TrendDecompositionChartProps {
     data?: DecompositionPoint[] | null;
     historyMonths?: number;
+    error?: string | null;
     showInterpret?: boolean;
 }
 
@@ -50,7 +51,7 @@ function insightsFor(points: DecompositionPoint[], historyMonths?: number) {
     ];
 }
 
-export function TrendDecompositionChart({ data, historyMonths, showInterpret }: TrendDecompositionChartProps) {
+export function TrendDecompositionChart({ data, historyMonths, error, showInterpret }: TrendDecompositionChartProps) {
     const points = data ?? [];
     const chartData = points.map(p => ({ ...p, label: label(p) }));
 
@@ -74,8 +75,8 @@ export function TrendDecompositionChart({ data, historyMonths, showInterpret }: 
             <CardContent className="pt-0 pb-0">
                 <div className="h-[240px]">
                     {points.length === 0 ? (
-                        <div className="h-full flex items-center justify-center text-sm text-slate-400">
-                            {data ? 'No rows match the current filters' : 'Loading…'}
+                        <div className={`h-full flex items-center justify-center text-sm text-center px-6 ${error ? 'text-red-500' : 'text-slate-400'}`}>
+                            {error ?? (data ? 'No rows match the current filters' : 'Loading…')}
                         </div>
                     ) : (
                         <ResponsiveContainer width="100%" height="100%">
