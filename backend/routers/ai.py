@@ -189,8 +189,9 @@ async def chat(payload: Dict[str, Any] = Body(...)):
     if knowledge_doc_ids:
         knowledge_parts = []
         for doc_id in knowledge_doc_ids:
-            if doc_id in _rag_documents:
-                knowledge_parts.append(_rag_documents[doc_id][:15000])
+            text = _load_doc(doc_id)
+            if text:
+                knowledge_parts.append(text[:15000])
         if knowledge_parts:
             system += "\n\n=== เอกสารอ้างอิงจากผู้ใช้ ===\n" + "\n\n---\n\n".join(knowledge_parts)
 
@@ -360,7 +361,18 @@ async def ocr_purchase_order(
 # ──────────────────────────────────────────
 
 # In-memory document store (per session, demo only)
-_rag_documents: Dict[str, str] = {}  # doc_id → extracted text
+# Uploaded documents live in the store (DynamoDB + S3 on AWS, a directory locally), never in
+# process memory: Render sleeps and restarts, and a document that vanished between an upload and
+# a question would fail the demo on stage. Same rule as Runs and uploads (#6).
+def _save_doc(doc_id: str, filename: str, text: str) -> None:
+    from ..store.service import get_store
+    get_store().put_json(f"docs/{doc_id}.json", {"doc_id": doc_id, "filename": filename, "text": text})
+
+
+def _load_doc(doc_id: str) -> Optional[str]:
+    from ..store.service import get_store
+    doc = get_store().get_json(f"docs/{doc_id}.json") if doc_id else None
+    return doc["text"] if doc else None
 
 
 @router.post("/rag/upload")
@@ -368,7 +380,7 @@ async def rag_upload_document(
     file: UploadFile = File(...),
 ):
     """
-    Upload a document → extract text → store in memory.
+    Upload a document → extract text → keep it in the store.
     Supports: PDF (via Gemini Vision), TXT, CSV.
     """
     file_bytes = await file.read()
@@ -401,10 +413,9 @@ async def rag_upload_document(
                 error={"code": "UNSUPPORTED_TYPE", "message": f"ไม่รองรับไฟล์ประเภท {content_type} (รองรับ: PDF, TXT, CSV, รูปภาพ)"},
             )
 
-        # Store in memory
         import hashlib
         doc_id = hashlib.md5(file_bytes[:1024]).hexdigest()[:12]
-        _rag_documents[doc_id] = extracted_text
+        _save_doc(doc_id, filename, extracted_text)
 
         return APIResponse(success=True, data={
             "doc_id": doc_id,
@@ -437,7 +448,8 @@ async def rag_query(payload: Dict[str, Any] = Body(...)):
     question = payload.get("question", "").strip()
     history = payload.get("history", [])
 
-    if not doc_id or doc_id not in _rag_documents:
+    document_text = _load_doc(doc_id)
+    if document_text is None:
         return APIResponse(
             success=False,
             error={"code": "DOC_NOT_FOUND", "message": "ไม่พบเอกสาร กรุณาอัปโหลดใหม่"},
@@ -449,7 +461,6 @@ async def rag_query(payload: Dict[str, Any] = Body(...)):
             error={"code": "NO_QUESTION", "message": "กรุณาส่งคำถาม"},
         )
 
-    document_text = _rag_documents[doc_id]
 
     # Build conversation with document context
     system_prompt = f"""คุณเป็น AI ที่ช่วยตอบคำถามจากเอกสาร
