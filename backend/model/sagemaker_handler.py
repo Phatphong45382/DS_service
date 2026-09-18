@@ -26,9 +26,7 @@ def to_X(rows, art):
 
 def model_fn(model_dir):
     with open(os.path.join(model_dir, "model.pkl"), "rb") as f:
-        art = pickle.load(f)
-    art["explainer"] = None
-    return art
+        return pickle.load(f)
 
 
 def input_fn(body, content_type="application/json"):
@@ -41,14 +39,13 @@ def predict_fn(payload, art):
     pred = art["model"].predict(X)
     out = [{"prediction": float(p), "p10": float(p * (1 + art["q10"])), "p90": float(p * (1 + art["q90"]))} for p in pred]
     if explain:
-        import shap
-        if art["explainer"] is None:
-            art["explainer"] = shap.TreeExplainer(art["model"])
-        contributions = np.asarray(art["explainer"].shap_values(X))
-        base = float(np.ravel(art["explainer"].expected_value)[0])
+        # LightGBM computes TreeSHAP itself, to the same values shap.TreeExplainer returns, with
+        # the base value in the last column. Using it keeps shap - and numba, and a numpy ABI
+        # this container cannot satisfy - out of the image entirely.
+        contributions = np.asarray(art["model"].predict(X, pred_contrib=True))
         for o, row in zip(out, contributions):
-            o["explanations"] = {f: float(v) for f, v in zip(art["features"], row)}
-            o["base"] = base
+            o["explanations"] = {f: float(v) for f, v in zip(art["features"], row[:-1])}
+            o["base"] = float(row[-1])
     return {"predictions": out, "model_version": f"{art['model_name']} {art['version']}"}
 
 

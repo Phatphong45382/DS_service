@@ -16,10 +16,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
-import shap
 
 from ..config import settings
-from .train import FEATURES, to_X
+from .train import to_X
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ class LocalModel:
         self.q10, self.q90 = art["q10"], art["q90"]
         self.version = f"{art['model_name']} {art['version']}"
         self.metrics = art.get("metrics", {})  # holdout WAPE/bias measured at training time on unseen months
-        self.explainer = shap.TreeExplainer(self.model)
+        self.features = art["features"]
         logger.info("Loaded %s from %s", self.version, path)
 
     def predict(self, rows: list[dict], explain: bool = False) -> list[dict]:
@@ -41,11 +40,13 @@ class LocalModel:
         pred = self.model.predict(X)
         out = [{"prediction": float(p), "p10": float(p * (1 + self.q10)), "p90": float(p * (1 + self.q90))} for p in pred]
         if explain:
-            contributions = np.asarray(self.explainer.shap_values(X))
-            base = float(np.ravel(self.explainer.expected_value)[0])
+            # LightGBM's own TreeSHAP: the same values shap.TreeExplainer gives for this model,
+            # base value last. The endpoint handler uses the identical call, so the two paths
+            # cannot drift, and neither needs shap.
+            contributions = np.asarray(self.model.predict(X, pred_contrib=True))
             for o, row in zip(out, contributions):
-                o["explanations"] = {f: float(v) for f, v in zip(FEATURES, row)}
-                o["base"] = base
+                o["explanations"] = {f: float(v) for f, v in zip(self.features, row[:-1])}
+                o["base"] = float(row[-1])
         return out
 
 
