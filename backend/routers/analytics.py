@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException, Query
 from typing import List, Dict, Any, Optional
 import logging
 from datetime import datetime
+import pandas as pd
 
 from ..schemas.common import APIResponse
 from ..schemas.dashboard_v2 import (
@@ -16,7 +17,11 @@ from ..schemas.dashboard_v2 import (
     PerformanceRankingItem, 
     ScatterPoint, 
     ErrorDistBin,
-    TimeSeriesPoint
+    TimeSeriesPoint,
+    BoxStats,
+    CorrelationMatrix,
+    DecompositionPoint,
+    AnalysisResponse,
 )
 from ..config import settings
 
@@ -730,4 +735,84 @@ def get_deep_dive_analytics(
         )
     except Exception as e:
         logger.error(f"Deep dive error: {e}", exc_info=True)
+        return APIResponse(success=False, error={"code": "INTERNAL_ERROR", "message": str(e)})
+
+
+@router.get("/analysis", response_model=APIResponse[AnalysisResponse])
+def get_analysis(
+    year_from: Optional[int] = None,
+    month_from: Optional[int] = None,
+    year_to: Optional[int] = None,
+    month_to: Optional[int] = None,
+    customer: Optional[List[str]] = Query(None),
+    product_group: Optional[List[str]] = Query(None),
+    size: Optional[List[str]] = Query(None),
+    flavor: Optional[List[str]] = Query(None),
+    mechgroup: Optional[List[str]] = Query(None),
+    has_promotion: Optional[int] = None,
+):
+    """The Analysis tab: Promo vs Non-Promo spread, a correlation matrix and a trend decomposition.
+
+    Same filters as /summary. The decomposition is fitted on the whole history that matches the
+    non-date filters and returned for the selected months, so seasonality is averaged over every
+    year the dataset has rather than read off a single one.
+    """
+    try:
+        import numpy as np
+        from ..data.loader import load_frame
+
+        df = load_frame()
+        keep = pd.Series(True, index=df.index)
+        for col, wanted in (("Customer", customer), ("Product_Group", product_group), ("Size", size),
+                            ("Flavor", flavor), ("MechGroup", mechgroup)):
+            if wanted:
+                keep &= df[col].astype(str).str.strip().isin(wanted)
+        promo_flag = pd.to_numeric(df["has_promotion"], errors="coerce").fillna(0).astype(int)
+        if has_promotion is not None:
+            keep &= promo_flag == has_promotion
+        df = df[keep]
+        promo_flag = promo_flag[keep]
+
+        dates = pd.to_datetime(df["date"])
+        month_id = dates.dt.year * 100 + dates.dt.month
+        now = datetime.now()
+        year_to, month_to = (year_to, month_to) if year_to else (now.year, now.month)
+        year_from, month_from = (year_from, month_from) if year_from else (year_to - 2, month_to)
+        in_range = (month_id >= year_from * 100 + (month_from or 1)) & (month_id <= year_to * 100 + (month_to or 12))
+        window = df[in_range]
+
+        boxes = []
+        for name, flag in (("Non-Promo", 0), ("Promotion", 1)):
+            s = pd.to_numeric(window.loc[promo_flag[in_range] == flag, "Actual_sale"], errors="coerce").dropna()
+            q = s.quantile([0, 0.25, 0.5, 0.75, 1]).tolist() if len(s) else [0.0] * 5
+            boxes.append(BoxStats(name=name, count=int(len(s)), min=q[0], q1=q[1], median=q[2], q3=q[3], max=q[4]))
+
+        variables = {"Discount": "discount_pct", "Promo Days": "promotion_dt", "Actual": "Actual_sale"}
+        corr = window[list(variables.values())].apply(pd.to_numeric, errors="coerce").corr().fillna(0.0)
+        correlation = CorrelationMatrix(variables=list(variables), matrix=corr.values.tolist())
+
+        # ponytail: linear trend + calendar-month means is the textbook additive decomposition;
+        # swap in statsmodels STL if the demo ever needs a curved trend.
+        monthly = (pd.to_numeric(df["Actual_sale"], errors="coerce").fillna(0)
+                   .groupby([dates.dt.year, dates.dt.month]).sum().sort_index())
+        points = []
+        if len(monthly):
+            y = monthly.values.astype(float)
+            t = np.arange(len(y))
+            slope, intercept = np.polyfit(t, y, 1) if len(y) > 1 else (0.0, float(y[0]))
+            trend = intercept + slope * t
+            months = monthly.index.get_level_values(1)
+            seasonality = pd.Series(y - trend).groupby(months.values).transform("mean").values
+            residual = y - trend - seasonality
+            for i, (yr, mo) in enumerate(monthly.index):
+                if year_from * 100 + (month_from or 1) <= yr * 100 + mo <= year_to * 100 + (month_to or 12):
+                    points.append(DecompositionPoint(year=int(yr), month=int(mo), actual=float(y[i]), trend=float(trend[i]),
+                                                     seasonality=float(seasonality[i]), residual=float(residual[i])))
+
+        return APIResponse(success=True, data=AnalysisResponse(
+            promo_distribution=boxes, correlation=correlation, decomposition=points,
+            meta={"refreshed_at": now.isoformat(), "record_count": int(len(window)), "history_months": int(len(monthly))},
+        ))
+    except Exception as e:
+        logger.error(f"Analysis error: {e}", exc_info=True)
         return APIResponse(success=False, error={"code": "INTERNAL_ERROR", "message": str(e)})

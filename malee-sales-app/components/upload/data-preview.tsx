@@ -13,7 +13,7 @@ interface DataPreviewProps {
 export function DataPreview({ data, onConfirm, onCancel }: DataPreviewProps) {
     const [showErrors, setShowErrors] = useState(true);
 
-    // Simple validation logic (Mock)
+    // Validation from the parsed summary
     const validationResults = {
         valid: data.summary.emptyCells === 0,
         errors: data.summary.emptyCells > 0 ? [`Found ${data.summary.emptyCells} empty cells`] : [],

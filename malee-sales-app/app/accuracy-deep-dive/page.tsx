@@ -30,7 +30,7 @@ const item = {
 };
 
 export default function AccuracyDeepDivePage() {
-    // Mock State for Ranking Table Toggle
+    // Ranking table toggle
     const [rankingType, setRankingType] = useState<'under' | 'over'>('under');
 
     // Data State
@@ -41,6 +41,7 @@ export default function AccuracyDeepDivePage() {
     const [heatmapData, setHeatmapData] = useState<any>(null);
     const [rankingData, setRankingData] = useState<{ under: any[], over: any[] }>({ under: [], over: [] });
     const [kpiMeta, setKpiMeta] = useState<any>(null); // For refresher timestamp
+    const [howWeMiss, setHowWeMiss] = useState<{ scatter: any[]; errorDist: any[]; stability: any[] }>({ scatter: [], errorDist: [], stability: [] });
 
     // Set Active Page for Filter Context
     useEffect(() => {
@@ -101,6 +102,7 @@ export default function AccuracyDeepDivePage() {
                         over: data.ranking_over_plan || []
                     });
                     setKpiMeta(data.meta);
+                    setHowWeMiss({ scatter: data.scatter_data || [], errorDist: data.error_dist || [], stability: data.stability_trend || [] });
                 } else {
                     console.error("API Response Failed:", data);
                 }
@@ -173,16 +175,16 @@ export default function AccuracyDeepDivePage() {
                 {/* 4. How We Miss (Scatter & Distribution) */}
                 <motion.div variants={item} className="grid grid-cols-1 lg:grid-cols-2 gap-4 h-[400px]">
                     <div className="min-h-0 h-full">
-                        <BiasScatterPlot />
+                        <BiasScatterPlot data={howWeMiss.scatter} loading={loading} />
                     </div>
                     <div className="min-h-0 h-full">
-                        <ErrorDistribution />
+                        <ErrorDistribution data={howWeMiss.errorDist} loading={loading} />
                     </div>
                 </motion.div>
 
                 {/* 5. Stability & Pattern */}
                 <motion.div variants={item} className="h-[350px]">
-                    <StabilityTrend />
+                    <StabilityTrend data={howWeMiss.stability} loading={loading} />
                 </motion.div>
 
             </motion.div>
