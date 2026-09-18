@@ -17,7 +17,7 @@ Two things measured against account 272175291580 say otherwise.
 - The endpoint, its Model, its EndpointConfig and a small `*-models` bucket holding `model.tar.gz` are in **ap-southeast-1**; SageMaker will only read a model artifact from a bucket in the endpoint's own region. Everything else stays in Thailand.
 - A forecast request therefore leaves Thailand. It carries Product, month and Promotion attributes — no customer names, no personal data. The same is already true of the AI features: Claude on Bedrock is reachable in this account only through `global.` and `apac.` inference profiles, so no Thailand-only inference path exists today for either model.
 - `SAGEMAKER_REGION` is a single setting. When ap-southeast-7 gains Serverless Inference, point it back and re-run `scripts/aws_deploy.py endpoint`; nothing else changes.
-- If the residency of inference turns out to be a legal requirement rather than a preference, the choice is a real-time endpoint in Thailand with its continuous cost, and ADR-0001 should be revisited.
+- **Accepted by the account owner on 2026-09-18**: this is a demo, and reaching the model matters more than where it is computed. The question of legal residency is closed for this project. If the app is ever taken past a demo, the choice becomes a real-time endpoint in Thailand with its continuous cost, and ADR-0001 should be revisited then.
 
 ## Considered options
 
