@@ -5,50 +5,26 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { ResponsiveContainer, PieChart, Pie, Cell, Tooltip, Legend } from "recharts";
 
 interface AccuracyDeviationChartProps {
-    data?: any[];
+    /** The deep-dive KPI. Its volumes are summed per row by the backend. */
+    kpi?: { under_plan_volume?: number; over_plan_volume?: number } | null;
     loading?: boolean;
 }
 
-export function AccuracyDeviationChart({ data, loading }: AccuracyDeviationChartProps) {
-    // Pie Chart Data Calculation
+export function AccuracyDeviationChart({ kpi, loading }: AccuracyDeviationChartProps) {
     const pieData = useMemo(() => {
-        if (!data || data.length === 0) return [];
-
-        let overPlan = 0;
-        let underPlan = 0;
-
-        data.forEach(series => {
-            const isActual = series.label.includes('Actual');
-            // We need to match actual and planned data points
-            // Assuming data structure allows easy matching or we process it like in TrendChart
-        });
-
-        // Better approach: Reuse the logic from TrendChart to get clean data points first
-        const map = new Map<string, any>();
-        data.forEach(series => {
-            const isActual = series.label.includes('Actual');
-            series.data.forEach((pt: any) => {
-                const key = `${pt.year}-${pt.month}`;
-                if (!map.has(key)) {
-                    map.set(key, { actual: 0, planned: 0 });
-                }
-                const entry = map.get(key);
-                if (isActual) entry.actual = pt.qty;
-                else entry.planned = pt.qty;
-            });
-        });
-
-        const items = Array.from(map.values());
-        overPlan = items.reduce((acc, item) => acc + (item.actual > item.planned ? item.actual - item.planned : 0), 0);
-        underPlan = items.reduce((acc, item) => acc + (item.planned > item.actual ? item.planned - item.actual : 0), 0);
-
-        const total = overPlan + underPlan;
+        // These come straight from the backend, which sums them row by row. Deriving them here
+        // from the monthly trend series netted a month's shortfalls against its excesses, so a
+        // dataset that outsells its plan every month showed Under Plan 0% (issue #12).
+        const underPlan = kpi?.under_plan_volume ?? 0;
+        const overPlan = kpi?.over_plan_volume ?? 0;
+        const total = underPlan + overPlan;
+        if (total <= 0) return [];
 
         return [
-            { name: 'Under Plan', value: underPlan, color: '#3B82F6', percentage: total > 0 ? (underPlan / total) * 100 : 0 },
-            { name: 'Over Plan', value: overPlan, color: '#F97316', percentage: total > 0 ? (overPlan / total) * 100 : 0 },
+            { name: 'Under Plan', value: underPlan, color: '#3B82F6', percentage: (underPlan / total) * 100 },
+            { name: 'Over Plan', value: overPlan, color: '#F97316', percentage: (overPlan / total) * 100 },
         ];
-    }, [data]);
+    }, [kpi]);
 
     if (loading) {
         return (

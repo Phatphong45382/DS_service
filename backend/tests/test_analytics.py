@@ -70,6 +70,29 @@ def test_deep_dive_measures_plan_accuracy(client):
     assert data["scatter_data"] and sum(b["count"] for b in data["error_dist"]) > 0
 
 
+def test_under_and_over_plan_volumes_mean_what_the_rankings_mean(client, df):
+    """Under Plan is the Plan falling short of Actual, everywhere it is named.
+
+    The rankings, the Bias card and these volumes were three different opinions: a card could read
+    Under Plan 2.9 % beside a ranking whose every row meant the opposite thing (issue #12).
+    """
+    rows = df[(df["date"] >= "2025-01-01") & (df["date"] <= "2025-12-31")]
+    gap = rows["Actual_sale"] - rows["Planed_sales_from_start"]
+    expected_under = float(gap[gap > 0].sum())     # Plan below Actual: a shortfall against demand
+    expected_over = float(-gap[gap < 0].sum())     # Plan above Actual: excess planned
+
+    for endpoint in ("deep-dive", "summary"):
+        kpi = ok(client.get(f"{API}/{endpoint}", params=YEAR_2025))["kpi"]
+        assert kpi["under_plan_volume"] == pytest.approx(expected_under, rel=1e-6), endpoint
+        assert kpi["over_plan_volume"] == pytest.approx(expected_over, rel=1e-6), endpoint
+
+    data = ok(client.get(f"{API}/deep-dive", params=YEAR_2025))
+    kpi = data["kpi"]
+    # every ranked under-plan row is a shortfall, so the shortfall volume cannot be the smaller one
+    assert all(item["actual"] > item["planned"] for item in data["ranking_under_plan"])
+    assert kpi["bias"] > 0 and kpi["under_plan_volume"] > kpi["over_plan_volume"]
+
+
 def test_deep_dive_promotion_filter_keeps_only_promotion_rows(client):
     data = ok(client.get(f"{API}/deep-dive", params={**YEAR_2025, "has_promotion": 1}))
     assert all(p["is_promo"] for p in data["scatter_data"])
