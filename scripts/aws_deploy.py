@@ -82,7 +82,8 @@ def artifact() -> bytes:
 
 
 def upload_data():
-    for local, key in [(ROOT / "data" / "sales.parquet", settings.S3_DATA_KEY)]:
+    for local, key in [(ROOT / "data" / "sales.parquet", settings.S3_DATA_KEY),
+                       (ROOT / "data" / "catalog.json", "data/catalog.json")]:
         if not local.exists():
             sys.exit(f"missing {local}: run python -m backend.data.generator first")
         s3.put_object(Bucket=BUCKET, Key=key, Body=local.read_bytes())
