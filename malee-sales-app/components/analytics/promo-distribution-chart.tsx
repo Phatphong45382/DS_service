@@ -6,6 +6,7 @@ import type { BoxStats } from '@/lib/api-client';
 
 interface PromoDistributionChartProps {
     data?: BoxStats[] | null;
+    error?: string | null;
     showInterpret?: boolean;
 }
 
@@ -111,7 +112,7 @@ function insightsFor(nonPromo: BoxStats, promo: BoxStats) {
     ];
 }
 
-export function PromoDistributionChart({ data, showInterpret }: PromoDistributionChartProps) {
+export function PromoDistributionChart({ data, error, showInterpret }: PromoDistributionChartProps) {
     const nonPromo = data?.find(b => b.name === 'Non-Promo');
     const promo = data?.find(b => b.name === 'Promotion');
     const ready = nonPromo && promo && nonPromo.count + promo.count > 0;
@@ -140,8 +141,8 @@ export function PromoDistributionChart({ data, showInterpret }: PromoDistributio
             </CardHeader>
             <CardContent className="flex-1 pt-0 pb-0 flex flex-col">
                 {!ready ? (
-                    <div className="h-[240px] flex items-center justify-center text-sm text-slate-400">
-                        {data ? 'No rows match the current filters' : 'Loading…'}
+                    <div className={`h-[240px] flex items-center justify-center text-sm text-center px-6 ${error ? 'text-red-500' : 'text-slate-400'}`}>
+                        {error ?? (data ? 'No rows match the current filters' : 'Loading…')}
                     </div>
                 ) : (
                     <div className="h-[240px] flex">

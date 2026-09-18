@@ -5,6 +5,7 @@ import { InterpretPanel } from './interpret-panel';
 
 interface CorrelationHeatmapProps {
     data?: { variables: string[]; matrix: number[][] } | null;
+    error?: string | null;
     showInterpret?: boolean;
 }
 
@@ -52,7 +53,7 @@ function insightsFor(variables: string[], matrix: number[][]) {
     return lines;
 }
 
-export function CorrelationHeatmap({ data, showInterpret }: CorrelationHeatmapProps) {
+export function CorrelationHeatmap({ data, error, showInterpret }: CorrelationHeatmapProps) {
     const variables = data?.variables ?? [];
     const matrix = data?.matrix ?? [];
     const ready = variables.length > 0 && matrix.length === variables.length;
@@ -69,8 +70,8 @@ export function CorrelationHeatmap({ data, showInterpret }: CorrelationHeatmapPr
             </CardHeader>
             <CardContent className="flex-1 pt-0 pb-0 px-0 flex flex-col">
                 {!ready ? (
-                    <div className="h-[200px] flex items-center justify-center text-sm text-slate-400">
-                        {data ? 'No rows match the current filters' : 'Loading…'}
+                    <div className={`h-[200px] flex items-center justify-center text-sm text-center px-6 ${error ? 'text-red-500' : 'text-slate-400'}`}>
+                        {error ?? (data ? 'No rows match the current filters' : 'Loading…')}
                     </div>
                 ) : (
                     <div className="flex flex-col px-4 pt-0 pb-4 min-w-0">

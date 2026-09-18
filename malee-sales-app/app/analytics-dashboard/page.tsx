@@ -44,16 +44,19 @@ export default function AnalyticsDashboardPage() {
     const [activeTab, setActiveTab] = useState("overview");
     const [showInterpret, setShowInterpret] = useState(false);
     const [analysis, setAnalysis] = useState<AnalysisData | null>(null);
+    const [analysisError, setAnalysisError] = useState<string | null>(null);
 
     // Analysis tab: one request feeds the box plot, the correlation matrix and the decomposition
     useEffect(() => {
         if (!filters) return;
         setAnalysis(null);
+        setAnalysisError(null);
         const timer = setTimeout(async () => {
             try {
                 setAnalysis(await getAnalysisData(getQueryParams(filters)));
             } catch (error) {
                 console.error("Failed to fetch analysis data", error);
+                setAnalysisError(`Could not load from the API (${error instanceof Error ? error.message : String(error)}). Reload to retry.`);
             }
         }, 300);
         return () => clearTimeout(timer);
@@ -328,16 +331,16 @@ export default function AnalyticsDashboardPage() {
                     {/* Row 1: Sales Distribution + Correlation Matrix */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                         <div className="h-full">
-                            <PromoDistributionChart data={analysis?.promo_distribution} showInterpret={showInterpret} />
+                            <PromoDistributionChart data={analysis?.promo_distribution} error={analysisError} showInterpret={showInterpret} />
                         </div>
                         <div className="h-full">
-                            <CorrelationHeatmap data={analysis?.correlation} showInterpret={showInterpret} />
+                            <CorrelationHeatmap data={analysis?.correlation} error={analysisError} showInterpret={showInterpret} />
                         </div>
                     </div>
 
                     {/* Row 2: Trend Decomposition */}
                     <div className="min-h-[320px]">
-                        <TrendDecompositionChart data={analysis?.decomposition} historyMonths={analysis?.meta.history_months} showInterpret={showInterpret} />
+                        <TrendDecompositionChart data={analysis?.decomposition} historyMonths={analysis?.meta.history_months} error={analysisError} showInterpret={showInterpret} />
                     </div>
 
                     {/* Row 3: Seasonal Heatmap */}
