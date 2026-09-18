@@ -816,3 +816,32 @@ def get_analysis(
     except Exception as e:
         logger.error(f"Analysis error: {e}", exc_info=True)
         return APIResponse(success=False, error={"code": "INTERNAL_ERROR", "message": str(e)})
+
+
+@router.get("/sample", response_model=APIResponse[Dict[str, Any]])
+def get_dataset_sample(limit: int = Query(5, ge=1, le=50)):
+    """The built-in dataset's first rows, so New Prediction previews it the way it previews a file."""
+    try:
+        import json
+
+        from ..data.loader import load_frame
+
+        df = load_frame()
+        head = df.head(limit).copy()
+        for c in head.columns:
+            if pd.api.types.is_datetime64_any_dtype(head[c]):
+                head[c] = head[c].dt.strftime("%Y-%m-%d")
+        months = pd.to_datetime(df["date"]).dt.to_period("M")
+        return APIResponse(success=True, data={
+            "headers": [str(c) for c in df.columns],
+            "rows": json.loads(head.to_json(orient="records")),
+            "summary": {
+                "rowCount": int(len(df)),
+                "colCount": int(df.shape[1]),
+                "emptyCells": int(df.isna().sum().sum()),
+            },
+            "months": {"from": str(months.min()), "to": str(months.max()), "count": int(months.nunique())},
+        })
+    except Exception as e:
+        logger.error(f"Dataset sample error: {e}", exc_info=True)
+        return APIResponse(success=False, error={"code": "INTERNAL_ERROR", "message": str(e)})

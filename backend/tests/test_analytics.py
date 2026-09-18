@@ -158,3 +158,11 @@ def test_analysis_filters_follow_summary(client):
     assert boxes["Non-Promo"]["count"] == 0 and boxes["Promotion"]["count"] > 0
     empty = ok(client.get(f"{API}/analysis", params={**YEAR_2025, "customer": "Nobody"}))
     assert empty["decomposition"] == [] and empty["meta"]["record_count"] == 0
+
+
+def test_sample_previews_the_built_in_dataset(client, df):
+    data = ok(client.get(f"{API}/sample", params={"limit": 3}))
+    assert data["headers"] == list(df.columns)
+    assert len(data["rows"]) == 3 and data["rows"][0]["Customer"] == df.iloc[0]["Customer"]
+    assert data["summary"] == {"rowCount": len(df), "colCount": df.shape[1], "emptyCells": 0}
+    assert data["months"]["to"] == "2026-08" and data["months"]["count"] > 12
