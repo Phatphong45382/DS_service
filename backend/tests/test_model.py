@@ -78,3 +78,10 @@ def test_compare_endpoint_returns_baseline_scenario_delta_and_explanations(clien
     assert data["delta"] == pytest.approx(data["scenario"] - data["baseline"], abs=0.02)
     assert data["delta_pct"] > 0
     assert data["explanations"] and all(isinstance(v, float) for v in data["explanations"].values())
+
+
+def test_local_model_serves_the_booster_not_the_sklearn_wrapper(client, model_dir):
+    """The wrapper's predict() needs scikit-learn, which production does not install (Render 500 on every Run)."""
+    import lightgbm as lgb
+    from backend.model.service import LocalModel
+    assert isinstance(LocalModel(model_dir).model, lgb.Booster)

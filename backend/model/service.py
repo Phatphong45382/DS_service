@@ -27,7 +27,9 @@ class LocalModel:
     def __init__(self, path: str | Path):
         with open(Path(path) / "model.pkl", "rb") as f:
             art = pickle.load(f)
-        self.model = art["model"]
+        # The artifact pickles the sklearn wrapper, whose predict() needs scikit-learn at runtime;
+        # the Booster inside gives the same predictions and pred_contrib with lightgbm alone.
+        self.model = art["model"].booster_ if hasattr(art["model"], "booster_") else art["model"]
         self.categories = art["categories"]
         self.q10, self.q90 = art["q10"], art["q90"]
         self.version = f"{art['model_name']} {art['version']}"
