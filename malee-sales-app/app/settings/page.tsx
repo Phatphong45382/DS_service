@@ -4,8 +4,17 @@ import { MainLayout } from "@/components/layout/main-layout";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { User, Bell, Moon, Shield, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { clearToken } from "@/lib/auth";
 
 export default function SettingsPage() {
+    const router = useRouter();
+    // Drop the session cookie and go to the login page. With no DEMO_PASSWORD on the backend the
+    // login page waves you straight back in, which is the honest behaviour for an open demo.
+    const logOut = () => {
+        clearToken();
+        router.push("/login");
+    };
     return (
         <MainLayout title="Settings" description="Manage your account and preferences">
             <div className="space-y-6">
@@ -32,7 +41,7 @@ export default function SettingsPage() {
                             ))}
                         </nav>
                         <div className="mt-4 pt-4 border-t border-slate-200">
-                            <button className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
+                            <button onClick={logOut} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
                                 <LogOut className="w-5 h-5" />
                                 Log out
                             </button>

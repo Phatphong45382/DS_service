@@ -170,6 +170,22 @@ def test_ai_tier_picker_shows_the_tier_the_api_says_is_current(page, api):
     expect(page.get_by_text(current, exact=True).first).to_be_visible()
 
 
-def test_settings_opens(page):
+def test_settings_opens_and_log_out_ends_the_session(page):
     page.goto(f"{WEB}/settings")
     expect(page.get_by_text("Manage your account and preferences")).to_be_visible()
+    page.get_by_role("button", name="Log out").click()
+    page.wait_for_url(re.compile(r"/login"))
+    # the cookie is gone, so a protected page now redirects instead of rendering
+    page.goto(f"{WEB}/runs")
+    page.wait_for_url(re.compile(r"/login\?next=%2Fruns"))
+
+
+def test_top_bar_keeps_its_controls_clear_of_the_subtitle(page):
+    """Deep Dive has the widest toolbar; its subtitle must truncate rather than run under it."""
+    page.goto(f"{WEB}/accuracy-deep-dive")
+    subtitle = page.get_by_title("WAPE, Bias and error distribution of the Plan", exact=False).first
+    expect(subtitle).to_be_visible()
+    sub = subtitle.bounding_box()
+    control = page.get_by_text("All Products").first.bounding_box()
+    assert sub and control
+    assert sub["x"] + sub["width"] <= control["x"], "subtitle overlaps the first toolbar control"
