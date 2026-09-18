@@ -468,12 +468,12 @@ export default function HomePage() {
               ))}
             </div>
 
-            {/* ── Footer: Dataiku integration ── */}
+            {/* ── Footer: AWS integration ── */}
             <div className="pt-3 border-t border-blue-700/50">
               <p className="text-blue-300/70 text-[11px]">
                 Forecast models run natively on{" "}
-                <span className="text-white font-semibold">Dataiku DSS</span>
-                {" "}— fully integrated for automated retraining, versioning, and one-click deployment.
+                <span className="text-white font-semibold">Amazon SageMaker + Bedrock</span>
+                {" "}— served on demand, with an explanation for every prediction.
               </p>
             </div>
           </div>
@@ -502,7 +502,7 @@ export default function HomePage() {
 
         {/* ── FOOTER ── */}
         <footer className="text-center text-xs text-slate-400 pt-4 border-t border-slate-200">
-          Demand Planning System · LightGBM + Prophet · Dataiku DSS · Built with Next.js
+          Demand Planning System · LightGBM · Amazon SageMaker + Bedrock · Built with Next.js
         </footer>
 
       </div>

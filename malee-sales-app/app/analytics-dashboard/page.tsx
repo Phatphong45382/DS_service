@@ -255,7 +255,7 @@ export default function AnalyticsDashboardPage() {
                             <HorizontalKPICard
                                 icon={Activity}
                                 name="Discount AVG"
-                                value={`${((kpi.avg_discount_pct || 0) * 100).toFixed(1)}%`}
+                                value={`${(kpi.avg_discount_pct || 0).toFixed(1)}%`}
                                 change={`${(kpi.avg_discount_pct_change || 0) > 0 ? '+' : ''}${(kpi.avg_discount_pct_change || 0).toFixed(1)}%`}
                                 isPositive={(kpi.avg_discount_pct_change || 0) >= 0}
                                 iconBgColor="bg-green-600"

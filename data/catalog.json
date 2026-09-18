@@ -1,0 +1,175 @@
+{
+  "products": [
+    {
+      "product_group": "Chips",
+      "flavor": "BBQ",
+      "size": "30g"
+    },
+    {
+      "product_group": "Chips",
+      "flavor": "BBQ",
+      "size": "75g"
+    },
+    {
+      "product_group": "Chips",
+      "flavor": "Original",
+      "size": "30g"
+    },
+    {
+      "product_group": "Chips",
+      "flavor": "Original",
+      "size": "75g"
+    },
+    {
+      "product_group": "Chips",
+      "flavor": "Sour Cream",
+      "size": "30g"
+    },
+    {
+      "product_group": "Chips",
+      "flavor": "Sour Cream",
+      "size": "75g"
+    },
+    {
+      "product_group": "Chips",
+      "flavor": "Hot Spicy",
+      "size": "30g"
+    },
+    {
+      "product_group": "Chips",
+      "flavor": "Hot Spicy",
+      "size": "75g"
+    },
+    {
+      "product_group": "Crackers",
+      "flavor": "Seaweed",
+      "size": "50g"
+    },
+    {
+      "product_group": "Crackers",
+      "flavor": "Seaweed",
+      "size": "150g"
+    },
+    {
+      "product_group": "Crackers",
+      "flavor": "Cheese",
+      "size": "50g"
+    },
+    {
+      "product_group": "Crackers",
+      "flavor": "Cheese",
+      "size": "150g"
+    },
+    {
+      "product_group": "Crackers",
+      "flavor": "Wasabi",
+      "size": "50g"
+    },
+    {
+      "product_group": "Crackers",
+      "flavor": "Wasabi",
+      "size": "150g"
+    },
+    {
+      "product_group": "Crackers",
+      "flavor": "Tom Yum",
+      "size": "50g"
+    },
+    {
+      "product_group": "Crackers",
+      "flavor": "Tom Yum",
+      "size": "150g"
+    },
+    {
+      "product_group": "Rice Crackers",
+      "flavor": "Salted Egg",
+      "size": "20g"
+    },
+    {
+      "product_group": "Rice Crackers",
+      "flavor": "Salted Egg",
+      "size": "75g"
+    },
+    {
+      "product_group": "Rice Crackers",
+      "flavor": "Truffle",
+      "size": "20g"
+    },
+    {
+      "product_group": "Rice Crackers",
+      "flavor": "Truffle",
+      "size": "75g"
+    },
+    {
+      "product_group": "Rice Crackers",
+      "flavor": "Honey Butter",
+      "size": "20g"
+    },
+    {
+      "product_group": "Rice Crackers",
+      "flavor": "Honey Butter",
+      "size": "75g"
+    },
+    {
+      "product_group": "Rice Crackers",
+      "flavor": "Teriyaki",
+      "size": "20g"
+    },
+    {
+      "product_group": "Rice Crackers",
+      "flavor": "Teriyaki",
+      "size": "75g"
+    }
+  ],
+  "customers": [
+    "FreshMart",
+    "MegaStore",
+    "ValuePlus",
+    "CityGrocery",
+    "RetailCo"
+  ],
+  "sites": [
+    {
+      "site": "DC Central 1",
+      "customer": "FreshMart"
+    },
+    {
+      "site": "DC Central 2",
+      "customer": "FreshMart"
+    },
+    {
+      "site": "DC East 1",
+      "customer": "MegaStore"
+    },
+    {
+      "site": "DC North 1",
+      "customer": "MegaStore"
+    },
+    {
+      "site": "DC South 1",
+      "customer": "ValuePlus"
+    },
+    {
+      "site": "DC South 2",
+      "customer": "ValuePlus"
+    },
+    {
+      "site": "DC Central 3",
+      "customer": "CityGrocery"
+    },
+    {
+      "site": "DC West 1",
+      "customer": "CityGrocery"
+    },
+    {
+      "site": "DC North-East 1",
+      "customer": "RetailCo"
+    }
+  ],
+  "mechanics": [
+    "No Promotion",
+    "Weekly Deal",
+    "B2B Program",
+    "Loyalty Points"
+  ]
+}

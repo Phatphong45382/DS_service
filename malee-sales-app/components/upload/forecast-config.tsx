@@ -115,7 +115,7 @@ export function ForecastConfig({ onRun, isLoading, uploadResult, demoMode = fals
                                 <span className="font-semibold text-slate-900">Time Series Model</span>
                                 {config.model === 'ensemble' && <Check className="w-4 h-4 text-indigo-600" />}
                             </div>
-                            <p className="text-xs text-slate-500">Baseline model used for testing Dataiku integration (read & plot graphs).</p>
+                            <p className="text-xs text-slate-500">Baseline model for a quick first forecast.</p>
                         </div>
                         <div
                             onClick={() => !isLoading && setConfig({ ...config, model: 'xgboost' })}

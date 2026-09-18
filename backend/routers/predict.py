@@ -1,12 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Dict, Any, Optional
-import requests
+from typing import Dict, Any
 import logging
 
 from ..schemas.common import APIResponse
-from ..services.data_masking import masker
-from ..config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -35,77 +32,37 @@ class CompareRequest(BaseModel):
     promo_type: str = "None"
 
 
-def _build_dataiku_payload(
-    product_group: str,
-    flavor: str,
-    size: str,
-    year: int,
-    month: int,
-    promo_flag: int,
-    promo_days_in_month: int,
-    promo_discount_pct_ratio: float,
-    promo_type: str,
-) -> dict:
-    month_id = (year - 2021) * 12 + (month - 1) + 1
+def _features(product_group, flavor, size, year, month, promo_flag, promo_days_in_month, promo_discount_pct, promo_type) -> dict:
     return {
-        "features": {
-            "product_group": product_group,
-            "flavor": flavor,
-            "size": size,
-            "year": year,
-            "month": month,
-            "month_id": month_id,
-            "promo_flag": promo_flag,
-            "promo_days_in_month": promo_days_in_month,
-            "promo_discount_pct": promo_discount_pct_ratio,
-            "promo_type": promo_type,
-        },
-        "explanations": {
-            "enabled": True,
-            "method": "ICE",
-            "nExplanations": 5,
-        },
+        "product_group": product_group,
+        "flavor": flavor,
+        "size": size,
+        "year": year,
+        "month": month,
+        "month_id": (year - 2021) * 12 + month,
+        "promo_flag": promo_flag,
+        "promo_days_in_month": promo_days_in_month,
+        "promo_discount_pct": promo_discount_pct,  # 0-100, the Discount scale in CONTEXT.md and the dataset
+        "promo_type": promo_type,
     }
 
 
-def _call_dataiku(payload: dict) -> dict:
-    try:
-        resp = requests.post(
-            settings.DATAIKU_PREDICT_URL,
-            json=payload,
-            timeout=30,
-        )
-        resp.raise_for_status()
-        data = resp.json()
-        return data.get("result", data)
-    except requests.exceptions.Timeout:
-        raise HTTPException(status_code=504, detail="Dataiku prediction API timeout")
-    except requests.exceptions.ConnectionError:
-        raise HTTPException(status_code=502, detail="Cannot connect to Dataiku prediction API")
-    except Exception as e:
-        logger.error(f"Dataiku predict error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+def _predict(features: dict) -> dict:
+    """Returns {"prediction": float, "explanations": {feature: contribution}}.
+
+    Filled in by the forecast-model ticket; until then the Planner gets a clear 503.
+    """
+    raise HTTPException(status_code=503, detail="Model backend not configured")
 
 
 @router.post("/single", response_model=APIResponse[Dict[str, Any]])
 async def predict_single(req: PredictRequest):
     """Single prediction with explanations."""
     try:
-        # Unmask: frontend sends masked names, Dataiku needs real names
-        real_pg = masker.unmask("product_group", req.product_group)
-        real_fl = masker.unmask("flavor", req.flavor)
-        payload = _build_dataiku_payload(
-            product_group=real_pg,
-            flavor=real_fl,
-            size=req.size,
-            year=req.year,
-            month=req.month,
-            promo_flag=req.promo_flag,
-            promo_days_in_month=req.promo_days_in_month,
-            promo_discount_pct_ratio=req.promo_discount_pct / 100,
-            promo_type=req.promo_type,
-        )
-        result = _call_dataiku(payload)
+        result = _predict(_features(
+            req.product_group, req.flavor, req.size, req.year, req.month,
+            req.promo_flag, req.promo_days_in_month, req.promo_discount_pct, req.promo_type,
+        ))
         return APIResponse(success=True, data=result)
     except HTTPException:
         raise
@@ -116,45 +73,17 @@ async def predict_single(req: PredictRequest):
 
 @router.post("/compare", response_model=APIResponse[Dict[str, Any]])
 async def predict_compare(req: CompareRequest):
-    """Compare baseline (no promo) vs scenario (with promo). Returns both predictions + delta."""
+    """Compare baseline (no Promotion) vs scenario (with Promotion). Returns both predictions + delta."""
     try:
-        # Unmask: frontend sends masked names, Dataiku needs real names
-        real_pg = masker.unmask("product_group", req.product_group)
-        real_fl = masker.unmask("flavor", req.flavor)
-
-        # Baseline: no promo
-        baseline_payload = _build_dataiku_payload(
-            product_group=real_pg,
-            flavor=real_fl,
-            size=req.size,
-            year=req.year,
-            month=req.month,
-            promo_flag=0,
-            promo_days_in_month=0,
-            promo_discount_pct_ratio=0,
-            promo_type="None",
-        )
-        baseline_result = _call_dataiku(baseline_payload)
-        baseline_pred = baseline_result.get("prediction", 0)
-
-        # Scenario: with promo
-        scenario_payload = _build_dataiku_payload(
-            product_group=real_pg,
-            flavor=real_fl,
-            size=req.size,
-            year=req.year,
-            month=req.month,
-            promo_flag=1,
-            promo_days_in_month=req.promo_days_in_month,
-            promo_discount_pct_ratio=req.promo_discount_pct / 100,
-            promo_type=req.promo_type,
-        )
-        scenario_result = _call_dataiku(scenario_payload)
-        scenario_pred = scenario_result.get("prediction", 0)
-
+        baseline = _predict(_features(req.product_group, req.flavor, req.size, req.year, req.month, 0, 0, 0, "None"))
+        scenario = _predict(_features(
+            req.product_group, req.flavor, req.size, req.year, req.month,
+            1, req.promo_days_in_month, req.promo_discount_pct, req.promo_type,
+        ))
+        baseline_pred = baseline.get("prediction", 0)
+        scenario_pred = scenario.get("prediction", 0)
         delta = scenario_pred - baseline_pred
         delta_pct = (delta / baseline_pred * 100) if baseline_pred > 0 else 0
-
         return APIResponse(
             success=True,
             data={
@@ -162,7 +91,7 @@ async def predict_compare(req: CompareRequest):
                 "scenario": round(scenario_pred, 2),
                 "delta": round(delta, 2),
                 "delta_pct": round(delta_pct, 2),
-                "explanations": scenario_result.get("explanations", {}),
+                "explanations": scenario.get("explanations", {}),
             },
         )
     except HTTPException:

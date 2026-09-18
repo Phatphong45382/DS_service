@@ -1,16 +1,8 @@
 /**
- * API Client for Dataiku Backend Integration
- * 
- * This module provides functions to interact with the FastAPI backend
- * that connects to Dataiku DSS.
+ * API client for the FastAPI backend.
  */
 
-import {
-    DataikuUploadResponse,
-    DataikuHealthResponse,
-    DataikuListFilesResponse,
-    DataikuError
-} from './types/dataiku';
+import { UploadResponse, HealthResponse } from './types/api';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8080';
 const API_URL = `${API_BASE_URL}/api/v1`;
@@ -33,9 +25,9 @@ interface ApiResponse<T> {
 }
 
 /**
- * Custom error class for Dataiku API errors
+ * Error raised for any backend API failure
  */
-export class DataikuAPIError extends Error {
+export class ApiError extends Error {
     constructor(
         message: string,
         public statusCode?: number,
@@ -43,7 +35,7 @@ export class DataikuAPIError extends Error {
         public code?: string
     ) {
         super(message);
-        this.name = 'DataikuAPIError';
+        this.name = 'ApiError';
     }
 }
 
@@ -66,7 +58,7 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
             let errorCode = undefined;
             try {
                 const errorData = await response.json();
-                // Dataiku/FastAPI error structure often has { error: { message: "..." } } or { detail: "..." }
+                // FastAPI error structure has { error: { message: "..." } } or { detail: "..." }
                 errorMsg = errorData.error?.message ||
                     (typeof errorData.detail === 'string' ? errorData.detail : JSON.stringify(errorData.detail)) ||
                     errorMsg;
@@ -76,14 +68,14 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
                 // Not JSON or parsing failed
                 console.error("API Error (Non-JSON):", response.statusText);
             }
-            throw new DataikuAPIError(errorMsg, response.status, undefined, errorCode);
+            throw new ApiError(errorMsg, response.status, undefined, errorCode);
         }
 
         const result: ApiResponse<T> = await response.json();
 
         if (!result.success) {
             console.error("API Logic Error:", result.error);
-            throw new DataikuAPIError(
+            throw new ApiError(
                 result.error?.message || 'API request failed',
                 response.status,
                 undefined,
@@ -94,18 +86,18 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
         return result.data as T;
     } catch (error) {
         console.error("fetchAPI Exception:", error);
-        if (error instanceof DataikuAPIError) throw error;
+        if (error instanceof ApiError) throw error;
 
         // Network error
         if (error instanceof TypeError && error.message.includes('fetch')) {
-            throw new DataikuAPIError(
+            throw new ApiError(
                 '⚠️ Cannot connect to the backend',
                 undefined,
                 `Check that the FastAPI server is running at ${API_BASE_URL}`
             );
         }
 
-        throw new DataikuAPIError(
+        throw new ApiError(
             error instanceof Error ? error.message : String(error)
         );
     }
@@ -114,22 +106,22 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
 /**
  * Check if the FastAPI backend is healthy
  */
-export async function checkBackendHealth(): Promise<DataikuHealthResponse> {
-    return fetchAPI<DataikuHealthResponse>('/health');
+export async function checkBackendHealth(): Promise<HealthResponse> {
+    return fetchAPI<HealthResponse>('/health');
 }
 
 /**
  * Upload a CSV file to the scoring input folder
  */
-export async function uploadFileToDataiku(file: File): Promise<DataikuUploadResponse> {
+export async function uploadForecastInput(file: File): Promise<UploadResponse> {
     if (!file.name.toLowerCase().endsWith('.csv')) {
-        throw new DataikuAPIError('Only CSV files are supported');
+        throw new ApiError('Only CSV files are supported');
     }
 
     const formData = new FormData();
     formData.append('file', file);
 
-    return fetchAPI<DataikuUploadResponse>('/scoring/upload', {
+    return fetchAPI<UploadResponse>('/scoring/upload', {
         method: 'POST',
         body: formData,
     });
@@ -159,7 +151,7 @@ export async function getJobStatus(jobId: string, scenarioId: string = 'TEST'): 
 }
 
 /**
- * Get aggregated dashboard data from Dataiku dataset
+ * Get aggregated dashboard data from the sales dataset
  */
 export async function getDashboardData(params: Record<string, any> = {}): Promise<any[]> {
     const queryParams = new URLSearchParams();
@@ -180,7 +172,7 @@ export async function getDashboardData(params: Record<string, any> = {}): Promis
 }
 
 /**
- * Get unique filter values from Dataiku dataset
+ * Get unique filter values from the sales dataset
  */
 export async function getDashboardFilters(params: Record<string, any> = {}): Promise<any> {
     const queryParams = new URLSearchParams();
@@ -279,7 +271,7 @@ export function downloadForecastResultFile(filename?: string): void {
 // ──────────────────────────────────────────
 
 /**
- * Generate AI insights from KPI data via Gemini
+ * Generate AI insights from KPI data via the AI service
  */
 export async function getAIInsights(payload: {
     kpi: any;
@@ -327,7 +319,7 @@ export async function generateReport(payload: {
 }
 
 /**
- * OCR a Purchase Order image using Gemini Vision
+ * OCR a Purchase Order image using the AI service
  */
 export async function ocrPurchaseOrder(
     file: File,
@@ -362,12 +354,12 @@ export async function ocrPurchaseOrder(
             const errorData = await response.json();
             errorMsg = errorData.error?.message || errorMsg;
         } catch (_) {}
-        throw new DataikuAPIError(errorMsg, response.status);
+        throw new ApiError(errorMsg, response.status);
     }
 
     const result: ApiResponse<any> = await response.json();
     if (!result.success) {
-        throw new DataikuAPIError(
+        throw new ApiError(
             result.error?.message || 'OCR failed',
             undefined,
             undefined,
@@ -483,12 +475,12 @@ export async function ragUploadDocument(file: File): Promise<{
             const errorData = await response.json();
             errorMsg = errorData.error?.message || errorMsg;
         } catch (_) {}
-        throw new DataikuAPIError(errorMsg, response.status);
+        throw new ApiError(errorMsg, response.status);
     }
 
     const result: ApiResponse<any> = await response.json();
     if (!result.success) {
-        throw new DataikuAPIError(
+        throw new ApiError(
             result.error?.message || 'Upload failed',
             undefined,
             undefined,
@@ -514,11 +506,11 @@ export async function ragQuery(payload: {
 }
 
 // ──────────────────────────────────────────
-// Prediction Endpoints (Dataiku ML Model)
+// Prediction Endpoints (forecast model)
 // ──────────────────────────────────────────
 
 /**
- * Compare baseline (no promo) vs scenario (with promo) using Dataiku ML model
+ * Compare baseline (no promo) vs scenario (with promo) using the forecast model
  */
 export async function predictCompare(features: {
     product_group: string;
@@ -541,22 +533,5 @@ export async function predictCompare(features: {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(features),
     });
-}
-
-// Keep old functions for compatibility if needed, but update their implementations
-export async function listDataikuFiles(): Promise<DataikuListFilesResponse> {
-    // For now, return empty or implement a general list endpoint
-    return { status: 'ok', count: 0, files: [] };
-}
-
-export async function uploadAndTriggerScenario(file: File, scenarioId: string = 'TEST'): Promise<any> {
-    const upload = await uploadFileToDataiku(file);
-    const run = await runForecast(scenarioId);
-    return { ...upload, ...run };
-}
-
-export async function readCsvFromDataiku(filename: string): Promise<any> {
-    // This could be mapped to a specific folder-read endpoint if needed
-    throw new Error('Endpoint not implemented in modular API yet');
 }
 

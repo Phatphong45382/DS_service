@@ -18,30 +18,13 @@ from ..schemas.dashboard_v2 import (
     ErrorDistBin,
     TimeSeriesPoint
 )
-from ..services.dataiku_service import dataiku_service
-from ..services.data_masking import masker
 from ..config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# In-memory cache for analytics data
-DATA_CACHE = {}
-CACHE_TTL = 300 # 5 minutes
+from ..data.loader import load_rows
 
-def get_cached_dataset(dataset_name: str):
-    now = datetime.now().timestamp()
-    if dataset_name in DATA_CACHE:
-        cached = DATA_CACHE[dataset_name]
-        if now - cached["timestamp"] < CACHE_TTL:
-            return cached["data"]
-    
-    logger.info(f"Fetching fresh data for {dataset_name}")
-    rows = dataiku_service.get_dataset_rows(dataset_name)
-    DATA_CACHE[dataset_name] = {"timestamp": now, "data": rows}
-    return rows
-
-@router.get("/filters", response_model=APIResponse[FilterOptionsResponse])
 @router.get("/filters", response_model=APIResponse[FilterOptionsResponse])
 async def get_analytics_filters(
     product_group: Optional[str] = None,
@@ -50,20 +33,15 @@ async def get_analytics_filters(
     customer: Optional[str] = None
 ):
     try:
-        # Unmask incoming filter params
-        if product_group: product_group = masker.unmask("product_group", product_group)
-        if flavor: flavor = masker.unmask("flavor", flavor)
-        if customer: customer = masker.unmask("customer", customer)
 
-        rows = get_cached_dataset(settings.DATASET_ANALYTICS_DASHBOARD)
+        rows = load_rows()
 
         filtered_rows = []
         for row in rows:
-            if row.get("Product_Group") == "Canned Fruit": continue
-            if product_group and not masker.match("product_group", row.get("Product_Group", ""), product_group): continue
-            if flavor and not masker.match("flavor", row.get("Flavor", ""), flavor): continue
+            if product_group and not row.get("Product_Group", "") == product_group: continue
+            if flavor and not row.get("Flavor", "") == flavor: continue
             if size and str(row.get("Size")) != str(size): continue
-            if customer and not masker.match("customer", row.get("Customer", ""), customer): continue
+            if customer and not row.get("Customer", "") == customer: continue
             filtered_rows.append(row)
 
         product_groups = set()
@@ -82,12 +60,12 @@ async def get_analytics_filters(
         return APIResponse(
             success=True,
             data=FilterOptionsResponse(
-                product_groups=sorted([masker.mask("product_group", v) for v in product_groups]),
-                flavors=sorted([masker.mask("flavor", v) for v in flavors]),
-                sizes=sorted([masker.mask("size", v) for v in sizes]),
-                customers=sorted([masker.mask("customer", v) for v in customers]),
+                product_groups=sorted([v for v in product_groups]),
+                flavors=sorted([v for v in flavors]),
+                sizes=sorted([v for v in sizes]),
+                customers=sorted([v for v in customers]),
                 sites=[],
-                mechgroups=sorted([masker.mask("mechgroup", v) for v in mechgroups])
+                mechgroups=sorted([v for v in mechgroups])
             )
         )
     except Exception as e:
@@ -112,14 +90,8 @@ def get_analytics_summary(
     breakdown: Optional[str] = None,
 ):
     try:
-        # Unmask incoming filter params
-        if customer: customer = [masker.unmask("customer", v) for v in customer]
-        if product_group: product_group = [masker.unmask("product_group", v) for v in product_group]
-        if flavor: flavor = [masker.unmask("flavor", v) for v in flavor]
-        if size: size = [masker.unmask("size", v) for v in size]
-        if mechgroup: mechgroup = [masker.unmask("mechgroup", v) for v in mechgroup]
 
-        rows = get_cached_dataset(settings.DATASET_ANALYTICS_DASHBOARD)
+        rows = load_rows()
 
         # Helper for loose column matching
         def get_val_idx(row, keys):
@@ -130,29 +102,6 @@ def get_analytics_summary(
                     if rk.lower() == k.lower(): return row[rk]
             return None
 
-        import os
-        log_path = os.path.join(os.getcwd(), "backend_debug.txt")
-        
-        if rows and len(rows) > 0:
-            try:
-                with open(log_path, "w") as f:
-                    f.write(f"DEBUG DATASET: {settings.DATASET_ANALYTICS_DASHBOARD}\n")
-                    f.write(f"DEBUG COLUMNS: {list(rows[0].keys())}\n")
-                    
-                    # Check for promo related keys
-                    first_row = rows[0]
-                    f.write(f"DEBUG FIRST ROW: {first_row}\n")
-                    
-                    p_day = get_val_idx(first_row, ["Promo_Days", "promo_days", "duration"])
-                    disc = get_val_idx(first_row, ["discount_pct", "discount", "usage"])
-                    has_promo = get_val_idx(first_row, ["has_promotion", "is_promo"])
-                    
-                    f.write(f"Resolved Promo_Days: {p_day}\n")
-                    f.write(f"Resolved discount_pct: {disc}\n")
-                    f.write(f"Resolved has_promotion: {has_promo}\n")
-
-            except Exception as e:
-                print(f"Failed to write debug log: {e}")
 
 
         
@@ -200,13 +149,12 @@ def get_analytics_summary(
                 if not (start_id <= month_id <= end_id):
                     continue
                 
-                if row.get("Product_Group") == "Canned Fruit": continue
                 
-                if customer and not masker.match_in("customer", row.get("Customer", ""), customer): continue
-                if product_group and not masker.match_in("product_group", row.get("Product_Group", ""), product_group): continue
-                if size and not masker.match_in("size", str(row.get("Size", "")), size): continue
-                if flavor and not masker.match_in("flavor", row.get("Flavor", ""), flavor): continue
-                if mechgroup and not masker.match_in("mechgroup", row.get("MechGroup", ""), mechgroup): continue
+                if customer and not row.get("Customer", "") in customer: continue
+                if product_group and not row.get("Product_Group", "") in product_group: continue
+                if size and not str(row.get("Size", "")) in size: continue
+                if flavor and not row.get("Flavor", "") in flavor: continue
+                if mechgroup and not row.get("MechGroup", "") in mechgroup: continue
 
                 if has_promotion is not None:
                     r_promo = int(float(row.get("has_promotion", 0)))
@@ -312,15 +260,15 @@ def get_analytics_summary(
             if breakdown:
                 b_key = None
                 if breakdown == 'product_group':
-                    b_key = masker.mask("product_group", row.get("Product_Group", "Other"))
+                    b_key = row.get("Product_Group", "Other")
                 elif breakdown == 'flavor':
                     val = row.get("Flavor", "Other")
-                    b_key = masker.mask("flavor", val) if val else "Other"
+                    b_key = val if val else "Other"
                 elif breakdown == 'size':
                     sz = str(row.get("Size", "Other")).strip()
                     fl = str(row.get("Flavor", "")).strip()
-                    masked_fl = masker.mask("flavor", fl) if fl else ""
-                    masked_sz = masker.mask("size", sz)
+                    masked_fl = fl if fl else ""
+                    masked_sz = sz
                     b_key = f"{masked_fl} {masked_sz}" if masked_fl and sz else "Other"
                 
                 if b_key:
@@ -434,7 +382,7 @@ def get_analytics_summary(
         )
         
         # Group Lists (masked)
-        cust_list = [GroupByPoint(label=masker.mask("customer", k), qty=v) for k, v in cust_agg.items()]
+        cust_list = [GroupByPoint(label=k, qty=v) for k, v in cust_agg.items()]
         cust_list.sort(key=lambda x: x.qty, reverse=True)
         cust_list = cust_list[:20]
 
@@ -442,7 +390,7 @@ def get_analytics_summary(
 
         prod_list = []
         for (pg, fl, sz), q in product_agg.items():
-            prod_list.append(TopProductPoint(product_group=masker.mask("product_group", pg), flavor=masker.mask("flavor", fl), size=masker.mask("size", sz), qty=q))
+            prod_list.append(TopProductPoint(product_group=pg, flavor=fl, size=sz, qty=q))
         prod_list.sort(key=lambda x: x.qty, reverse=True)
         prod_list = prod_list[:10]
         
@@ -458,14 +406,7 @@ def get_analytics_summary(
                 meta={
                     "refreshed_at": datetime.now().isoformat(),
                     "record_count": count_rows,
-                    "dataset": settings.DATASET_ANALYTICS_DASHBOARD,
-                    "debug_columns": list(rows[0].keys()) if rows else [],
-                    "debug_sample": str(rows[0]) if rows else "No Data",
-                    "debug_promo_check": {
-                        "p_days_sample": [r.get("Promo_Days") for r in rows[:5]] if rows else [],
-                        "disc_sample": [r.get("discount_pct") for r in rows[:5]] if rows else [],
-                        "has_promo_sample": [r.get("has_promotion") for r in rows[:5]] if rows else []
-                    }
+                    "dataset": "sales"
                 }
             )
         )
@@ -488,14 +429,8 @@ def get_deep_dive_analytics(
     breakdown: Optional[str] = None, # Added breakdown parameter
 ):
     try:
-        # Unmask incoming filter params
-        if customer: customer = [masker.unmask("customer", v) for v in customer]
-        if product_group: product_group = [masker.unmask("product_group", v) for v in product_group]
-        if flavor: flavor = [masker.unmask("flavor", v) for v in flavor]
-        if size: size = [masker.unmask("size", v) for v in size]
-        if mechgroup: mechgroup = [masker.unmask("mechgroup", v) for v in mechgroup]
 
-        rows = get_cached_dataset(settings.DATASET_ANALYTICS_DASHBOARD)
+        rows = load_rows()
 
         # Filtering logic (same as summary)
         current_year = datetime.now().year
@@ -555,7 +490,6 @@ def get_deep_dive_analytics(
                 if not (start_id <= month_id <= end_id): 
                     continue
                 
-                # Exclude Canned Fruit
                 # Robust Filtering: Handle potential whitespace mismatch
                 row_pg = row.get("Product_Group", "").strip()
                 row_flavor = row.get("Flavor", "").strip()
@@ -563,11 +497,11 @@ def get_deep_dive_analytics(
                 row_cust = row.get("Customer", "").strip()
                 row_mech = row.get("MechGroup", "").strip()
 
-                if product_group and row_pg != "All" and not masker.match_in("product_group", row_pg, product_group): continue
-                if size and not masker.match_in("size", row_size, size): continue
-                if flavor and not masker.match_in("flavor", row_flavor, flavor): continue
-                if mechgroup and not masker.match_in("mechgroup", row_mech, mechgroup): continue
-                if customer and not masker.match_in("customer", row_cust, customer): continue
+                if product_group and row_pg != "All" and not row_pg in product_group: continue
+                if size and not row_size in size: continue
+                if flavor and not row_flavor in flavor: continue
+                if mechgroup and not row_mech in mechgroup: continue
+                if customer and not row_cust in customer: continue
                 
                 if has_promotion is not None:
                     # Robust int/float conversion
@@ -632,15 +566,15 @@ def get_deep_dive_analytics(
             total_err += err
             
             # Heatmaps (masked)
-            c = masker.mask("customer", row.get("Customer", "Unknown"))
+            c = row.get("Customer", "Unknown")
 
             # Dynamic Product Heatmap Key (masked)
             pg = "Unknown"
             if breakdown == 'flavor':
                  val = row.get("Flavor")
-                 pg = masker.mask("flavor", val) if val else "Unknown"
+                 pg = val if val else "Unknown"
             else:
-                 pg = masker.mask("product_group", row.get("Product_Group", "Unknown"))
+                 pg = row.get("Product_Group", "Unknown")
             
             for key, val in [(hm_cust, c), (hm_prod, pg)]:
                 k = (val, m_str)
@@ -681,17 +615,17 @@ def get_deep_dive_analytics(
             ranking_items.append(PerformanceRankingItem(
                 date=m_str,
                 customer=c,
-                sku=f"{masker.mask('flavor', row.get('Flavor', '-'))} {masker.mask('size', str(row.get('Size', '-')))}",
+                sku=f"{row.get('Flavor', '-')} {str(row.get('Size', '-'))}",
                 product_group=pg,
-                flavor=masker.mask("flavor", row.get("Flavor", "-")),
-                size=masker.mask("size", str(row.get("Size", "-"))),
+                flavor=row.get("Flavor", "-"),
+                size=str(row.get("Size", "-")),
                 planned=planned,
                 actual=actual,
                 error=err,
                 abs_error=abs_err,
                 under_over_volume=err,
                 has_promotion=int(float(row.get("has_promotion", 0))) == 1,
-                mech_group=masker.mask("mechgroup", row.get("MechGroup", "")),
+                mech_group=row.get("MechGroup", ""),
                 discount_pct=float(row.get("discount_pct") or 0)
             ))
 

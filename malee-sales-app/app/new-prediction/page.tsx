@@ -70,7 +70,7 @@ export default function NewPredictionPage() {
             console.log("Starting forecast...");
             await runForecast();
 
-            console.log("Waiting 25s for Dataiku processing...");
+            console.log("Waiting for forecast processing...");
             const WAIT_SECONDS = 25;
 
             for (let i = 0; i < WAIT_SECONDS; i++) {

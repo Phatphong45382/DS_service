@@ -1,9 +1,9 @@
 fastapi
 uvicorn[standard]
 python-multipart
-dataiku-api-client
 pydantic
 aiofiles
 pandas
+pyarrow
 google-genai
 requests

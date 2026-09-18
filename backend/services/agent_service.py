@@ -22,6 +22,7 @@ from google.genai import types
 from google.genai.errors import ClientError
 
 from ..config import settings
+from ..data.loader import load_rows
 
 logger = logging.getLogger(__name__)
 
@@ -138,13 +139,12 @@ class AgentTools:
     # ─── Tool 1: ดึงข้อมูลยอดขาย ───
     def query_sales_data(self, params: dict) -> dict:
         """
-        ดึงข้อมูลยอดขายจาก Dataiku แล้วสรุปเป็น KPI
+        ดึงข้อมูลยอดขายจาก dataset แล้วสรุปเป็น KPI
         ── นี่คือ tool ที่ Agent เรียกเมื่อต้องการ "ดูข้อมูล" ──
         """
         try:
-            from ..services.dataiku_service import dataiku_service
 
-            rows = dataiku_service.get_dataset_rows(settings.DATASET_DASHBOARD_SUMMARY)
+            rows = load_rows()
 
             # Aggregate
             total_qty = 0.0
@@ -153,8 +153,6 @@ class AgentTools:
             product_agg = {}
 
             for row in rows:
-                if row.get("Product_Group") == "Canned Fruit":
-                    continue
 
                 qty = float(row.get("Quantity_sum", 0))
                 total_qty += qty
@@ -167,14 +165,13 @@ class AgentTools:
                     monthly_agg[key] = monthly_agg.get(key, 0) + qty
 
                 # Customer (masked)
-                from ..services.data_masking import masker
-                c = masker.mask("customer", row.get("Customer", "Unknown"))
+                c = row.get("Customer", "Unknown")
                 cust_agg[c] = cust_agg.get(c, 0) + qty
 
                 # Product (masked)
-                pg = masker.mask("product_group", row.get("Product_Group", ""))
-                fl = masker.mask("flavor", row.get("Flavor", ""))
-                sz = masker.mask("size", str(row.get("Size", "")))
+                pg = row.get("Product_Group", "")
+                fl = row.get("Flavor", "")
+                sz = str(row.get("Size", ""))
                 p_key = f"{fl} {sz} ({pg})"
                 product_agg[p_key] = product_agg.get(p_key, 0) + qty
 
@@ -304,16 +301,12 @@ class AgentTools:
     def get_product_list(self, params: dict) -> dict:
         """ดึงรายการสินค้าทั้งหมด"""
         try:
-            from ..services.dataiku_service import dataiku_service
-            rows = dataiku_service.get_dataset_rows(settings.DATASET_DASHBOARD_SUMMARY)
+            rows = load_rows()
 
-            from ..services.data_masking import masker
             products = set()
             for row in rows:
-                if row.get("Product_Group") == "Canned Fruit":
-                    continue
-                pg = masker.mask("product_group", row.get("Product_Group", ""))
-                fl = masker.mask("flavor", row.get("Flavor", ""))
+                pg = row.get("Product_Group", "")
+                fl = row.get("Flavor", "")
                 sz = str(row.get("Size", ""))
                 if fl:
                     products.add(f"{fl} {sz} ({pg})")
@@ -326,15 +319,13 @@ class AgentTools:
     def get_customer_list(self, params: dict) -> dict:
         """ดึงรายการลูกค้าทั้งหมด"""
         try:
-            from ..services.dataiku_service import dataiku_service
-            rows = dataiku_service.get_dataset_rows(settings.DATASET_DASHBOARD_SUMMARY)
+            rows = load_rows()
 
-            from ..services.data_masking import masker
             customers = set()
             for row in rows:
                 c = row.get("Customer", "")
                 if c:
-                    customers.add(masker.mask("customer", c))
+                    customers.add(c)
 
             return {"status": "success", "customers": sorted(list(customers)), "count": len(customers)}
         except Exception as e:

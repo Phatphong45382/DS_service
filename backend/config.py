@@ -11,22 +11,19 @@ if _env_path.exists():
                 key, _, value = line.partition("=")
                 os.environ.setdefault(key.strip(), value.strip())
 
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
 class Settings:
     # App Settings
     API_V1_STR: str = "/api/v1"
     PROJECT_NAME: str = "Sales Forecast App API"
-    
-    # Dataiku Settings
-    DATAIKU_HOST: str = os.getenv("DATAIKU_HOST", "")
-    API_KEY: str = os.getenv("API_KEY", "")
-    PROJECT_KEY: str = os.getenv("PROJECT_KEY", "MALEE_NEW")
-    
-    # Dashboard Settings
-    PROJECT_KEY_DASHBOARD: str = os.getenv("PROJECT_KEY_DASHBOARD", "MALEE_NEW")
-    DATASET_DASHBOARD_SUMMARY: str = os.getenv("DATASET_DASHBOARD_SUMMARY", "sale_data_final_1")
-    DATASET_ANALYTICS_DASHBOARD: str = os.getenv("DATASET_ANALYTICS_DASHBOARD", "join_data_cl_fill_prepared")
-    
-    # Gemini AI Settings
+
+    # Dataset: local Parquet now, S3 with the AWS backends ticket
+    DATA_SOURCE: str = os.getenv("DATA_SOURCE", "local")
+    DATA_PATH: str = os.getenv("DATA_PATH", str(_REPO_ROOT / "data" / "sales.parquet"))
+
+    # Gemini AI Settings (replaced by Bedrock in the AI ticket)
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
     GEMINI_AVAILABLE_MODELS: list = [
@@ -45,13 +42,5 @@ class Settings:
     RESEND_API_KEY: str = os.getenv("RESEND_API_KEY", "")
     RESEND_FROM: str = os.getenv("RESEND_FROM", "noreply@resend.dev")
 
-    # Dataiku Prediction API
-    DATAIKU_PREDICT_URL: str = os.getenv("DATAIKU_PREDICT_URL", "")
-
-    # Resources
-    FOLDER_ID: str = os.getenv("FOLDER_ID", "OztgS7aU")
-    RESULTS_FOLDER_ID: str = os.getenv("RESULTS_FOLDER_ID", "pOjzy3fq") 
-    SCENARIO_ID: str = os.getenv("SCENARIO_ID", "TEST")
-    DATASET_NAME: str = os.getenv("DATASET_NAME", "sale_data_final_1")
 
 settings = Settings()

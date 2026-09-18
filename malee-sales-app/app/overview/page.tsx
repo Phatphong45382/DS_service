@@ -25,7 +25,7 @@ export default function OverviewPage() {
     return (
         <MainLayout
             title="Executive Summary"
-            description="Sales overview and production plan, connected to live Dataiku data"
+            description="Sales overview and production plan, connected to live sales data"
         >
             <div className="space-y-6">
 

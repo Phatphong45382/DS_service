@@ -25,9 +25,9 @@ export function UploadPanel({ onDataParsed }: UploadPanelProps) {
         setProgress(0);
 
         try {
-            const { uploadFileToDataiku, getJobStatus } = await import('@/lib/api-client');
+            const { uploadForecastInput, getJobStatus } = await import('@/lib/api-client');
 
-            const uploadResult = await uploadFileToDataiku(file);
+            const uploadResult = await uploadForecastInput(file);
             console.log('✓ Upload started, Job ID:', uploadResult.job_id);
 
             if (uploadResult.job_id) {

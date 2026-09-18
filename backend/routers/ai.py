@@ -9,7 +9,6 @@ from ..schemas.common import APIResponse
 from ..services.gemini_service import gemini_service, QuotaExceededError
 from ..services.agent_service import agent_service
 from ..services.email_service import email_service
-from ..services.data_masking import masker
 from ..config import settings
 
 router = APIRouter()

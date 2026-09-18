@@ -13,30 +13,12 @@ from ..schemas.dashboard_v2 import (
     TopProductPoint,
     FilterOptionsResponse
 )
-from ..services.dataiku_service import dataiku_service
-from ..services.data_masking import masker
 from ..config import settings
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
-# In-memory cache for dashboard data (simple implementation)
-DATA_CACHE = {}
-CACHE_TTL = 300 # 5 minutes
-
-def get_cached_dataset(dataset_name: str):
-    now = datetime.now().timestamp()
-    if dataset_name in DATA_CACHE:
-        cached = DATA_CACHE[dataset_name]
-        if now - cached["timestamp"] < CACHE_TTL:
-            logger.info(f"Using cached data for {dataset_name}")
-            return cached["data"]
-    
-    # Fetch fresh data
-    logger.info(f"Fetching fresh data for {dataset_name}")
-    rows = dataiku_service.get_dataset_rows(dataset_name)
-    DATA_CACHE[dataset_name] = {"timestamp": now, "data": rows}
-    return rows
+from ..data.loader import load_rows
 
 @router.get("/filters", response_model=APIResponse[FilterOptionsResponse])
 async def get_dashboard_filters(
@@ -49,12 +31,8 @@ async def get_dashboard_filters(
     Fetch unique filter values from the dataset, optionally filtered by current selection.
     """
     try:
-        # Unmask incoming filter params (frontend sends masked names)
-        if product_group: product_group = masker.unmask("product_group", product_group)
-        if flavor: flavor = masker.unmask("flavor", flavor)
-        if customer: customer = masker.unmask("customer", customer)
 
-        rows = get_cached_dataset(settings.DATASET_DASHBOARD_SUMMARY)
+        rows = load_rows()
 
         product_groups = set()
         flavors = set()
@@ -64,16 +42,14 @@ async def get_dashboard_filters(
         mechgroups = set()
 
         for row in rows:
-            # Apply cascading filters (case-insensitive via masker)
-            if product_group and not masker.match("product_group", row.get("Product_Group", ""), product_group): continue
-            if flavor and not masker.match("flavor", row.get("Flavor", ""), flavor): continue
+            if product_group and not row.get("Product_Group", "") == product_group: continue
+            if flavor and not row.get("Flavor", "") == flavor: continue
             if size and str(row.get("Size")) != str(size): continue
-            if customer and not masker.match("customer", row.get("Customer", ""), customer): continue
+            if customer and not row.get("Customer", "") == customer: continue
 
             # Collect options
             if val := row.get("Product_Group"):
-                if val != "Canned Fruit":
-                    product_groups.add(val)
+                product_groups.add(val)
             if val := row.get("Flavor"): flavors.add(val)
             if val := row.get("Size"): sizes.add(str(val))
             if val := row.get("Customer"): customers.add(val)
@@ -83,12 +59,12 @@ async def get_dashboard_filters(
         return APIResponse(
             success=True,
             data=FilterOptionsResponse(
-                product_groups=sorted([masker.mask("product_group", v) for v in product_groups]),
-                flavors=sorted([masker.mask("flavor", v) for v in flavors]),
-                sizes=sorted([masker.mask("size", v) for v in sizes]),
-                customers=sorted([masker.mask("customer", v) for v in customers]),
-                sites=sorted([masker.mask("site", v) for v in sites]),
-                mechgroups=sorted([masker.mask("mechgroup", v) for v in mechgroups])
+                product_groups=sorted([v for v in product_groups]),
+                flavors=sorted([v for v in flavors]),
+                sizes=sorted([v for v in sizes]),
+                customers=sorted([v for v in customers]),
+                sites=sorted([v for v in sites]),
+                mechgroups=sorted([v for v in mechgroups])
             )
         )
     except Exception as e:
@@ -113,16 +89,9 @@ def get_dashboard_summary(
     has_promotion: Optional[int] = None,
 ):
     try:
-        # 0. Unmask incoming filter params
-        if customer: customer = [masker.unmask("customer", v) for v in customer]
-        if product_group: product_group = [masker.unmask("product_group", v) for v in product_group]
-        if flavor: flavor = [masker.unmask("flavor", v) for v in flavor]
-        if site: site = [masker.unmask("site", v) for v in site]
-        if size: size = [masker.unmask("size", v) for v in size]
-        if mechgroup: mechgroup = [masker.unmask("mechgroup", v) for v in mechgroup]
 
         # 1. Read Data (Cached)
-        rows = get_cached_dataset(settings.DATASET_DASHBOARD_SUMMARY)
+        rows = load_rows()
 
         # 2. Prepare Filter Logic
         current_year = datetime.now().year
@@ -144,9 +113,6 @@ def get_dashboard_summary(
         # 3. Apply Filters
         for row in rows:
             try:
-                # Exclude Canned Fruit
-                if row.get("Product_Group") == "Canned Fruit":
-                    continue
 
                 # Parse date (Legacy format: Billing_Date_year, Billing_Date_month)
                 r_year = int(row.get("Billing_Date_year", 0))
@@ -155,12 +121,12 @@ def get_dashboard_summary(
 
                 if not (start_id <= month_id <= end_id): continue
 
-                if customer and not masker.match_in("customer", row.get("Customer", ""), customer): continue
-                if site and not masker.match_in("site", row.get("site_name_public", ""), site): continue
-                if product_group and not masker.match_in("product_group", row.get("Product_Group", ""), product_group): continue
-                if size and not masker.match_in("size", str(row.get("Size", "")), size): continue
-                if flavor and not masker.match_in("flavor", row.get("Flavor", ""), flavor): continue
-                if mechgroup and not masker.match_in("mechgroup", row.get("MechGroup", ""), mechgroup): continue
+                if customer and not row.get("Customer", "") in customer: continue
+                if site and not row.get("site_name_public", "") in site: continue
+                if product_group and not row.get("Product_Group", "") in product_group: continue
+                if size and not str(row.get("Size", "")) in size: continue
+                if flavor and not row.get("Flavor", "") in flavor: continue
+                if mechgroup and not row.get("MechGroup", "") in mechgroup: continue
                 
                 if has_promotion is not None:
                     r_promo = int(row.get("has_promotion", 0))
@@ -248,16 +214,16 @@ def get_dashboard_summary(
             target_achievement_rate=0.0
         )
         
-        cust_list = [GroupByPoint(label=masker.mask("customer", k), qty=v) for k, v in cust_agg.items()]
+        cust_list = [GroupByPoint(label=k, qty=v) for k, v in cust_agg.items()]
         cust_list.sort(key=lambda x: x.qty, reverse=True)
         cust_list = cust_list[:20]
 
-        site_list = [GroupByPoint(label=masker.mask("site", k), qty=v) for k, v in site_agg.items()]
+        site_list = [GroupByPoint(label=k, qty=v) for k, v in site_agg.items()]
         site_list.sort(key=lambda x: x.qty, reverse=True)
 
         prod_list = []
         for (pg, fl, sz), q in product_agg.items():
-            prod_list.append(TopProductPoint(product_group=masker.mask("product_group", pg), flavor=masker.mask("flavor", fl), size=masker.mask("size", sz), qty=q))
+            prod_list.append(TopProductPoint(product_group=pg, flavor=fl, size=sz, qty=q))
         prod_list.sort(key=lambda x: x.qty, reverse=True)
         prod_list = prod_list[:10]
         
@@ -272,7 +238,7 @@ def get_dashboard_summary(
                 meta={
                     "refreshed_at": datetime.now().isoformat(),
                     "record_count": count_rows,
-                    "dataset": settings.DATASET_DASHBOARD_SUMMARY
+                    "dataset": "sales"
                 }
             )
         )
