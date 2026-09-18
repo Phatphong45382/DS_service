@@ -24,6 +24,10 @@ class Settings:
     ).split(",") if o.strip()]
     AI_TIMEOUT_SEC: int = int(os.getenv("AI_TIMEOUT_SEC", "30"))
 
+    # Single-password login. Empty = no auth (local development); production refuses to start without one.
+    DEMO_PASSWORD: str = os.getenv("DEMO_PASSWORD", "")
+    AUTH_SECRET: str = os.getenv("AUTH_SECRET", "")  # defaults to a key derived from DEMO_PASSWORD
+
     # Dataset: local Parquet now, S3 with the AWS backends ticket
     DATA_SOURCE: str = os.getenv("DATA_SOURCE", "local")
     DATA_PATH: str = os.getenv("DATA_PATH", str(_REPO_ROOT / "data" / "sales.parquet"))

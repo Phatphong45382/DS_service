@@ -4,6 +4,7 @@
 
 import { HealthResponse } from './types/api';
 import type { RunRecord, RunForecast, RunCompare, UploadMeta } from '@/types/runs';
+import { authHeader, clearToken } from './auth';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://127.0.0.1:8080';
 const API_URL = `${API_BASE_URL}/api/v1`;
@@ -60,9 +61,17 @@ async function fetchWithTimeout(url: string, options: RequestInit, ms: number): 
     }
 }
 
+/** A 401 means the session is gone: drop the cookie and let the middleware show the login page. */
+function signOut(): never {
+    clearToken();
+    if (typeof window !== 'undefined') window.location.href = '/login';
+    throw new ApiError('Session expired', 401, undefined, 'UNAUTHORIZED');
+}
+
 /** Every failed request is announced once so the UI can show it (see components/api-error-toasts). */
 function reportApiError(err: unknown, endpoint: string): void {
     if (typeof window === 'undefined') return;
+    if (endpoint.includes('/auth/login')) return;  // the login form shows its own error; no toast for a typo
     const e = err as Partial<ApiError> & { message?: string };
     window.dispatchEvent(new CustomEvent('api-error', {
         detail: { message: e?.message || String(err), code: e?.code, status: e?.statusCode, endpoint },
@@ -79,6 +88,7 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
             ...options,
             headers: {
                 'Accept': 'application/json',
+                ...authHeader(),
                 ...options.headers,
             },
         }, DEFAULT_TIMEOUT_MS);
@@ -98,6 +108,7 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
                 // Not JSON or parsing failed
                 console.error("API Error (Non-JSON):", response.statusText);
             }
+            if (response.status === 401) return signOut() as never;
             throw new ApiError(errorMsg, response.status, undefined, errorCode);
         }
 
@@ -322,7 +333,7 @@ export async function ocrPurchaseOrder(
     const url = `${API_URL}/ai/ocr`;
     const response = await fetchWithTimeout(url, {
         method: 'POST',
-        headers: { 'Accept': 'application/json' },
+        headers: { 'Accept': 'application/json', ...authHeader() },
         body: formData,
     }, UPLOAD_TIMEOUT_MS).catch((err) => { reportApiError(err, url); throw err; });
 
@@ -451,7 +462,7 @@ export async function ragUploadDocument(file: File): Promise<{
     const url = `${API_URL}/ai/rag/upload`;
     const response = await fetchWithTimeout(url, {
         method: 'POST',
-        headers: { 'Accept': 'application/json' },
+        headers: { 'Accept': 'application/json', ...authHeader() },
         body: formData,
     }, UPLOAD_TIMEOUT_MS).catch((err) => { reportApiError(err, url); throw err; });
 
@@ -556,4 +567,17 @@ export async function uploadRunInput(file: File): Promise<UploadMeta> {
     const formData = new FormData();
     formData.append('file', file);
     return fetchAPI<UploadMeta>('/runs/upload', { method: 'POST', body: formData });
+}
+
+
+/**
+ * Trade the demo password for a 12-hour token. `auth_required: false` means the backend has no
+ * DEMO_PASSWORD set and the app is open.
+ */
+export async function login(password: string): Promise<{ token: string; expires_at: number; auth_required: boolean }> {
+    return fetchAPI<{ token: string; expires_at: number; auth_required: boolean }>('/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+    });
 }
