@@ -73,6 +73,28 @@ def test_model_info_reports_the_endpoint_and_the_path_taken(sagemaker):
     assert sagemaker.last_path == "fallback"
 
 
+def test_the_sagemaker_handler_matches_the_in_process_model(model_dir):
+    """The endpoint and the fallback must be interchangeable, to the last decimal.
+
+    They are two implementations of one thing. An early handler carried its own copy of the
+    feature list in the wrong order: every prediction was wrong and nothing raised.
+    """
+    from backend.model import sagemaker_handler as handler
+
+    art = handler.model_fn(model_dir)
+    body, content_type = handler.output_fn(
+        handler.predict_fn(handler.input_fn(json.dumps({"rows": [ROW], "explain": True})), art))
+    assert content_type == "application/json"
+    served = json.loads(body)["predictions"][0]
+    local = LocalModel(model_dir).predict([ROW], explain=True)[0]
+
+    assert served["prediction"] == pytest.approx(local["prediction"], rel=1e-9)
+    assert served["p10"] == pytest.approx(local["p10"], rel=1e-9)
+    assert served["p90"] == pytest.approx(local["p90"], rel=1e-9)
+    assert served["explanations"] == pytest.approx(local["explanations"], rel=1e-9)
+    assert served["base"] == pytest.approx(local["base"], rel=1e-9)
+
+
 @pytest.mark.parametrize("key,expected", [
     ("runs/RUN-1/record.json", ("runs", "RUN-1/record.json")),
     ("runs/RUN-1/forecast.json", ("runs", "RUN-1/forecast.json")),

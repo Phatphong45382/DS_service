@@ -56,62 +56,10 @@ s3 = session.client("s3")                                        # data bucket, 
 ms3 = boto3.client("s3", region_name=MODEL_REGION)               # model bucket, in MODEL_REGION
 sm = boto3.client("sagemaker", region_name=MODEL_REGION)
 
-INFERENCE_PY = '''"""SageMaker handler for the demand-forecast LightGBM model.
-
-The container gives us Python; everything below is the same code the API runs in-process, so the
-endpoint and the fallback cannot answer differently.
-"""
-import json
-import os
-import pickle
-
-import numpy as np
-import pandas as pd
-
-FEATURES = ["product_group", "flavor", "size", "year", "month", "month_id",
-            "promo_flag", "promo_days_in_month", "promo_discount_pct", "promo_type"]
-CATEGORICAL = ["product_group", "flavor", "size", "promo_type"]
-
-
-def to_X(df, categories):
-    X = df[FEATURES].copy()
-    for c in CATEGORICAL:
-        X[c] = pd.Categorical(X[c], categories=categories[c])
-    return X
-
-
-def model_fn(model_dir):
-    with open(os.path.join(model_dir, "model.pkl"), "rb") as f:
-        art = pickle.load(f)
-    art["explainer"] = None
-    return art
-
-
-def input_fn(body, content_type="application/json"):
-    return json.loads(body)
-
-
-def predict_fn(payload, art):
-    rows, explain = payload["rows"], payload.get("explain", False)
-    X = to_X(pd.DataFrame(rows), art["categories"])
-    pred = art["model"].predict(X)
-    out = [{"prediction": float(p), "p10": float(p * (1 + art["q10"])), "p90": float(p * (1 + art["q90"]))} for p in pred]
-    if explain:
-        import shap
-        if art["explainer"] is None:
-            art["explainer"] = shap.TreeExplainer(art["model"])
-        contributions = np.asarray(art["explainer"].shap_values(X))
-        base = float(np.ravel(art["explainer"].expected_value)[0])
-        for o, row in zip(out, contributions):
-            o["explanations"] = {f: float(v) for f, v in zip(FEATURES, row)}
-            o["base"] = base
-    return {"predictions": out, "model_version": f"{art['model_name']} {art['version']}"}
-
-
-def output_fn(prediction, accept="application/json"):
-    return json.dumps(prediction), "application/json"
-'''
-
+# The handler is a real module in the repo so it is linted, importable, and covered by a test that
+# pins it to the in-process model: a handler carrying its own copy of the feature order predicts
+# from the wrong columns without ever raising.
+HANDLER = ROOT / "backend" / "model" / "sagemaker_handler.py"
 # shap pulls numba; both are installed at container start, which is why the cold start is slow.
 REQUIREMENTS = "lightgbm==4.5.0\nshap==0.46.0\npandas\n"
 
@@ -124,7 +72,8 @@ def artifact() -> bytes:
             path = Path(settings.MODEL_PATH) / name
             if path.exists():
                 tar.add(path, arcname=name)
-        for name, text in (("code/inference.py", INFERENCE_PY), ("code/requirements.txt", REQUIREMENTS)):
+        for name, text in (("code/inference.py", HANDLER.read_text(encoding="utf-8")),
+                           ("code/requirements.txt", REQUIREMENTS)):
             info = tarfile.TarInfo(name)
             data = text.encode()
             info.size = len(data)
