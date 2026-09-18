@@ -59,11 +59,11 @@ export function ErrorDistribution() {
             <div className="flex justify-center gap-4 mt-2 text-xs text-slate-500">
                 <div className="flex items-center gap-1">
                     <div className="w-3 h-3 bg-red-400 rounded-sm"></div>
-                    <span>Over-planned (Negative Error)</span>
+                    <span>Under-planned (Negative Error)</span>
                 </div>
                 <div className="flex items-center gap-1">
                     <div className="w-3 h-3 bg-blue-400 rounded-sm"></div>
-                    <span>Under-planned (Positive Error)</span>
+                    <span>Over-planned (Positive Error)</span>
                 </div>
             </div>
         </div>
