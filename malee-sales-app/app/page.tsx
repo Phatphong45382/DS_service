@@ -69,7 +69,7 @@ const STEPS = [
     n: 2,
     icon: BarChart4,
     title: "Models train & validate",
-    desc: "LightGBM + Prophet models run with automatic quality checks.",
+    desc: "A LightGBM model runs with automatic quality checks and holdout accuracy.",
   },
   {
     n: 3,
@@ -204,7 +204,9 @@ export default function HomePage() {
                 >
                   {/* chart header */}
                   <div className="flex items-center justify-between">
-                    <span className="text-white/90 text-xs font-semibold">Forecast vs Actual</span>
+                    <span className="text-white/90 text-xs font-semibold">Forecast vs Actual
+                      <span className="ml-2 rounded-full border border-white/30 px-1.5 py-px text-[8px] font-medium uppercase tracking-wide text-white/60">illustration</span>
+                    </span>
                     <span className="text-emerald-300 text-[10px] font-bold">+24.5%</span>
                   </div>
                   {/* legend */}

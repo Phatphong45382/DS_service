@@ -64,7 +64,10 @@ class SageMakerModel:
         self.fallback = fallback
         self.runtime = client("sagemaker-runtime", read_timeout=settings.SAGEMAKER_TIMEOUT_SEC,
                               region=settings.SAGEMAKER_REGION, total_attempts=1)
-        self.version = f"{fallback.version} via endpoint {endpoint}"
+        # The same artifact serves both paths, so the version is the artifact's. Which path served
+        # a request is a serving detail, reported by model_info()["backend"] and ["last_path"],
+        # not something to bake into every Run record and every table cell that shows it.
+        self.version = fallback.version
         self.metrics = fallback.metrics
         self.last_path = "unknown"  # "endpoint" or "fallback": /health reports it
 

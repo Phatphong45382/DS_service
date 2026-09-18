@@ -274,10 +274,10 @@ export default function AnalyticsDashboardPage() {
                                 icon={ArrowDownCircle}
                                 name="Total Sku"
                                 value={`${kpi.total_active_items || 0}`}
-                                change="0"
+                                change=""
                                 isPositive={true}
                                 iconBgColor="bg-teal-600"
-                                changeLabel="Active Items"
+                                changeLabel="Active Items in range"
                             />
                         </div>
                     </div>

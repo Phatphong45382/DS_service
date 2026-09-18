@@ -170,7 +170,7 @@ export function ErrorHeatmap({ title, type, data, loading }: ErrorHeatmapProps) 
                                                                 <span className="text-slate-400">Actual:</span>
                                                                 <span className="font-mono text-right">{formatNumber(cell.actual)}</span>
 
-                                                                <span className="text-slate-400">Forecast:</span>
+                                                                <span className="text-slate-400">Plan:</span>
                                                                 <span className="font-mono text-right">{formatNumber(cell.planned)}</span>
 
                                                                 <span className="text-slate-400">Error:</span>
