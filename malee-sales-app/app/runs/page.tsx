@@ -171,7 +171,9 @@ export default function RunsPage() {
                     {formatDuration(run.duration_sec)}
                   </TableCell>
                   <TableCell className="text-xs">
-                    {run.model_name} {run.model_version}
+                    <span className="block max-w-[220px] truncate" title={`${run.model_name} ${run.model_version}`}>
+                      {run.model_name} {run.model_version}
+                    </span>
                   </TableCell>
                   <TableCell className="text-xs text-center tabular-nums">
                     {run.horizon_months}mo

@@ -70,8 +70,16 @@ function CompareContent() {
   const forecastB = useMemo(() => data?.forecast_b ?? [], [data])
   const skus = useMemo(() => skusOf([...forecastA, ...forecastB]), [forecastA, forecastB])
 
-  const aggA = useMemo(() => aggregateForecastByMonth(forecastA), [forecastA])
-  const aggB = useMemo(() => aggregateForecastByMonth(forecastB), [forecastB])
+  // Two Runs with different Horizons cover different months; a 6-month total against a 3-month
+  // total is not a difference, it is a longer list. Compare only the months both Runs forecast.
+  const commonMonths = useMemo(() => {
+    const inB = new Set(forecastB.map((r) => r.date_month))
+    return new Set(forecastA.map((r) => r.date_month).filter((m) => inB.has(m)))
+  }, [forecastA, forecastB])
+  const sharedA = useMemo(() => forecastA.filter((r) => commonMonths.has(r.date_month)), [forecastA, commonMonths])
+  const sharedB = useMemo(() => forecastB.filter((r) => commonMonths.has(r.date_month)), [forecastB, commonMonths])
+  const aggA = useMemo(() => aggregateForecastByMonth(sharedA), [sharedA])
+  const aggB = useMemo(() => aggregateForecastByMonth(sharedB), [sharedB])
 
   if (!runA || !runB) {
     return (
@@ -106,8 +114,8 @@ function CompareContent() {
 
   // SKU-level comparison
   const skuComparison = skus.map((sku) => {
-    const totalA = forecastA.filter((r) => r.sku === sku).reduce((s, r) => s + r.forecast_units, 0)
-    const totalB = forecastB.filter((r) => r.sku === sku).reduce((s, r) => s + r.forecast_units, 0)
+    const totalA = sharedA.filter((r) => r.sku === sku).reduce((s, r) => s + r.forecast_units, 0)
+    const totalB = sharedB.filter((r) => r.sku === sku).reduce((s, r) => s + r.forecast_units, 0)
     const diff = totalB - totalA
     const diffPct = totalA ? ((diff / totalA) * 100).toFixed(1) : "0.0"
     return { sku, totalA, totalB, diff, diffPct }
@@ -142,7 +150,9 @@ function CompareContent() {
   return (
     <MainLayout
       title="Compare Runs"
-      description={`Side-by-side comparison of ${runIdA} vs ${runIdB}`}
+      description={runA.horizon_months === runB.horizon_months
+        ? `Side-by-side comparison of ${runIdA} vs ${runIdB}`
+        : `${runA.horizon_months}mo vs ${runB.horizon_months}mo Horizon: comparing the ${commonMonths.size} months both Runs forecast`}
       action={
         <Button variant="outline" asChild>
           <Link href="/runs">

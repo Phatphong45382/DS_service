@@ -93,7 +93,10 @@ def test_the_invoke_client_gets_one_attempt_so_the_fallback_fits_the_browser_bud
 def test_model_info_reports_the_endpoint_and_the_path_taken(sagemaker):
     sagemaker.runtime = Dead()
     sagemaker.predict([ROW])
-    assert settings.SAGEMAKER_ENDPOINT in sagemaker.version or "endpoint" in sagemaker.version
+    # the version names the artifact, not the serving path: both paths run the same model, and a
+    # Run record or a table cell must not carry "via endpoint" as if it were part of the version
+    assert sagemaker.version == sagemaker.fallback.version
+    assert "endpoint" not in sagemaker.version
     assert sagemaker.last_path == "fallback"
 
 

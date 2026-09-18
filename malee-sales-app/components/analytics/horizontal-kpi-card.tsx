@@ -42,16 +42,19 @@ export function HorizontalKPICard({
             {/* Change Percentage */}
             <div className="flex items-center gap-1">
                 <span className="text-xs lg:text-[10px] xl:text-xs text-slate-500 whitespace-nowrap">{changeLabel || "Total Return"}</span>
-                <div className={`flex items-center gap-0.5 text-xs font-semibold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                    {change}
-                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        {isPositive ? (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-                        ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                        )}
-                    </svg>
-                </div>
+                {/* a KPI with nothing to compare against shows its label alone, not a fake "0 up" */}
+                {change && (
+                    <div className={`flex items-center gap-0.5 text-xs font-semibold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
+                        {change}
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            {isPositive ? (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
+                            ) : (
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                            )}
+                        </svg>
+                    </div>
+                )}
             </div>
         </div>
     );

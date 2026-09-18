@@ -219,8 +219,8 @@ export default function AIInsightsPage() {
                         </div>
                     </div>
 
-                    {/* Debug / Status Panel */}
-                    <div className="bg-slate-900 text-slate-300 rounded-2xl overflow-hidden shadow-sm border border-slate-700">
+                    {/* Debug / Status Panel: developer-facing, kept for troubleshooting but not shown to a customer */}
+                    <div className="hidden bg-slate-900 text-slate-300 rounded-2xl overflow-hidden shadow-sm border border-slate-700">
                         <div className="flex items-center gap-2 px-5 py-3 border-b border-slate-700 bg-slate-800">
                             <Server className="w-4 h-4 text-slate-400" />
                             <h3 className="text-sm font-bold text-slate-200">API Status & Debug Info</h3>
