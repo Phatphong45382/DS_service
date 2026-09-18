@@ -9,3 +9,4 @@ lightgbm
 shap
 google-genai
 requests
+anthropic

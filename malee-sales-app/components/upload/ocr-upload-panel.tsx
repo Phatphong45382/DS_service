@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import { ScanLine, Upload, Loader2, FileImage, Trash2, CheckCircle2, XCircle, Pencil, ChevronDown, Zap, Brain, Sparkles } from 'lucide-react';
-import { ocrPurchaseOrder } from '@/lib/api-client';
+import type { LucideIcon } from 'lucide-react';
+import { getAIModel, ocrPurchaseOrder, type AIModelOption } from '@/lib/api-client';
 import { ParsedData } from '@/lib/file-utils';
 
 interface OCRUploadPanelProps {
@@ -27,11 +28,7 @@ interface EditableHeader {
     customer_address: string;
 }
 
-const OCR_MODELS = [
-    { id: 'gemini-2.5-flash-lite', name: 'Fast', desc: 'Fast & free quota', icon: Zap },
-    { id: 'gemini-2.5-flash', name: 'Balanced', desc: 'Balanced performance', icon: Brain },
-    { id: 'gemini-3-flash-preview', name: 'Advanced', desc: 'Highest quality', icon: Sparkles },
-];
+const TIER_ICONS: Record<string, LucideIcon> = { Fast: Zap, Balanced: Brain, Advanced: Sparkles };
 
 export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
     const [file, setFile] = useState<File | null>(null);
@@ -41,7 +38,11 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
     const [ocrResult, setOcrResult] = useState<any>(null);
     const [responseTime, setResponseTime] = useState<number>(0);
     const fileInputRef = useRef<HTMLInputElement>(null);
-    const [selectedModel, setSelectedModel] = useState(OCR_MODELS[0].id);
+    const [models, setModels] = useState<AIModelOption[]>([]);
+    const [selectedModel, setSelectedModel] = useState('');
+    useEffect(() => {
+        getAIModel().then((d) => { setModels(d.available); setSelectedModel(d.current); }).catch(() => {});
+    }, []);
     const [showModelPicker, setShowModelPicker] = useState(false);
     const [modelUsed, setModelUsed] = useState<string>('');
 
@@ -295,7 +296,7 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                             ) : (
                                 <>
                                     <ScanLine className="w-4 h-4" />
-                                    Read with AI ({OCR_MODELS.find(m => m.id === selectedModel)?.name || 'AI'})
+                                    Read with AI ({models.find(m => m.id === selectedModel)?.label || 'AI'})
                                 </>
                             )}
                         </button>
@@ -323,7 +324,7 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                                     AI read the document — {editableItems.length} items
                                 </p>
                                 <p className="text-xs text-emerald-600 mt-0.5">
-                                    Took {(responseTime / 1000).toFixed(2)}s | {OCR_MODELS.find(m => m.id === modelUsed)?.name || 'AI Engine'}
+                                    Took {(responseTime / 1000).toFixed(2)}s | {models.find(m => m.id === modelUsed)?.label || 'AI Engine'}
                                 </p>
                             </div>
                         </div>
@@ -544,8 +545,8 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                             onClick={() => setShowModelPicker(!showModelPicker)}
                             className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium text-violet-700 bg-violet-100 hover:bg-violet-200 border border-violet-200 transition-colors"
                         >
-                            {(() => { const m = OCR_MODELS.find(m => m.id === selectedModel); const Icon = m?.icon || Zap; return <Icon className="w-3 h-3" />; })()}
-                            {OCR_MODELS.find(m => m.id === selectedModel)?.name || 'AI Model'}
+                            {(() => { const m = models.find(m => m.id === selectedModel); const Icon = TIER_ICONS[m?.label ?? ''] ?? Zap; return <Icon className="w-3 h-3" />; })()}
+                            {models.find(m => m.id === selectedModel)?.label || 'AI Model'}
                             <ChevronDown className="w-3 h-3" />
                         </button>
                         {showModelPicker && (
@@ -555,8 +556,8 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                                     <div className="px-3 py-1 text-[10px] font-bold text-violet-600 uppercase tracking-wider">
                                         AI Model
                                     </div>
-                                    {OCR_MODELS.map((m) => {
-                                        const Icon = m.icon;
+                                    {models.map((m) => {
+                                        const Icon = TIER_ICONS[m.label] ?? Brain;
                                         const isSelected = selectedModel === m.id;
                                         return (
                                             <button
@@ -567,10 +568,10 @@ export function OCRUploadPanel({ onDataParsed }: OCRUploadPanelProps) {
                                                 <Icon className={`w-3.5 h-3.5 ${isSelected ? 'text-violet-600' : 'text-slate-400'}`} />
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-1.5">
-                                                        <span className={`text-xs font-medium ${isSelected ? 'text-violet-700' : 'text-slate-700'}`}>{m.name}</span>
+                                                        <span className={`text-xs font-medium ${isSelected ? 'text-violet-700' : 'text-slate-700'}`}>{m.label}</span>
                                                         {isSelected && <span className="text-violet-600 text-[10px]">&#10003;</span>}
                                                     </div>
-                                                    <div className="text-[10px] text-slate-400">{m.desc}</div>
+                                                    <div className="text-[10px] text-slate-400">{m.description}</div>
                                                 </div>
                                             </button>
                                         );

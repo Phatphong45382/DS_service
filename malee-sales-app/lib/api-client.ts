@@ -353,8 +353,14 @@ export async function ocrPurchaseOrder(
 /**
  * Get current AI model and available models
  */
-export async function getAIModel(): Promise<{ current: string; available: string[] }> {
-    return fetchAPI<{ current: string; available: string[] }>('/ai/model');
+export interface AIModelOption {
+    id: string;
+    label: string;
+    description: string;
+}
+
+export async function getAIModel(): Promise<{ backend: string; current: string; available: AIModelOption[] }> {
+    return fetchAPI<{ backend: string; current: string; available: AIModelOption[] }>('/ai/model');
 }
 
 /**

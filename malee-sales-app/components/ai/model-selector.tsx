@@ -1,34 +1,26 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { getAIModel, setAIModel } from '@/lib/api-client';
+import { getAIModel, setAIModel, type AIModelOption } from '@/lib/api-client';
 import { ChevronDown, Cpu, Check, Loader2, Zap, Sparkles, FlaskConical } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 
-const MODEL_META: Record<string, { label: string; desc: string; icon: LucideIcon; color: string }> = {
-    'gemini-2.5-flash-lite': {
-        label: 'Fast',
-        desc: 'Fast & free quota',
-        icon: Zap,
-        color: 'text-amber-600 bg-amber-50',
-    },
-    'gemini-2.5-flash': {
-        label: 'Balanced',
-        desc: 'Balanced performance',
-        icon: Sparkles,
-        color: 'text-blue-600 bg-blue-50',
-    },
-    'gemini-3-flash-preview': {
-        label: 'Advanced',
-        desc: 'Highest quality',
-        icon: FlaskConical,
-        color: 'text-violet-600 bg-violet-50',
-    },
+// Tier look: icon + colour by label; ids and text come from the backend (Gemini or Bedrock).
+const TIER_META: Record<string, { icon: LucideIcon; color: string }> = {
+    Fast: { icon: Zap, color: 'text-amber-600 bg-amber-50' },
+    Balanced: { icon: Sparkles, color: 'text-blue-600 bg-blue-50' },
+    Advanced: { icon: FlaskConical, color: 'text-violet-600 bg-violet-50' },
 };
+const FALLBACK = { label: 'AI Model', desc: '', icon: Cpu, color: 'text-slate-600 bg-slate-50' };
+function metaFor(option?: AIModelOption) {
+    if (!option) return FALLBACK;
+    const tier = TIER_META[option.label];
+    return { label: option.label, desc: option.description, icon: tier?.icon ?? Cpu, color: tier?.color ?? FALLBACK.color };
+}
 
 export function ModelSelector() {
     const [current, setCurrent] = useState<string>('');
-    const [available, setAvailable] = useState<string[]>([]);
+    const [available, setAvailable] = useState<AIModelOption[]>([]);
     const [open, setOpen] = useState(false);
     const [switching, setSwitching] = useState(false);
     const dropdownRef = useRef<HTMLDivElement>(null);
@@ -67,7 +59,7 @@ export function ModelSelector() {
         }
     };
 
-    const meta = MODEL_META[current] || { label: 'AI Model', desc: '', icon: Cpu, color: 'text-slate-600 bg-slate-50' };
+    const meta = metaFor(available.find((m) => m.id === current));
     const CurrentIcon = meta.icon;
 
     if (!current) return null;
@@ -92,8 +84,9 @@ export function ModelSelector() {
                     <div className="px-3 py-2 border-b border-slate-100">
                         <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">AI Model</p>
                     </div>
-                    {available.map((model) => {
-                        const m = MODEL_META[model] || { label: 'AI Model', desc: '', icon: Cpu, color: 'text-slate-600 bg-slate-50' };
+                    {available.map((option) => {
+                        const model = option.id;
+                        const m = metaFor(option);
                         const Icon = m.icon;
                         const isActive = model === current;
                         return (

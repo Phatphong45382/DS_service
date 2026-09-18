@@ -225,12 +225,9 @@ class AgentTools:
 ตอบเป็นภาษาไทย กระชับ"""
 
         try:
-            client = self._get_client()
-            response = client.models.generate_content(
-                model=settings.GEMINI_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(max_output_tokens=800, temperature=0.7),
-            )
+            from .ai_service import get_ai
+            text = get_ai().generate_sync(prompt, max_tokens=800)
+            response = type("R", (), {"text": text})()
             return {"status": "success", "analysis": response.text or "ไม่สามารถวิเคราะห์ได้"}
         except Exception as e:
             return {"status": "error", "message": str(e)}
@@ -260,12 +257,9 @@ class AgentTools:
 - ปิดท้ายด้วยข้อเสนอแนะที่เป็นรูปธรรม อ้างอิงจากข้อมูลจริง"""
 
         try:
-            client = self._get_client()
-            response = client.models.generate_content(
-                model=settings.GEMINI_MODEL,
-                contents=prompt,
-                config=types.GenerateContentConfig(max_output_tokens=1200, temperature=0.7),
-            )
+            from .ai_service import get_ai
+            text = get_ai().generate_sync(prompt, max_tokens=1200)
+            response = type("R", (), {"text": text})()
             return {"status": "success", "report": response.text or "ไม่สามารถสร้างรายงานได้"}
         except Exception as e:
             return {"status": "error", "message": str(e)}
@@ -596,6 +590,9 @@ class AgentService:
         return {"type": "direct", "content": text}
 
     def _summarize_steps(self, steps: list) -> str:
+        return _summarize_steps_static(steps)
+
+    def _summarize_steps_unused(self, steps: list) -> str:
         """
         สรุปผลจาก steps ที่ทำไปแล้ว (ใช้เมื่อ LLM โควต้าหมดก่อนสรุป)
         ไม่เรียก LLM — สรุปจาก data ที่มีอยู่
@@ -632,3 +629,8 @@ class AgentService:
 
 # Singleton instance
 agent_service = AgentService()
+
+
+def _summarize_steps_static(steps: list) -> str:
+    """Summarise completed steps without calling the LLM (shared by both agent loops)."""
+    return AgentService._summarize_steps_unused(None, steps)

@@ -37,9 +37,10 @@ def _model():
 
 
 def _ai():
-    if settings.GEMINI_API_KEY:
-        return f"Gemini {settings.GEMINI_MODEL} configured (timeout {settings.AI_TIMEOUT_SEC}s)", "ok"
-    return "no AI API key configured", "degraded"
+    from ..services.ai_service import get_ai
+    ai = get_ai()
+    detail = ai.describe()
+    return detail, "degraded" if "no API key" in detail else "ok"
 
 
 @router.get("", response_model=APIResponse[dict])

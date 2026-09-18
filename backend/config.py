@@ -36,7 +36,18 @@ class Settings:
     STORE_BACKEND: str = os.getenv("STORE_BACKEND", "local")
     STORE_PATH: str = os.getenv("STORE_PATH", str(_REPO_ROOT / ".store"))
 
-    # Gemini AI Settings (replaced by Bedrock in the AI ticket)
+    # AI backend: gemini (default until the Bedrock quota is raised) or bedrock
+    AI_BACKEND: str = os.getenv("AI_BACKEND", "gemini")
+
+    # Claude on Amazon Bedrock. Newer models are reachable only through inference-profile IDs.
+    BEDROCK_REGION: str = os.getenv("BEDROCK_REGION", "ap-southeast-7")
+    BEDROCK_CLIENT: str = os.getenv("BEDROCK_CLIENT", "invoke")  # invoke = bedrock-runtime path; mantle = Messages-API endpoint
+    BEDROCK_MODEL_FAST: str = os.getenv("BEDROCK_MODEL_FAST", "global.anthropic.claude-haiku-4-5-20251001-v1:0")
+    BEDROCK_MODEL_BALANCED: str = os.getenv("BEDROCK_MODEL_BALANCED", "global.anthropic.claude-sonnet-4-6")
+    BEDROCK_MODEL_ADVANCED: str = os.getenv("BEDROCK_MODEL_ADVANCED", "global.anthropic.claude-opus-4-6-v1")
+    BEDROCK_MODEL: str = os.getenv("BEDROCK_MODEL", os.getenv("BEDROCK_MODEL_BALANCED", "global.anthropic.claude-sonnet-4-6"))
+
+    # Gemini AI Settings
     GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
     GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash-lite")
     GEMINI_AVAILABLE_MODELS: list = [

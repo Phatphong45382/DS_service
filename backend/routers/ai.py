@@ -6,8 +6,7 @@ import json
 from google.genai import types
 
 from ..schemas.common import APIResponse
-from ..services.gemini_service import gemini_service, QuotaExceededError
-from ..services.agent_service import agent_service
+from ..services.ai_service import QuotaExceededError, get_ai
 from ..services.email_service import email_service
 from ..config import settings
 
@@ -21,26 +20,26 @@ logger = logging.getLogger(__name__)
 
 @router.get("/model")
 async def get_model():
-    """Get current Gemini model and available models."""
+    """Current AI backend, its active model and the selectable tiers."""
+    ai = get_ai()
     return APIResponse(success=True, data={
-        "current": settings.GEMINI_MODEL,
-        "available": settings.GEMINI_AVAILABLE_MODELS,
+        "backend": ai.name,
+        "current": ai.current_model(),
+        "available": [{"id": m.id, "label": m.label, "description": m.description} for m in ai.available_models()],
     })
 
 
 @router.put("/model")
 async def set_model(payload: Dict[str, Any] = Body(...)):
-    """Switch Gemini model at runtime."""
+    """Switch the active model at runtime (one of the backend's tiers)."""
+    ai = get_ai()
     model = payload.get("model", "")
-    if model not in settings.GEMINI_AVAILABLE_MODELS:
-        return APIResponse(
-            success=False,
-            error={"code": "INVALID_MODEL", "message": f"Model ไม่ถูกต้อง เลือกได้: {', '.join(settings.GEMINI_AVAILABLE_MODELS)}"}
-        )
-    settings.GEMINI_MODEL = model
-    # Reset client so next call picks up new model
-    gemini_service._client = None
-    logger.info(f"Switched Gemini model to: {model}")
+    try:
+        ai.set_model(model)
+    except ValueError:
+        choices = ", ".join(m.id for m in ai.available_models())
+        return APIResponse(success=False, error={"code": "INVALID_MODEL", "message": f"Model ไม่ถูกต้อง เลือกได้: {choices}"})
+    logger.info(f"Switched {ai.name} model to: {model}")
     return APIResponse(success=True, data={"current": model})
 
 
@@ -75,17 +74,17 @@ async def generate_insights(payload: Dict[str, Any] = Body(...)):
 ห้ามใส่ markdown heading (#) ให้ใช้ bullet point (•) แทน"""
 
     try:
-        result = await gemini_service.generate(prompt, max_tokens=800)
+        result = await get_ai().generate(prompt, max_tokens=800)
     except QuotaExceededError as e:
         return APIResponse(
             success=False,
-            error={"code": "QUOTA_EXCEEDED", "message": f"Gemini API โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาทีแล้วลองใหม่", "retry_after": e.retry_after}
+            error={"code": "QUOTA_EXCEEDED", "message": f"AI โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาทีแล้วลองใหม่", "retry_after": e.retry_after}
         )
 
     if result is None:
         return APIResponse(
             success=False,
-            error={"code": "GEMINI_ERROR", "message": "ไม่สามารถสร้าง insight ได้ในขณะนี้"}
+            error={"code": "AI_ERROR", "message": "ไม่สามารถสร้าง insight ได้ในขณะนี้"}
         )
 
     return APIResponse(success=True, data={"insight": result})
@@ -196,7 +195,7 @@ async def chat(payload: Dict[str, Any] = Body(...)):
             system += "\n\n=== เอกสารอ้างอิงจากผู้ใช้ ===\n" + "\n\n---\n\n".join(knowledge_parts)
 
     try:
-        result = await gemini_service.chat(
+        result = await get_ai().chat(
             messages=messages,
             system_prompt=system,
             max_tokens=4096,
@@ -204,13 +203,13 @@ async def chat(payload: Dict[str, Any] = Body(...)):
     except QuotaExceededError as e:
         return APIResponse(
             success=False,
-            error={"code": "QUOTA_EXCEEDED", "message": f"Gemini API โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาทีแล้วลองใหม่", "retry_after": e.retry_after}
+            error={"code": "QUOTA_EXCEEDED", "message": f"AI โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาทีแล้วลองใหม่", "retry_after": e.retry_after}
         )
 
     if result is None:
         return APIResponse(
             success=False,
-            error={"code": "GEMINI_ERROR", "message": "ไม่สามารถตอบได้ในขณะนี้"}
+            error={"code": "AI_ERROR", "message": "ไม่สามารถตอบได้ในขณะนี้"}
         )
 
     return APIResponse(success=True, data={"reply": result})
@@ -260,17 +259,17 @@ async def generate_report(payload: Dict[str, Any] = Body(...)):
     prompt = REPORT_PROMPT_TEMPLATE.format(data_summary=data_summary)
 
     try:
-        report = await gemini_service.generate(prompt, max_tokens=1500)
+        report = await get_ai().generate(prompt, max_tokens=1500)
     except QuotaExceededError as e:
         return APIResponse(
             success=False,
-            error={"code": "QUOTA_EXCEEDED", "message": f"Gemini API โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาทีแล้วลองใหม่", "retry_after": e.retry_after}
+            error={"code": "QUOTA_EXCEEDED", "message": f"AI โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาทีแล้วลองใหม่", "retry_after": e.retry_after}
         )
 
     if report is None:
         return APIResponse(
             success=False,
-            error={"code": "GEMINI_ERROR", "message": "ไม่สามารถสร้างรายงานได้ในขณะนี้"}
+            error={"code": "AI_ERROR", "message": "ไม่สามารถสร้างรายงานได้ในขณะนี้"}
         )
 
     result = {"report": report, "email_sent": False, "email_to": None}
@@ -331,7 +330,7 @@ async def ocr_purchase_order(
             error={"code": "FILE_TOO_LARGE", "message": "ไฟล์ใหญ่เกิน 10MB"},
         )
 
-    result = await gemini_service.ocr_image(
+    result = await get_ai().ocr_image(
         image_bytes=image_bytes,
         mime_type=file.content_type,
         custom_prompt=custom_prompt or "",
@@ -341,7 +340,7 @@ async def ocr_purchase_order(
     if result is None:
         return APIResponse(
             success=False,
-            error={"code": "GEMINI_ERROR", "message": "ไม่สามารถอ่านเอกสารได้ในขณะนี้"},
+            error={"code": "AI_ERROR", "message": "ไม่สามารถอ่านเอกสารได้ในขณะนี้"},
         )
 
     return APIResponse(
@@ -390,20 +389,7 @@ async def rag_upload_document(
 
         # ── PDF / Image → ใช้ Gemini Vision อ่าน ──
         elif content_type in ("application/pdf", "image/png", "image/jpeg", "image/jpg", "image/webp"):
-            client = gemini_service._get_client()
-            file_part = types.Part.from_bytes(data=file_bytes, mime_type=content_type)
-            response = client.models.generate_content(
-                model=settings.GEMINI_MODEL,
-                contents=[
-                    "อ่านเอกสารนี้แล้วแปลงเป็นข้อความ (plain text) ให้ครบทุกเนื้อหา ไม่ต้องสรุป ไม่ต้องย่อ คัดลอกเนื้อหาทั้งหมดออกมา",
-                    file_part,
-                ],
-                config=types.GenerateContentConfig(
-                    max_output_tokens=8000,
-                    temperature=0.1,
-                ),
-            )
-            extracted_text = (response.text or "").strip()
+            extracted_text = (await get_ai().extract_text(file_bytes, content_type) or "").strip()
             if not extracted_text:
                 return APIResponse(
                     success=False,
@@ -431,7 +417,7 @@ async def rag_upload_document(
     except QuotaExceededError as e:
         return APIResponse(
             success=False,
-            error={"code": "QUOTA_EXCEEDED", "message": f"Gemini API โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาที"},
+            error={"code": "QUOTA_EXCEEDED", "message": f"AI โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาที"},
         )
     except Exception as e:
         logger.error(f"RAG upload error: {e}", exc_info=True)
@@ -487,7 +473,7 @@ async def rag_query(payload: Dict[str, Any] = Body(...)):
             messages.append(msg)
         messages.append({"role": "user", "content": question})
 
-        result = await gemini_service.chat(
+        result = await get_ai().chat(
             messages=messages,
             system_prompt=system_prompt,
             max_tokens=4096,
@@ -495,13 +481,13 @@ async def rag_query(payload: Dict[str, Any] = Body(...)):
     except QuotaExceededError as e:
         return APIResponse(
             success=False,
-            error={"code": "QUOTA_EXCEEDED", "message": f"Gemini API โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาที"},
+            error={"code": "QUOTA_EXCEEDED", "message": f"AI โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาที"},
         )
 
     if result is None:
         return APIResponse(
             success=False,
-            error={"code": "GEMINI_ERROR", "message": "ไม่สามารถตอบได้ในขณะนี้"},
+            error={"code": "AI_ERROR", "message": "ไม่สามารถตอบได้ในขณะนี้"},
         )
 
     return APIResponse(success=True, data={"reply": result})
@@ -527,14 +513,14 @@ async def run_agent(payload: Dict[str, Any] = Body(...)):
         )
 
     try:
-        result = await agent_service.run(message, max_steps=8)
+        result = await get_ai().agent_run(message, max_steps=8)
         return APIResponse(success=True, data=result)
     except QuotaExceededError as e:
         return APIResponse(
             success=False,
             error={
                 "code": "QUOTA_EXCEEDED",
-                "message": f"Gemini API โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาที",
+                "message": f"AI โควต้าหมด กรุณารอ {e.retry_after:.0f} วินาที",
                 "retry_after": e.retry_after,
             }
         )
