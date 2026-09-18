@@ -82,3 +82,23 @@ def test_bedrock_agent_tools_are_declared_as_strict_tools():
         assert t["strict"] is True
         assert t["input_schema"]["additionalProperties"] is False
         assert "required" in t["input_schema"]
+
+
+def test_an_uploaded_document_survives_a_backend_restart(client):
+    """RAG documents belong in the store, like Runs and uploads (#6), not in process memory.
+
+    Render sleeps between clicks. A document that lived in a dict vanished on the restart,
+    so "upload, wait, ask" answered DOC_NOT_FOUND in the middle of a demo.
+    """
+    from backend.store import service as store_service
+
+    files = {"file": ("policy.txt", b"Safety stock for Chips is 12 percent of forecast.\n", "text/plain")}
+    up = client.post("/api/v1/ai/rag/upload", files=files).json()
+    assert up["success"], up
+    doc_id = up["data"]["doc_id"]
+    assert store_service.get_store().get_json(f"docs/{doc_id}.json")["text"].startswith("Safety stock")
+
+    store_service.reset()  # drop every in-process handle; the next call must reload from the store
+    q = client.post("/api/v1/ai/rag/query", json={"doc_id": doc_id, "question": "Chips?"}).json()
+    # no AI key in tests, so the answer itself fails later - but the document must have been found
+    assert (q.get("error") or {}).get("code") != "DOC_NOT_FOUND", q
