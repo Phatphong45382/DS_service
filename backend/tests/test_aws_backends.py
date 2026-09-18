@@ -130,6 +130,12 @@ def test_a_store_key_always_maps_to_the_same_item(key, expected):
     assert AwsStore._split(key) == expected
 
 
+@pytest.mark.parametrize("key", ["runs/RUN-1/record.json", "uploads/UP-1.json", "prompts"])
+def test_a_key_survives_the_round_trip_through_dynamodb_keys(key):
+    """list_keys rebuilds keys from pk and sk, and must hand back exactly what LocalStore would."""
+    assert AwsStore._join(*AwsStore._split(key)) == key
+
+
 def test_the_split_between_dynamodb_and_s3_falls_where_a_real_run_needs_it(client):
     """Measured on a real Run, not a guess: the record must be an item, the Forecast an S3 object.
 

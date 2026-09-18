@@ -67,8 +67,14 @@ class AwsStore:
 
     @staticmethod
     def _split(key: str) -> tuple[str, str]:
+        """key -> (pk, sk). A key with no slash repeats itself, because DynamoDB rejects an empty
+        string as a key attribute; _join reverses it so listing matches the local store exactly."""
         head, _, rest = key.partition("/")
         return head, rest or head
+
+    @staticmethod
+    def _join(pk: str, sk: str) -> str:
+        return pk if sk == pk else f"{pk}/{sk}"
 
     def put_json(self, key: str, obj: Any) -> None:
         body = json.dumps(obj, ensure_ascii=False, default=_jsonable)
@@ -115,7 +121,7 @@ class AwsStore:
             ExpressionAttributeValues=values,
             ProjectionExpression="sk",
         ):
-            keys.update(f"{pk}/{i['sk']['S']}" for i in page["Items"])
+            keys.update(self._join(pk, i["sk"]["S"]) for i in page["Items"])
         for page in self.s3.get_paginator("list_objects_v2").paginate(Bucket=self.bucket, Prefix=prefix):
             keys.update(o["Key"] for o in page.get("Contents", []) if not o["Key"].endswith("/"))
         return sorted(keys)
