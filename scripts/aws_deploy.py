@@ -41,11 +41,16 @@ TAGS = [{"Key": "Project", "Value": "demand-demo"}, {"Key": "Environment", "Valu
 # Two regional facts, both measured against this account rather than assumed:
 #   - ap-southeast-7 refuses a serverless endpoint config ("This region does not support the
 #     serverless endpoint"), so the endpoint runs in MODEL_REGION while the data stays in Thailand.
-#   - the scikit-learn framework container is not published there either, so the PyTorch CPU
-#     deep-learning container is used purely as a Python serving base; inference.py never imports
-#     torch. The image is large, so cold start sits at the long end of ADR-0001's range.
-DLC_ACCOUNT = {"ap-southeast-1": "763104351884", "ap-southeast-7": "590183813437"}[MODEL_REGION]
-IMAGE = f"{DLC_ACCOUNT}.dkr.ecr.{MODEL_REGION}.amazonaws.com/pytorch-inference:2.6.0-cpu-py312"
+#   - the scikit-learn framework container is not published in ap-southeast-7 either, so running
+#     the endpoint there would also have meant a multi-gigabyte deep-learning image. In
+#     MODEL_REGION the small scikit-learn container is available, and it is exactly the shape this
+#     model needs: a pickled estimator plus code/. LightGBM and SHAP install from requirements.txt
+#     at container start, which is the cold start ADR-0001 accepts and /health/warm pays upfront.
+SKLEARN_ACCOUNTS = {"ap-southeast-1": "121021644041", "ap-southeast-2": "783357654285",
+                    "ap-southeast-3": "951798379941", "ap-northeast-1": "354813040037",
+                    "us-east-1": "683313688378", "eu-west-1": "141502667606"}
+IMAGE = (f"{SKLEARN_ACCOUNTS[MODEL_REGION]}.dkr.ecr.{MODEL_REGION}.amazonaws.com"
+         f"/sagemaker-scikit-learn:1.2-1-cpu-py3")
 
 s3 = session.client("s3")                                        # data bucket, in REGION
 ms3 = boto3.client("s3", region_name=MODEL_REGION)               # model bucket, in MODEL_REGION
