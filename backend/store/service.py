@@ -100,6 +100,9 @@ class AwsStore:
             return None
 
     def list_keys(self, prefix: str) -> list[str]:
+        # ponytail: keys only, so listing Runs costs one Query plus one GetItem per Run. The Query
+        # already returns each body; project it and hand back records if a demo ever has enough
+        # Runs for the round trips to show.
         pk, rest = self._split(prefix)
         rest = "" if rest == pk else rest
         keys = set()
