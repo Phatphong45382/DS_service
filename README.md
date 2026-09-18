@@ -42,9 +42,12 @@ cd malee-sales-app && npm install && npm run dev
 The app is at http://localhost:3000 and the API at http://127.0.0.1:8080. With no `DEMO_PASSWORD` set the login page waves you straight through.
 
 ```bash
-python -m pytest backend/tests -q         # 83 tests, no AWS, no mocking library
+python -m pytest -q                       # 85 API tests through the HTTP seam, no AWS, no mocking library
 cd malee-sales-app && npm run build
+python -m pytest e2e -q                   # 26 browser tests: every sidebar page, login, a Run, a prediction
 ```
+
+The browser suite starts its own API and web server on 8080 and 3000 from the build above, so stop any dev server on those ports first. It needs no AWS and no AI key; the AI pages are tested for loading and for failing visibly, not for answering.
 
 ## One switch per backend
 
