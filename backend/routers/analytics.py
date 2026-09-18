@@ -175,8 +175,8 @@ def get_analytics_summary(
         sum_diff = 0.0
         
         # Split Volume Risks
-        total_under_vol = 0.0 # Shortfall (Planned > Actual)
-        total_over_vol = 0.0  # Excess (Actual > Planned)
+        total_under_vol = 0.0  # Plan below Actual: demand the Plan did not ask for
+        total_over_vol = 0.0   # Plan above Actual: Plan asked for more than sold
         
         promo_rows_count = 0
         sum_discount = 0.0
@@ -217,10 +217,12 @@ def get_analytics_summary(
             sum_abs_diff += abs(diff)
             sum_diff += diff
             
+            # Under Plan = the Plan fell short of Actual, the same direction the rankings and the
+            # Bias card use. diff = actual - planned, so a positive diff is the shortfall (#12).
             if diff > 0:
-                total_over_vol += diff
+                total_under_vol += diff
             elif diff < 0:
-                total_under_vol += abs(diff)
+                total_over_vol += abs(diff)
             
             p_key = (str(row.get("Product_Group")), str(row.get("Flavor")), str(row.get("Size")))
             active_items_set.add(p_key)
@@ -555,10 +557,11 @@ def get_deep_dive_analytics(
             err = actual - planned
             abs_err = abs(err)
             
+            # same convention as the summary and the rankings: err > 0 is the Plan falling short
             if err > 0:
-                total_over_vol += err
+                total_under_vol += err
             elif err < 0:
-                total_under_vol += abs(err)
+                total_over_vol += abs(err)
             
             total_actual += actual
             total_planned += planned

@@ -146,7 +146,7 @@ export default function AccuracyDeepDivePage() {
                         <AccuracyTrendChart data={trendData} loading={loading} />
                     </motion.div>
                     <motion.div variants={item} className="lg:col-span-1">
-                        <AccuracyDeviationChart data={trendData} loading={loading} />
+                        <AccuracyDeviationChart kpi={kpiData} loading={loading} />
                     </motion.div>
                 </div>
 
